@@ -434,8 +434,6 @@ sub focus_shift($;)
 sub focus_to_next() { shift()->focus_shift(+1) }
 sub focus_to_prev() { shift()->focus_shift(-1) }
 
-__END__
-
 
 =pod
 
@@ -597,20 +595,20 @@ widget which currently has the focus.
 This method sets the focuspointer to the object with the
 given ID.
 
-=item * B<set_focusorder> ( LIST )
+=item * B<set_focusorder> ( IDLIST )
 
 Normally the order in which widgets get focused in a 
 container is determined by the order in which they
 are added to the container. Use B<set_focusorder> if you
-want a different focus order. The LIST contains a list
+want a different focus order. IDLIST contains a list
 of id's.
 
-=item * B<set_draworder> ( LIST )
+=item * B<set_draworder> ( IDLIST )
 
 Normally the order in which widgets are drawn in a 
 container is determined by the order in which they
 are added to the container. Use B<set_draworder> if you
-want a different draw order. The LIST contains a list
+want a different draw order. IDLIST contains a list
 of id's.
 
 =item * B<rebuild> ( )
@@ -639,12 +637,12 @@ If BOOLEAN is false, the screen will only be redrawn if
 the ID differs from the id of the window that is currently
 on top.
 
-=item * B<returnkeys> ( LIST )
+=item * B<returnkeys> ( KEYLIST )
 
 After you have added all the wanted widgets to the 
 container, you can add keybindings to each widget
 to have the container loose its focus. This is done
-by the B<returnkeys> method. The LIST is a list of
+by the B<returnkeys> method. KEYLIST is a list of
 keys on which the container must loose focus (see 
 also L<Curses::UI|Curses::UI>). 
 
@@ -680,6 +678,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 

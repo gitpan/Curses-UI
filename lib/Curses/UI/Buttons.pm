@@ -12,7 +12,6 @@
 package Curses::UI::Buttons;
 
 use strict;
-use Carp qw(confess);
 use Curses;
 use Curses::UI::Widget;
 use Curses::UI::Common;
@@ -271,7 +270,6 @@ sub shortcut()
 
 1;
 
-__END__
 
 =pod
 
@@ -340,17 +338,17 @@ This option takes a reference to a list of shortcut
 keys as its argument. The order of the keys in the list 
 corresponds to the order of the buttons.
 
-=item * B<-selected> < SCALAR >
+=item * B<-selected> < INDEX >
 
 By default the first button (index = 0) is active. If you
 want another button to be active at creation time, 
-add this option. The SCALAR is the index of the button you
+add this option. The INDEX is the index of the button you
 want to make active.
 
-=item * B<-buttonalignment> < SCALAR >
+=item * B<-buttonalignment> < VALUE >
 
 You can specify how the buttons should be aligned in the 
-widget. Available values for SCALAR are 'left', 'middle' 
+widget. Available values for VALUE are 'left', 'middle' 
 and 'right'.
 
 =item * B<-mayloosefocus> < BOOLEAN >
@@ -368,7 +366,7 @@ this binding can be disabled.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -441,7 +439,7 @@ handle the shortcuts that are set by the B<-shortcuts> option.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Widget|Curses::UI::Widget>, 
-L<Curses::UI::Common|Curses::UI:Common>
+L<Curses::UI::Common|Curses::UI::Common>
 
 
 
@@ -453,9 +451,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
-
-
-
 

@@ -12,7 +12,6 @@
 package Curses::UI::Dialog::Error;
 
 use strict;
-use Carp qw(confess);
 use Curses;
 use Curses::UI::Buttons;
 use Curses::UI::Common;
@@ -60,3 +59,69 @@ sub draw(;$)
 }
 
 1;
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Dialog::Error - Create and manipulate error dialogs
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    # The hard way.
+    # -------------
+    my $dialog = $win->add(
+        'mydialog', 'Dialog::Error',
+	-message   => 'The world has gone!'
+    );
+    $dialog->focus;
+    $win->delete('mydialog');
+    
+    # The easy way (see Curses::UI documentation).
+    # --------------------------------------------
+    $cui->error(-message => 'The world has gone!');
+
+    # or even:
+    $cui->error('The world has gone!');
+
+
+
+=head1 DESCRIPTION
+
+Curses::UI::Dialog::Error is a basic error dialog. It is
+almost the same as L<Curses::UI::Dialog::Basic|Curses::UI::Dialog::Basic>,
+except for the fact that a warning sign is drawn to the left of
+the message using ASCII "art":
+
+       _
+      / \
+     / ! \
+    /_____\
+
+
+Since this class is very closely related to the basic dialog,
+see L<Curses::UI::Dialog::Basic|Curses::UI::Dialog::Basic> for
+a description of the options and methods that you can use.
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::Dialog::Basic|Curses::UI::Dialog::Basic>
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+

@@ -12,7 +12,6 @@
 package Curses::UI::Common;
 
 use strict;
-use Carp qw(confess);
 use Term::ReadKey;
 use Curses;
 
@@ -218,6 +217,8 @@ sub text_wrap($$;)
 
 		# Line shorter than allowed? Then return immediately.
 		return [$line] if length($line) < $maxlen;
+		return ["internal wrap error: wraplength undefined"] 
+			unless defined $maxlen;
 
 		CHUNK: while ($idx < length($line))
 		{
@@ -395,8 +396,6 @@ sub get_key(;$$)
 
 1;
 
-__END__
-
 
 =pod
 
@@ -455,14 +454,14 @@ subwidgets before adding them again.
 
 =over 4
 
-=item B<split_to_lines> ( SCALAR )
+=item B<split_to_lines> ( TEXT )
 
-This method will split SCALAR into a list of separate lines.
+This method will split TEXT into a list of separate lines.
 It returns a reference to this list.
 
-=item B<scrlength> ( SCALAR )
+=item B<scrlength> ( LINE )
 
-Returns the screenlength of the string SCALAR. The difference
+Returns the screenlength of the string LINE. The difference
 with the perl function length() is that this method will
 expand TAB characters. It is exported by this class and it may
 be called as a stand-alone routine.
@@ -594,6 +593,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 

@@ -12,7 +12,6 @@
 package Curses::UI::Dialog::FileBrowser;
 
 use strict;
-use Carp qw(confess);
 use Curses;
 use Curses::UI::Window;
 use Curses::UI::Common;
@@ -30,10 +29,9 @@ sub new ()
 		-path		 => undef,	
 		-file		 => '', 
 		-show_hidden     => 0,
-		-mask_values 	 => undef,
-		-mask_labels 	 => undef,
+		-mask	     	 => undef,
 		-mask_selected 	 => 0,
-		-edit_filename 	 => 0,
+		-editfilename 	 => 0,
 		@_,
 		-border 	 => 1,
 		-centered        => 1,
@@ -148,21 +146,32 @@ sub new ()
 		);
 	}
 
-	if (defined $this->{-mask_values}) 
+	if (defined $this->{-mask} and ref $this->{-mask} eq 'ARRAY') 
 	{
 		$this->add('masklabel', 'Label',
 			-x 	 => $labeloffset,
 			-y 	 => $this->screenheight - 2,
 			-text 	 => 'Mask:',
 		);
-		my $maskbox = $this->add('maskbox', 'PopupBox',
+
+		my @values = ();
+		my %labels = ();
+		my $i =0;
+		foreach my $mask (@{$this->{-mask}})
+		{
+			push @values, $mask->[0];
+			$labels{$mask->[0]} = $mask->[1];
+		}
+
+		my $maskbox = $this->add(
+			'maskbox', 'PopupBox',
 			-x 	 => $textoffset,
 			-y 	 => $this->screenheight - 2,
-			-values  => $this->{-mask_values},
-			-labels  => $this->{-mask_labels},
+			-values  => \@values,
+			-labels  => \%labels,
 			-selected => $this->{-mask_selected},
 		);
-		$this->{-mask} = $maskbox->get;
+		$this->{-activemask} = $maskbox->get;
 		$maskbox->set_routine('option-select', \&maskbox_select);
 		$maskbox->set_routine('select-next',   \&maskbox_next);
 		$maskbox->set_routine('select-prev',   \&maskbox_prev);
@@ -181,7 +190,7 @@ sub layout()
 
 	my $w = 60;
 	my $h = 18;
-	$h += 2 if defined $this->{-mask_values};
+	$h += 2 if defined $this->{-mask};
 	$this->{-width} = $w,
 	$this->{-height} = $h,
 
@@ -233,8 +242,9 @@ sub get_dir()
 		push @dirs,  $f if -d "$path/$f";
 		if (-f "$path/$f")
 		{
-			$this->{-mask} = '.' unless defined $this->{-mask};
-			push @files, $f if $f =~ /$this->{-mask}/i;
+			$this->{-activemask} = '.' 
+				unless defined $this->{-activemask};
+			push @files, $f if $f =~ /$this->{-activemask}/i;
 		}
 	}
 	closedir D;
@@ -334,7 +344,7 @@ sub maskbox_select()
 	my $this = $popup->parent->parent; 
 
 	$popup->option_select;
-	$this->{-mask} = $popup->get;
+	$this->{-activemask} = $popup->get;
 	$this->get_dir;
 	return;
 }
@@ -344,7 +354,7 @@ sub maskbox_prev()
 	my $maskbox = shift; 
 	my $this = $maskbox->parent;
 	$maskbox->select_prev;
-	$this->{-mask} = $maskbox->get;
+	$this->{-activemask} = $maskbox->get;
 	$this->get_dir;
 	return $maskbox;	
 }
@@ -353,7 +363,7 @@ sub maskbox_next()
 	my $maskbox = shift; 
 	my $this = $maskbox->parent;
 	$maskbox->select_next;
-	$this->{-mask} = $maskbox->get;
+	$this->{-activemask} = $maskbox->get;
 	$this->get_dir;
 	return $maskbox;	
 }
@@ -420,5 +430,170 @@ sub return()
 	}
 }
 
-
 1;
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Dialog::FileBrowser - Create and manipulate filebrowser dialogs
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    # The hard way.
+    # -------------
+    my $dialog = $win->add(
+        'mydialog', 'Dialog::FileBrowser'
+    );
+    $dialog->focus;
+    my $file = $dialog->get();
+    $win->delete('mydialog');
+    
+    # The easy way (see Curses::UI documentation).
+    # --------------------------------------------
+    $file = $cui->filebrowser();
+    $file = $cui->loadfilebrowser();
+    $file = $cui->savefilebrowser();
+
+
+
+
+=head1 DESCRIPTION
+
+Curses::UI::Dialog::FileBrowser is a filebrowser dialog. 
+This type of dialog can be used to select a file, anywhere
+on the filesystem.
+
+See exampes/demo-Curses::UI::Dialog::FileBrowser in the 
+distribution for a short demo.
+
+
+
+=head1 OPTIONS
+
+=over 4
+
+=item * B<-title> < TEXT >
+
+Set the title of the dialog window to TEXT.
+
+=item * B<-path> < PATH >
+
+Set the path to start with to PATH. If this path
+does not exist, the filebrowser will start in the
+rootdirectory.
+
+=item * B<-file> < FILE >
+
+Set the filename to start with to FILE.
+
+=item * B<-editfilename> < BOOLEAN >
+
+If BOOLEAN has a true value, the user may edit
+the filename. This is for example useful for a 
+filebrowser that is used to select a filename to 
+save to. By default this option is set to false.
+
+=item * B<-show_hidden> < BOOLEAN >
+
+If BOOLEAN has a true value, hidden files (the filename
+starts with a dot) will also be shown. By default this
+option is set to false.
+
+=item * B<-mask> < ARRAYREF >
+
+If B<-mask> is defined, a filemask popupbox will be added
+to the filebrowser dialog window. This popupbox will filter
+the list of files that is displayed, using a regular expression
+(case insensitive). The ARRAYREF contains a list of array 
+references. Each array reference has two elements: a regexp and 
+a description. Here's an example B<-mask>:
+
+    my $mask = [
+        [ '.',        'All files (*)'       ],
+        [ '\.txt$',   'Text files (*.txt)'  ]
+        [ 'howto',    'HOWTO documentation' ],
+        [ 'core',     'Core files'          ],
+    ];    
+
+=item * B<-mask_selected> < INDEX >
+
+Normally the first mask in the list of masks will be made 
+active upon creation of the filebrowser. If you want 
+another mask to be active, use the B<-mask_selected>
+option. Set this value to the index of the mask you want
+to be active. For example: if you would want the "howto"
+mask in the above example to be active, you would use 
+the value 2 for B<-mask_selected>.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( OPTIONS )
+
+=item * B<layout> ( )
+
+=item * B<draw> ( BOOLEAN )
+
+=item * B<focus> ( )
+
+These are standard methods. See L<Curses::UI::Container|Curses::UI::Container> 
+for an explanation of these.
+
+=item * B<get> ( )
+
+This method will return the complete path to the file that was
+selected using the filebrowser. If no file was selected, this
+method will return an undefined value.
+
+=back
+
+
+
+=head1 SPECIAL BINDINGS
+
+=over 4
+
+=item * B<escape>
+
+This will invoke the cancel button, so the filebrowser widget
+returns without selecting any file.
+
+=item * B<~>
+
+If the directory- or filelistbox of the dialog window has the
+focus and the tilde (~) button is pressed, the filebrowser
+will chdir to the homedirectory of the current user.
+
+=back
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::Container|Curses::UI::Container>, 
+L<Curses::UI::Buttons|Curses::UI::Buttons>
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+

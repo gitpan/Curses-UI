@@ -178,8 +178,6 @@ sub draw(;$)
 
 1;
 
-__END__
-
 
 =pod
 
@@ -231,14 +229,14 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 
 =over 4
 
-=item * B<-text> < SCALAR >
+=item * B<-text> < TEXT >
 
-This will set the text on the label to SCALAR.
+This will set the text on the label to TEXT.
 
-=item * B<-textalignment> < SCALAR >
+=item * B<-textalignment> < VALUE >
 
 This option controls how the text should be aligned inside
-the label. SCALAR can be 'left', 'middle' and 'right'. The 
+the label. VALUE can be 'left', 'middle' and 'right'. The 
 default value for this option is 'left'. 
 
 =item * B<-paddingspaces> < BOOLEAN >
@@ -295,7 +293,7 @@ drawn in a blinking font.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -320,17 +318,17 @@ These methods can be used to control the font in which the text on
 the label is drawn, after creating the widget. The font option
 will be turned on for a true value of BOOLEAN.
 
-=item * B<textalignment> ( SCALAR )
+=item * B<textalignment> ( VALUE )
 
-Set the textalignment. SCALAR can be 'left',
+Set the textalignment. VALUE can be 'left',
 'middle' or 'right'. You will have to call the B<draw> 
 method of the widget to see the change.
 
-=item * B<text> ( [SCALAR] )
+=item * B<text> ( [TEXT] )
 
-Without the SCALAR argument, this method will return the current 
-text of the widget. With a SCALAR argument, the text on the widget
-will be set to SCALAR. You will have to call the B<draw> method of
+Without the TEXT argument, this method will return the current 
+text of the widget. With a TEXT argument, the text on the widget
+will be set to TEXT. You will have to call the B<draw> method of
 the widget to see the change.
 
 =item * B<get> ( )
@@ -366,10 +364,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
-
-
-
-
 

@@ -118,6 +118,8 @@ sub draw(;$)
 		$this->{-windowscr}->attroff(A_REVERSE);
 		$this->{-windowscr}->addstr(0, $xpos+$revlen, $norev);
 	}
+
+	$this->{-windowscr}->move(0,$this->screenwidth-1);
 	
 	$this->{-windowscr}->noutrefresh();
 	doupdate() unless $no_doupdate;
@@ -127,8 +129,6 @@ sub draw(;$)
 
 
 1;
-
-__END__
 
 
 =pod
@@ -184,16 +184,16 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 
 =over 4
 
-=item * B<-min> < SCALAR >
+=item * B<-min> < VALUE >
 
 This opion sets the minimum value for the progress bar. 
 Default is 0.
 
-=item * B<-max> < SCALAR >
+=item * B<-max> < VALUE >
 
 This opion sets the maximum value for the progress bar.
 
-=item * B<-pos> < SCALAR >
+=item * B<-pos> < VALUE >
 
 This option sets the startposition for the progress
 bar.
@@ -219,7 +219,7 @@ value is false, so a horizontal line will be drawn.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -234,7 +234,7 @@ for an explanation of these.
 
 This method will return the current B<-pos> value of the widget.
 
-=item * B<pos> ( SCALAR )
+=item * B<pos> ( VALUE )
 
 This method will set the B<-pos> value of the widget to SCALAR.
 The widget will not be redrawn, so you will have to call
@@ -258,7 +258,7 @@ any bindings.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Widget|Curses::UI::Widget>, 
-L<Curses::UI::Common|Curses::UI:Common>
+L<Curses::UI::Common|Curses::UI::Common>
 
 
 
@@ -270,6 +270,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 

@@ -198,9 +198,6 @@ sub search_get($$;)
 1;
 
 
-__END__
-
-
 =pod
 
 =head1 NAME
@@ -349,10 +346,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
-
-
-
-
 

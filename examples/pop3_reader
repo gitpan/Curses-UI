@@ -11,7 +11,7 @@ use Net::POP3;
 use Mail::Header;
 use Mail::Address;
 
-my $cui = new Curses::UI;
+my $cui = new Curses::UI ( -clear_on_exit => 1 );
 my $pop3 = undef;
 my $connection = undef;
 

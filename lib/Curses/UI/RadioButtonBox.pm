@@ -47,7 +47,6 @@ sub new ()
 
 1;
 
-__END__
 
 =pod
 
@@ -98,7 +97,7 @@ L<Curses::UI::ListBox|Curses::UI::ListBox>).
 =head1 SEE ALSO
 
 L<Curses::UI|Curses::UI>, 
-L<Curses::UI::Listbox|Curses::UI::Listbox>, 
+L<Curses::UI::ListBox|Curses::UI::ListBox>, 
 
 
 
@@ -110,6 +109,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 

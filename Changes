@@ -1,6 +1,56 @@
 Changelog for the Curses::UI distribution:
 
-Version 0.57
+Version 0.61
+============
+
+2001-01-13:     - Extended the examples/basic_test file
+                  to test the functionality of the basic 
+                  widgets (for now: Label, Buttons, 
+                  CheckBox, ListBox, PopupBox, 
+                  ProgressBar and TextEditor). Directly
+                  derived widgets are not tested (like
+                  RadioButtonBox and TextEntry) because
+                  these will most probably work like
+                  they should if the base class is okay.
+
+                - Changed the structure of the checkbox
+                  widget. The layout() method would each
+                  time re-add the label widget to the
+                  checkbox widget. Now the checkbox is 
+                  a container derivate which always
+                  contains the label.
+
+                - Fixed bug: The TextEditor class and
+                  derivates didn't call check_for_resize()
+                  during focus, so screen resize was
+                  not detected.
+         
+
+2001-01-12:     - Fixed some broken links in the
+                  documentation.
+
+                - Removed "use Carp qw(confess)" from
+                  the modules which do not use this
+                  (anymore).
+
+                - Wrote documentation for:
+                  - Curses::UI::Dialog::Basic
+                  - Curses::UI::Dialog::Error
+                  - Curses::UI::Dialog::FileBrowser
+                  - Curses::UI::Dialog::Progress
+                  - Curses::UI::Dialog::Status
+
+                - Added new example applications:
+                  - demo-Curses::UI::Dialog::FileBrowser
+                  - demo-Curses::UI::Dialog::Status
+
+                - Added the -clear_on_exit option
+                  to Curses::UI. If this option is
+                  set, a Curses::UI application will
+                  call "clear" on exit.
+
+
+Version 0.60
 ============
 
 2001-01-11:     - Wrote documentation for:

@@ -6,7 +6,7 @@ open STDERR, ">/dev/null";
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
-my $cui = new Curses::UI;
+my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
 $cui->dialog(
 	-message => "The most simple dialog"

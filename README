@@ -4,6 +4,8 @@ E-mailaddress : maurice@gitaar.net
 Licence       : Curses::UI is free software and it is distributed 
                 under the same license as perl itself
 
+Please do let me know if you find these modules useful and let me
+know if any appliction is built using them.
 
 What is Curses::UI?
 ===================
@@ -29,8 +31,8 @@ several widgets which can be used to build a user interface:
 There are also a couple of dialog windows available:
 
 - Standard dialog window (message + buttons)
-- Filebrowser 
 - Error dialog window
+- Filebrowser 
 - Status window (no interaction so actually not a dialog)
 - Progress window (no interaction so actually not a dialog)
 
@@ -94,6 +96,4 @@ widget type, please feel free to send me an e-mail
 Patches are even better :-)
 
 
-Please do let me know if you find these modules useful and let me
-know if any appliction is built using them.
 

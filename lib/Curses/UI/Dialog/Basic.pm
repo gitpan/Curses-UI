@@ -12,7 +12,6 @@
 package Curses::UI::Dialog::Basic;
 
 use strict;
-use Carp qw(confess);
 use Curses;
 use Curses::UI::Common;
 use Curses::UI::Window;
@@ -66,6 +65,7 @@ sub new ()
 sub layout()
 {
 	my $this = shift;
+	return $this if $Curses::UI::screen_too_small;
 
 	# The maximum available space on the screen.
 	my $avail_width = $ENV{COLS};
@@ -103,8 +103,8 @@ sub layout()
 
 	# Check if there is enough space to show the widget.
 	if ($avail_textheight < 1 or $avail_textwidth < $longest_line) {
-# TODO unfit detection
-#		confess "Not enough room for the $this object";
+		$Curses::UI::screen_too_small = 1;
+		return $this;
 	}
 
 	# Compute the size of the widget.
@@ -146,3 +146,126 @@ sub get()
 }
 
 1;
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Dialog::Basic - Create and manipulate basic dialogs
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    # The hard way.
+    # -------------
+    my $dialog = $win->add(
+        'mydialog', 'Dialog::Basic',
+	-message   => 'Hello, world!'
+    );
+    $dialog->focus;
+    $win->delete('mydialog');
+    
+    # The easy way (see Curses::UI documentation).
+    # --------------------------------------------
+    my $buttonvalue = $cui->dialog(-message => 'Hello, world!');
+
+    # or even
+    $cui->dialog('Hello, world!');
+    
+
+
+
+
+=head1 DESCRIPTION
+
+Curses::UI::Dialog::Basic is a basic dialog. This type of
+dialog has a message on it and one or more buttons. It 
+can be used to show a message to the user of your program
+("The thingy has been updated") or to get some kind of 
+confirmation from the user ("Are you sure you want to
+update the thingy?").
+
+See exampes/demo-Curses::UI::Dialog::Basic in the distribution
+for a short demo.
+
+
+
+=head1 OPTIONS
+
+=over 4
+
+=item * B<-title> < TEXT >
+
+Set the title of the dialog window to TEXT.
+
+=item * B<-message> < TEXT >
+
+This option sets the message to show to TEXT. The text may
+contain newline (\n) characters.
+
+=item * B<-buttons> < ARRAYREF >
+
+=item * B<-values> < ARRAYREF >
+
+=item * B<-shortcuts> < ARRAYREF >
+
+=item * B<-selected> < INDEX >
+
+=item * B<-buttonalignment> < VALUE >
+
+These options sets the buttons that have to be used. For an
+explanation of these options, see the 
+L<Curses::UI::Buttons|Curses::UI::Buttons> documentation.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( HASH )
+
+=item * B<layout> ( )
+
+=item * B<draw> ( BOOLEAN )
+
+=item * B<focus> ( )
+
+These are standard methods. See L<Curses::UI::Container|Curses::UI::Container> 
+for an explanation of these.
+
+=item * B<get> ( )
+
+This method will call B<get> on the buttons object of the dialog
+and return its returnvalue. See L<Curses::UI::Buttons|Curses::UI::Buttons>
+for more information on this.
+
+=back
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::Container|Curses::UI::Container>, 
+L<Curses::UI::Buttons|Curses::UI::Buttons>
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+

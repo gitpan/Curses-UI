@@ -90,8 +90,6 @@ sub prompt()
 
 1;
 
-__END__
-
 
 =pod
 
@@ -128,7 +126,7 @@ This option sets the initial prompt for the SearchEntry widget.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -166,6 +164,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 

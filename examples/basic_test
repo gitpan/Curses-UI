@@ -5,38 +5,319 @@ use Curses;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 
-open STDERR, ">/tmp/stderr.$$";
-
 use Curses::UI;
-my $cui = new Curses::UI;
-
+my $cui = new Curses::UI ( -clear_on_exit => 0 );
 my $win = $cui->add( 'window1', 'Window' );
 
-$win->add('label1', 'Label', -x => 1, -y => 1,
-	-text => "This is a basic test to see if Curses::UI works like ");
+# ----------------------------------------------------------------------
+# Support routines
+# ----------------------------------------------------------------------
 
-$win->add('label2', 'Label', -x => 1, -y => 2,
-	-text => "it should do. It will exit in a few seconds...");
+sub pause 
+{ 
+	select (undef,undef,undef,0.10);
+}
 
-$cui->draw;
-sleep 2;
+sub error($;) 
+{
+	my $error = shift;
+	undef $cui;
+	endwin;	
+	die "$error\n";
+}
+
+
+# ----------------------------------------------------------------------
+# Test label
+# ----------------------------------------------------------------------
+
+sub test_label()
+{
+	$win->add('label1', 'Label', -x => 1, -y => 1,
+	    -text => "This is a basic test to see if Curses::UI works like ");
+
+	$win->add('label2', 'Label', -x => 1, -y => 2,
+	    -text => "it should do. One moment please...");
+
+	$cui->draw;
+	sleep 2;
+	$win->delete('label1');
+	$win->delete('label2');
+	$cui->draw;
+}
+
+# ----------------------------------------------------------------------
+# Test buttons
+# ----------------------------------------------------------------------
+
+sub test_buttons()
+{
+	my $b = $win->add(
+		'buttons', 'Buttons', 
+		-y => 1, -x => 1,
+		-buttons => ['< Button >', '< Test >'],
+		-values  => [1, 2],
+	);
+
+	$b->{-focus} = 1;
+	$b->draw;
+	pause();
+
+	$b->next_button;
+	$b->draw;
+	error "Unexpected value from Curses::UI::Buttons->get()"
+		unless $b->get() == 2;
+	pause();
+
+	$b->previous_button;
+	$b->draw;
+	error "Unexpected value from Curses::UI::Buttons->get()"
+		unless $b->get() == 1;
+	pause();
+
+	$win->delete('buttons');
+	$cui->draw;
+}
+
+# ----------------------------------------------------------------------
+# Test checkbox
+# ----------------------------------------------------------------------
+
+sub test_checkbox()
+{
+	my $c = $win->add(
+		'checkbox', 'CheckBox',
+		-y => 1, -x => 1,
+		-label => 'The checkbox does work',
+		-checked => 0,
+	);
+
+	$c->{-focus} = 1;
+	$c->draw;
+	error "Curses::UI::CheckBox: test 1 failed"
+		if $c->get();
+	pause();
+
+	$c->toggle;
+	$c->draw;
+	error "Curses::UI::CheckBox: test 2 failed"
+		unless $c->get();
+	pause();
+
+	$win->delete('checkbox');
+	$cui->draw;
+}
+
+# ----------------------------------------------------------------------
+# Test listbox
+# ----------------------------------------------------------------------
+
+my $values = [ 1,2,3,4,5,6,7,8,9,10 ];
+my $labels = { 1 => 'One',   2 => 'Two',   3 => 'Three',
+	       4 => 'Four',  5 => 'Five',  6 => 'Six',
+	       7 => 'Seven', 8 => 'Eight', 9 => 'Nine',
+	       10 => 'Ten' };	
+
+sub test_listbox()
+{
+	my $l = $win->add(
+		'listbox', 'ListBox',
+		-y => 1, -x => 1,
+		-border => 1,
+		-width  => 10, 
+		-height => 8,
+		-vscrollbar => 1,
+		-values => $values, 
+		-labels => $labels, 
+	);
+
+	$l->{-focus} = 1;
+	$l->draw;
+	
+	error "Curses::UI::ListBox: test 1 failed"
+		if defined $l->get();
+	
+	for (1..12) {
+		$l->option_next;
+		$l->layout_content;
+		$l->draw;
+		pause;
+	}
+	$l->option_select;
+	
+	error "Curses::UI::ListBox: test 2 failed"
+		unless $l->get() == 10;
+	
+        for (1..3) {
+		$l->option_prev;
+		$l->layout_content;
+		$l->draw;
+		pause;
+	}
+	$l->option_select;
+	
+	error "Curses::UI::ListBox: test 3 failed"
+		unless $l->get() == 7;
+	
+	$win->delete('listbox');
+	$cui->draw;
+}
+
+# ----------------------------------------------------------------------
+# Test popupbox
+# ----------------------------------------------------------------------
+
+sub test_popupbox()
+{
+	my $l = $win->add(
+		'popupbox', 'PopupBox',
+		-y => 1, -x => 1,
+		-width  => 10, 
+		-values => $values, 
+		-labels => $labels, 
+	);
+	my $p = $l->{-listboxobject}; # popupbox
+
+	$l->{-focus} = 1;
+	$l->draw;
+	pause();
+	$p->{-focus} = 1;
+	$p->draw;
+	pause();
+	
+	for (1..10) {
+		$p->option_next;
+		$p->layout_content;
+		$p->draw;
+		pause;
+	}
+        for (1..3) {
+		$p->option_prev;
+		$p->layout_content;
+		$p->draw;
+		pause;
+	}
+	$p->option_select;
+	$cui->rebuild();
+
+	$l->select_prev;
+	$l->draw;
+	pause;
+	$l->select_prev;
+	$l->draw;
+	pause;
+	
+	error "Curses::UI::PopupBox: test 1 failed"
+		unless $l->get() == 5;
+
+	$win->delete('popupbox');
+	$cui->draw;
+}
+
+# ----------------------------------------------------------------------
+# Test progressbar
+# ----------------------------------------------------------------------
+
+sub test_progressbar()
+{
+	my $b = $win->add(
+		'progressbar', 'ProgressBar', 
+		-y => 1, -x => 1,
+		-min => -1,
+		-max => 9,
+		-pos => -1,
+		-width => 20,
+	);
+
+	$b->{-focus} = 1;
+	$b->draw;
+	pause();
+
+	for (0..7) {
+		$b->pos($b->get + 1);
+		$b->draw;
+		pause;
+	}
+	for (0..3) {
+		$b->pos($b->get - 1);
+		$b->draw;
+		pause;
+	}
+	for (0..6) {
+		$b->pos($b->get + 1);
+		$b->draw;
+		pause;
+	}
+	
+	error "Curses::UI::Progressbar: test 1 failed"
+		unless $b->get() == 9;
+
+	$win->delete('progressbar');
+	$cui->draw;
+}
+
+# ----------------------------------------------------------------------
+# Test texteditor
+# ----------------------------------------------------------------------
+
+my $text = "Curses::UI is a UI framework based on the curses "
+         . "library.\nCurses::UI contains several widgets which "
+         . "can be used to build a user interface.";
+
+sub test_texteditor()
+{
+	my $b = $win->add(
+		'texteditor', 'TextEditor', 
+		-y => 1, -x => 1,
+		-title => 'Texteditor test',
+		-width => 20,
+		-height => 10,
+		-wrapping => 1,
+		-border => 1,
+		-vscrollbar => 1,	
+	);
+
+	$b->{-focus} = 1;
+	$b->draw;
+
+	my @l = split //, $text . "\n\n" . $text;
+	foreach (@l) {
+		$b->add_string($_);
+		$b->draw;
+	}
+	pause();
+	
+	$b->{-pos} = 0;
+	$b->draw;
+	
+	$b->delete_line();
+	$b->draw;
+	pause();
+	$b->delete_line();
+	$b->draw;
+	pause();
+	$b->delete_line();
+	$b->draw;
+	pause();
+
+	error "Curses::UI::TextEditor: test 1 failed"
+		unless $b->get() eq $text;
+
+	$win->delete('texteditor');
+	$cui->draw;
+}
+
+# ----------------------------------------------------------------------
+# Run tests
+# ----------------------------------------------------------------------
+
+test_label();
+test_buttons();
+test_checkbox();
+test_listbox();
+test_popupbox();
+test_progressbar();
+test_texteditor();
 endwin();
 
-my $exit = 0;
-close STDERR;
-if (-s "/tmp/stderr.$$")
-{
-	if (open E, "/tmp/stderr.$$") {
-		while (<E>){
-			chomp;
-			print $_ . "\n";
-		}
-		print "\n";
-		close E;
-		$exit = 1;
-	}	
-}
-unlink "/tmp/stderr.$$";
 
-print "\n";
-exit($exit);

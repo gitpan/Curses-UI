@@ -465,7 +465,6 @@ sub getline_at_ypos($;) { shift()->getlabel(shift()) }
 
 1;
 
-__END__
 
 =pod
 
@@ -576,12 +575,12 @@ labels to show in the listbox. It's not obligatory to have
 a label defined for each value. You may even omit -labels 
 completely.
 
-=item * B<-selected> < VALUE >
+=item * B<-selected> < INDEX >
 
-In case the B<-multi> option is not set, VALUE is the index
+In case the B<-multi> option is not set, INDEX is the index
 of the value that should be selected.
 
-In case the B<-multi> option is set, VALUE is a hash reference
+In case the B<-multi> option is set, INDEX is a hash reference
 in which the keys are the indices of the B<-values> which are 
 selected and the values are any true value.
 
@@ -614,7 +613,7 @@ selected and "goto previous value" is pressed.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -716,7 +715,7 @@ opposite direction.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Widget|Curses::UI::Widget>, 
-L<Curses::UI::Common|Curses::UI:Common>
+L<Curses::UI::Common|Curses::UI::Common>
 
 
 
@@ -728,6 +727,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 

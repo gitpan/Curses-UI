@@ -759,7 +759,6 @@ sub generic_focus($$;)
 
 1;
 
-__END__
 
 =pod
 
@@ -858,23 +857,23 @@ is false. The default is not to use a square bracket border.
 
 =over 4
 
-=item * B<-x> < SCALAR >             
+=item * B<-x> < VALUE >             
 
 The x-position of the widget, relative to the parent. The default
 is 0.
 
-=item * B<-y> < SCALAR >
+=item * B<-y> < VALUE >
 
 The y-position of the widget, relative to the parent. The default
 is 0.
 
-=item * B<-width> < SCALAR >
+=item * B<-width> < VALUE >
 
 The width of the widget. If the width is undefined or -1,
 the maximum available width will be used. By default the widget
 will use the maximum available width.
 
-=item * B<-height> < SCALAR >
+=item * B<-height> < VALUE >
 
 The height of the widget. If the height is undefined or -1,
 the maximum available height will be used. By default the widget
@@ -888,30 +887,30 @@ will use the maximum available height.
  
 =over 4
 
-=item * B<-pad> < SCALAR >
+=item * B<-pad> < VALUE >
 
-=item * B<-padtop> < SCALAR >
+=item * B<-padtop> < VALUE >
 
-=item * B<-padbottom> < SCALAR >
+=item * B<-padbottom> < VALUE >
 
-=item * B<-padleft> < SCALAR >
+=item * B<-padleft> < VALUE >
 
-=item * B<-padright> < SCALAR >
+=item * B<-padright> < VALUE >
 
 With -pad you can specify the default padding outside the widget
 (the default value for -pad is 0). Using one of the -pad... options
 that have a direction in them, you can override the default
 padding.
  
-=item * B<-ipad> < SCALAR >
+=item * B<-ipad> < VALUE >
 
-=item * B<-ipadtop> < SCALAR >
+=item * B<-ipadtop> < VALUE >
 
-=item * B<-ipadbottom> < SCALAR >
+=item * B<-ipadbottom> < VALUE >
 
-=item * B<-ipadleft> < SCALAR >
+=item * B<-ipadleft> < VALUE >
 
-=item * B<-ipadright> < SCALAR >
+=item * B<-ipadright> < VALUE >
 
 These are almost the same as the -pad... options, except these options
 specify the padding _inside_ the widget. Normally the available 
@@ -931,9 +930,9 @@ be available if -border is true.
 
 =over 4
  
-=item * B<-title> < SCALAR >
+=item * B<-title> < TEXT >
 
-Set the title of the widget to SCALAR. If the text is longer then the 
+Set the title of the widget to TEXT. If the text is longer then the 
 available width, it will be clipped.
 
 =item * B<-titlereverse> < BOOLEAN >
@@ -964,9 +963,9 @@ away with this naming convention.
  
 =over 4
 
-=item * B<-vscrollbar> < SCALAR >
+=item * B<-vscrollbar> < VALUE >
 
-SCALAR can be 'left', 'right', another true value or false.
+VALUE can be 'left', 'right', another true value or false.
 
 If -vscrollbar has a true value, a vertical scrollbar will
 be drawn by the widget. If this true value happens to be "left",
@@ -980,9 +979,9 @@ and -vscrollpos (the current position in the document) should
 be set. If Curses::UI::Widget::draw is called, the scrollbar
 will be drawn.
 
-=item * B<-hscrollbar> < SCALAR >
+=item * B<-hscrollbar> < VALUE >
 
-SCALAR can be 'top', 'bottom', another true value or false.
+VALUE can be 'top', 'bottom', another true value or false.
 
 If -hscrollbar has a true value, a horizontal scrollbar will
 be drawn by the widget. If this true value happens to be "top",
@@ -1005,7 +1004,7 @@ the scrollbar will be drawn.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 Create a new Curses::UI::Widget instance using the options in HASH.
 
@@ -1027,10 +1026,10 @@ Give focus to the widget. In Curses::UI::Widget, this method
 immediately returns, so the widget will not get focused. 
 A derived class that needs focus, must override this method.
 
-=item * B<title> ( SCALAR )
+=item * B<title> ( TEXT )
 
 Change the title that is shown in the border of the widget
-to SCALAR.
+to TEXT.
 
 =item * B<width> ( )
 
@@ -1057,14 +1056,14 @@ draw() method of a widget may draw the contents of the widget
 (BTW: the curses window that is associated to this drawing
 area is $this->{-windowscr}).
 
-=item * B<width_by_windowscrwidth> ( NEEDWIDTH, HASH )
+=item * B<width_by_windowscrwidth> ( NEEDWIDTH, OPTIONS )
 
-=item * B<height_by_windowscrheight> ( NEEDHEIGHT, HASH )
+=item * B<height_by_windowscrheight> ( NEEDHEIGHT, OPTIONS )
 
 These methods are exported by this module. These can be used
 in child classes to easily compute the total width/height the widget
 needs in relation to the needed width/height of the effective drawing
-area ($this->{-windowscr}). The HASH contains the arguments that
+area ($this->{-windowscr}). The OPTIONS contains the options that
 will be used to create the widget. So if we want a widget that
 has a drawing area height of 1 and that has a border, the -height
 option can be computed using something like:
@@ -1153,9 +1152,9 @@ sees a scalar value, it will return this value. If it sees a
 coderef, it will execute the code and return the returnvalue of
 this code. 
 
-=item * B<set_binding> ( ROUTINE, LIST )
+=item * B<set_binding> ( ROUTINE, KEYLIST )
 
-Bind the keys in the list LIST to the ROUTINE. If you use an
+Bind the keys in the list KEYLIST to the ROUTINE. If you use an
 empty string for a key, then this routine will become the default
 routine (in case no other keybinding could be found). This 
 is for example used in the TextEditor widget.

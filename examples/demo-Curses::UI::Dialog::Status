@@ -1,0 +1,21 @@
+#!/usr/bin/perl -w use strict;
+
+# Deny STDERR
+open STDERR, ">/dev/null";
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI ( -clear_on_exit => 1 );
+
+$cui->status( "This is a status window" );
+sleep 2;
+$cui->nostatus();
+sleep 1;
+$cui->status( "As you can see it simply displays a status" );
+sleep 2;
+$cui->nostatus();
+sleep 1;
+$cui->status( "So long, and thanks for all the fish!" );
+sleep 2;
+

@@ -20,7 +20,7 @@ use Curses::UI::Container;
 use Term::ReadKey;
 
 use vars qw($VERSION @ISA);
-$VERSION = "0.60";
+$VERSION = "0.61";
 @ISA = qw(Curses::UI::Container);
 
 $Curses::UI::resizing = 0; 
@@ -61,7 +61,8 @@ sub new()
 {
 	my $class = shift;
 	my %args = (
-		-compat    => 0,
+		-compat        => 0,
+		-clear_on_exit => 0,
 		@_,
 	);
 	my $this = bless { %args }, $class;
@@ -343,17 +344,20 @@ sub noprogress()
 
 DESTROY 
 { 
+	my $this = shift;
 	endwin();
 		
-	my $save_path = $ENV{PATH};
-	$ENV{PATH} = "/bin:/usr/bin";
-	system "clear";
-	$ENV{PATH} = $save_path;
+	if ($this->{-clear_on_exit})
+	{
+		my $save_path = $ENV{PATH};
+		$ENV{PATH} = "/bin:/usr/bin";
+		system "clear";
+		$ENV{PATH} = $save_path;
+	}
 }
 
 1;
 
-__END__
 
 =pod
 
@@ -427,6 +431,14 @@ Support classes
 If the B<-compat> option is set to a true value, the Curses::UI
 program will run in compatibility mode. This means that only
 very simple characters will be used for creating the widgets.
+By default this option is set to false.
+
+=item B<-clear_on_exit> < BOOLEAN >
+
+If the B<-clear_on_exit> option is set to a true value,
+a Curses::UI program will call the "clear" program on exit
+(through the DESTROY method of Curses::UI). By default
+this option is set to false.
 
 =back
 
@@ -814,10 +826,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
-
-
-
-
 

@@ -128,12 +128,18 @@ sub cursor_right()
 		my $y = $this->{-y} + $this->{-ypos};
 
 		# Create the submenu.
-		my ($return, $key) = $this->root->add(
-			"_submenu_$this", 'MenuListBox',
+		my $id = "_submenu_$this";
+		$this->root->add(
+			$id, 'MenuListBox',
 			-x      => $x,
 			-y      => $y,
 			-menu   => $this->{-menu}->[$this->{-ypos}]->{-submenu},
-		)->draw->focus;
+		);
+
+		# The new created submenu might not fit.
+		$this->root->check_for_too_small_screen();
+		
+		my ($return, $key) = $this->root->getobj($id)->focus;
 
 		$this->root->delete("_submenu_$this");
 		$this->root->rebuild;
@@ -179,7 +185,6 @@ sub option_select()
 
 1;
 
-__END__
 
 =pod
 
@@ -300,7 +305,7 @@ Example data structure:
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -419,6 +424,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 

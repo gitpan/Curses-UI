@@ -108,9 +108,10 @@ sub layout()
 
 	# Create the label on the widget.
 	my $label = new Curses::UI::Label(
-		-parent   => $this,
-		-x        => 0,
-		-y        => 0,
+		-parent        => $this,
+		-paddingspaces => 1,
+		-x             => 0,
+		-y             => 0,
 	);
 	$this->{-labelobject} = $label;
 
@@ -248,7 +249,6 @@ sub set_routine()
 
 1;
 
-__END__
 
 =pod
 
@@ -324,7 +324,7 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 
 =item * B<-labels> < HASHREF >
 
-=item * B<-selected> < VALUE >
+=item * B<-selected> < INDEX >
 
 =item * B<-wraparound> < BOOLEAN >
 
@@ -341,7 +341,7 @@ take a look at L<Curses::UI::ListBox|Curses::UI::ListBox>.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -415,7 +415,7 @@ routine will have the popup listbox to close. If the routine
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::ListBox|Curses::UI:ListBox>
 L<Curses::UI::Widget|Curses::UI::Widget>, 
-L<Curses::UI::Common|Curses::UI:Common>
+L<Curses::UI::Common|Curses::UI::Common>
 
 
 
@@ -427,7 +427,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
-
 

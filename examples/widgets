@@ -23,7 +23,7 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 
 use Curses::UI;
-my $cui = new Curses::UI;
+my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
 my $page1 = $cui->add(
 	'page1', 'Window',
@@ -332,20 +332,13 @@ FOCUS_CHANGE: for (;;)
 			-path => "/tmp",
 			-file => "example.txt",
 			-editfilename => 1,
-			-mask_values => [
-				'.',
-				'\.txt$',
-				'\.doc$',
-				'\.gif$',
-				'\.jpe?g$',
+			-mask => [
+				['.'        => 'All files (*)'],
+				['\.txt$'   => 'Text files (*.txt)'],
+				['\.doc$'   => 'MS Word files (*.doc)'],
+				['\.gif$'   => 'GIF images (*.gif)'],
+				['\.jpe?g$' => 'JPEG images (*.jpg/*.jpeg)'],
 			],
-			-mask_labels => {
-				'.'     => 'All files (*)',
-				'\.txt$' => 'Text files (*.txt)',
-				'\.doc$' => 'MS Word files (*.doc)',
-				'\.gif$' => 'GIF images (*.gif)',
-				'\.jpe?g$' => 'JPEG images (*.jpg/*.jpeg)',
-			},
 			-mask_selected => 1,
 		);
 

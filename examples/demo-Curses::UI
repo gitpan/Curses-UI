@@ -8,7 +8,7 @@ use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
 
-my $cui = new Curses::UI;
+my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
 my $win1 = $cui->add(
         'win1', 'Window',

@@ -4,7 +4,7 @@ use strict;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
-my $cui = new Curses::UI;
+my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
 my $win = $cui->add('window_id', 'Window');
 

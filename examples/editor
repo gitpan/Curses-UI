@@ -65,7 +65,7 @@ my @menu = (
 
 # Create the root. Everything else will be built up from here.
 use Curses::UI;
-my $cui = new Curses::UI;
+my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
 # Add the menu to the root.
 my $menu = $cui->add(

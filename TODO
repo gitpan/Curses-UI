@@ -21,5 +21,3 @@ TODO list for Curses::UI:
   
 - Replace the current -callback system with some kind of timer 
   system.
-
-- Write docs for the Dialog widgets.

@@ -555,12 +555,16 @@ sub focus()
 		$key = defined $do_key 
 		     ? $do_key
 		     : $this->get_key(
-			5, NO_CONTROLKEYS, 
+			2, NO_CONTROLKEYS, 
 			($this->{-readonly} ? CURSOR_INVISIBLE : CURSOR_VISIBLE)
 		       );
 		undef $do_key;
 
 		$this->process_callback;
+
+                # Check if the screen resized.
+                $this->root->check_for_resize;
+		
 		next if $key eq "-1"; 
 		
 		# Reset the field that tracks if undoinfo has already
@@ -1197,8 +1201,6 @@ sub getline_at_ypos($;) { shift()->{-scr_lines}->[shift()] }
 
 1;
 
-__END__
-
 
 =pod
 
@@ -1272,14 +1274,14 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 
 =over 4
 
-=item * B<-text> < SCALAR>
+=item * B<-text> < TEXT >
 
-This sets the initial text for the widget to SCALAR.
+This sets the initial text for the widget to TEXT.
 
-=item * B<-pos> < SCALAR >
+=item * B<-pos> < CURSOR_POSITION >
 
 This sets the initial cursor position for the widget
-to SCALAR. BB<-pos> represents the character index within
+to CURSOR_POSITION. B<-pos> represents the character index within
 B<-text>. By default this option is set to 0.
 
 =item * B<-readonly> < BOOLEAN >
@@ -1305,16 +1307,16 @@ If BOOLEAN is set to a true value, each editable line
 in the editor will show a line to type on. By default
 BOOLEAN is set to false.
 
-=item * B<-maxlength> < SCALAR >
+=item * B<-maxlength> < VALUE >
 
-This sets the maximum allowed length of the text to SCALAR.
-By default SCALAR is set to 0, which means that the text
-may be infinitely long.
+This sets the maximum allowed length of the text to 
+VALUE. By default VALUE is set to 0, 
+which means that the text may be infinitely long.
 
-=item * B<-maxlines> < SCALAR >
+=item * B<-maxlines> < VALUE >
 
 This sets the maximum allowed number of lines for the text 
-to SCALAR. By default SCALAR is set to 0, which means that 
+to SCALAR. By default VALUE is set to 0, which means that 
 the text may contain an infinite number of lines.
 
 =item * B<-password> < CHARACTER >
@@ -1326,12 +1328,6 @@ can be done by setting:
 
     -password => '*'
 
-=item * B<-maxlength> < SCALAR >
-
-This sets the maximum allowed length of the text to SCALAR.
-By default SCALAR is set to 0, which means that the text
-may be infinitely long.
-
 =item * B<-regexp> < REGEXP >
 
 If characters are added to the texteditor, the new text
@@ -1341,7 +1337,7 @@ force digit-only input on the texteditor:
 
     -regexp => '/^\d*$/'
 
-=item * B<-undolevels> < SCALAR >
+=item * B<-undolevels> < VALUE >
 
 This option determines how many undolevels should be kept
 in memory for the texteditor widget. By default 10 levels
@@ -1384,7 +1380,7 @@ to lowercase. By default BOOLEAN is false.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -1395,11 +1391,11 @@ to lowercase. By default BOOLEAN is false.
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
 for an explanation of these.
 
-=item * B<text> ( [SCALAR] )
+=item * B<text> ( [TEXT] )
 
-If SCALAR is defined, this will set the text of the widget to SCALAR.
+If SCALAR is defined, this will set the text of the widget to TEXT.
 To see the change, the widget needs to be redrawn by the B<draw> method.
-If SCALAR is not defined, this method will return the current contents
+If TEXT is not defined, this method will return the current contents
 of the texteditor.
 
 =item * B<get> ( )
@@ -1430,22 +1426,22 @@ this widget can be used.
 Call the 'return' routine. This will have the widget 
 loose its focus.
 
-=item * <B<cursor-left>, <B<CTRL+B>>
+=item * <B<cursor-left>>, <B<CTRL+B>>
 
 Call the 'cursor-left' routine: move the
 cursor one position to the left.
 
-=item * <B<cursor-right>, <B<CTRL+F>>
+=item * <B<cursor-right>>, <B<CTRL+F>>
 
 Call the 'cursor-right' routine: move the
 cursor one position to the right.
 
-=item * <B<cursor-down>, <B<CTRL+N>>
+=item * <B<cursor-down>>, <B<CTRL+N>>
 
 Call the 'cursor-down' routine: move the
 cursor one line down.
 
-=item * <B<cursor-up>, <B<CTRL+P>>
+=item * <B<cursor-up>>, <B<CTRL+P>>
 
 Call the 'cursor-up' routine: move the
 cursor one line up.
@@ -1612,7 +1608,7 @@ L<Curses::UI|Curses::UI>,
 L<Curses::UI::TextViewer|Curses::UI:TextViewer>
 L<Curses::UI::TextEntry|Curses::UI:TextEntry>
 L<Curses::UI::Widget|Curses::UI::Widget>, 
-L<Curses::UI::Common|Curses::UI:Common>
+L<Curses::UI::Common|Curses::UI::Common>
 
 
 
@@ -1624,6 +1620,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 

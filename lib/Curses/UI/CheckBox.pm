@@ -19,7 +19,7 @@ use Curses::UI::Widget;
 
 use vars qw($VERSION @ISA);
 $VERSION = '1.00';
-@ISA = qw(Curses::UI::Widget Curses::UI::Common);
+@ISA = qw(Curses::UI::Container Curses::UI::Common);
 
 my %routines = (
         'return'   	=> 'RETURN',
@@ -67,6 +67,15 @@ sub new ()
 		unless defined $args{-width};
 	
 	my $this = $class->SUPER::new( %args );
+	
+	# Create the label on the widget.
+	$this->add(
+		'label', 'Label',
+		-text     => $this->{-label},
+		-x        => 4,
+		-y        => 0
+	);
+
 	$this->layout;
 
 	return bless $this, $class;
@@ -75,20 +84,8 @@ sub new ()
 sub layout()
 {
 	my $this = shift;
-
-	$this->delallwin;
-	$this->SUPER::layout;
 	return $this if $Curses::UI::screen_too_small;
-
-	# Create the label on the widget.
-	my $label = new Curses::UI::Label(
-		-parent   => $this,
-		-text     => $this->{-label},
-		-x        => 4,
-		-y        => 0
-	);
-	$this->{-labelobject} = $label;
-
+	$this->SUPER::layout;
 	return $this;
 }
 
@@ -103,9 +100,6 @@ sub draw(;$)
 	# Draw the widget.
 	$this->SUPER::draw(1);
 
-	# Draw the label
-	$this->{-labelobject}->draw(1);
-	
 	# Draw the checkbox.
 	$this->{-windowscr}->attron(A_BOLD) if $this->{-focus};	
 	$this->{-windowscr}->addstr(0, 0, '[ ]');
@@ -157,8 +151,6 @@ sub get()
 }
 
 1;
-
-__END__
 
 
 =pod
@@ -217,10 +209,10 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 
 =over 4
 
-=item * B<-label> < VALUE >
+=item * B<-label> < TEXT >
 
 This will set the text label for the checkbox widget 
-to VALUE.
+to TEXT.
 
 =item * B<-checked> < BOOLEAN >
 
@@ -237,7 +229,7 @@ set to false, so the checkbox is not checked.
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -303,7 +295,7 @@ Call the 'check' routine (see the B<check> method).
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Widget|Curses::UI::Widget>, 
-L<Curses::UI::Common|Curses::UI:Common>
+L<Curses::UI::Common|Curses::UI::Common>
 
 
 
@@ -315,10 +307,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
-
-
-
-
 

@@ -164,13 +164,21 @@ sub pulldown()
 	}
 
 	my $id = "_submenu_$this";
-	my ($return,$key) = $this->root->add(
+	$this->root->add(
 		$id, 'MenuListBox',
 		-x		=> $x,
 		-y		=> 1,
 		-is_topmenu	=> 1,
                 -menu           => $this->{-menu}->[$this->{-selected}]->{-submenu},
-	)->draw->focus;
+	);
+
+	# The new created window might not fit.
+	$this->root->check_for_too_small_screen();
+
+	# Focus the new window.
+	my ($return,$key) = $this->root->getobj($id)->focus;
+
+	# Delete it after it returns.
 	$this->root->delete($id);
 	$this->root->rebuild;
 
@@ -218,8 +226,6 @@ sub cursor_right()
 
 1;
 
-
-__END__
 
 =pod
 
@@ -319,7 +325,7 @@ will only use -submenu's. Example data structure:
 
 =over 4
 
-=item * B<new> ( HASH )
+=item * B<new> ( OPTIONS )
 
 =item * B<layout> ( )
 
@@ -426,6 +432,4 @@ Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
-
-=end
 
