@@ -1,5 +1,12 @@
 # ----------------------------------------------------------------------
-# Curses::UI::MenuBar package
+# Curses::UI::MenuBar
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
 package Curses::UI::MenuBar;
@@ -42,13 +49,10 @@ sub new ()
 {
 	my $class = shift;
 
-	my %myroutines = %routines;
-	my %mybindings = %bindings;
-
 	my %args = (
 		-parent		 => undef,	# the parent window
-		-bindings	 => \%mybindings,
-		-routines	 => \%myroutines,
+		-bindings	 => {%bindings},
+		-routines	 => {%routines},
 		-menu		 => [],
 		@_,
 		-width		 => undef,

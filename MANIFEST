@@ -1,10 +1,10 @@
-BUGS
 TODO
 README
 INSTALL
 MANIFEST
 Makefile.PL
 test.pl
+Changes
 examples/cascaded_menu
 examples/editor
 examples/widgets
@@ -15,7 +15,7 @@ lib/Curses/UI/Container.pm
 lib/Curses/UI/Dialog.pm
 lib/Curses/UI/ErrorDialog.pm
 lib/Curses/UI/FileBrowser.pm
-lib/Curses/UI/Frame.pm
+lib/Curses/UI/Widget.pm
 lib/Curses/UI/Label.pm
 lib/Curses/UI/ListBox.pm
 lib/Curses/UI/MenuBar.pm

@@ -1,4 +1,16 @@
 #!/usr/bin/perl -w
+
+# ----------------------------------------------------------------------
+# Script: cascaded_menu
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 use strict;
 use Curses;
 
@@ -7,7 +19,6 @@ $ENV{PATH} = "/bin:/usr/bin";
 
 # Deny STDERR output.
 open STDERR, ">/dev/null";
-open STDERR, ">>/tmp/err";
 
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
@@ -15,18 +26,37 @@ use lib "$FindBin::RealBin/../lib";
 use Curses::UI::RootWindow;
 my $root = new Curses::UI::RootWindow;
 
+# ----------------------------------------------------------------------
+# Menu definition.
+# ----------------------------------------------------------------------
+
 my @file_menu = (
-    {
-	-label => 'Open file',
-	-callback => \&menu_openfile,
-    },{
-	-label => 'Save file',
-	-callback => \&menu_savefile,
-    },{
-	-label => 'Exit',
-	-callback => \&exit_dialog,
-    }
+    {-label => 'Open file', -callback => \&menu_openfile,},
+    {-label => 'Save file', -callback => \&menu_savefile,},
+    {-label => 'Exit',      -callback => \&exit_dialog}
 );
+
+my @submenu2 = (
+    {-label => 'Option 1', -return => "SUBMENU_2_OPTION_1"},
+    {-label => 'Option 2', -submenu => \@file_menu},
+    {-label => 'Option 3', -return => "SUBMENU_2_OPTION_3"}
+);
+
+my @help_menu = (
+    {-label => 'About',	-callback => sub { print STDERR "Help -> About selected\n" }},
+    {-label => 'Submenu 1', -submenu => \@file_menu},
+    {-label => 'Submenu 2', -submenu => \@submenu2}
+);
+
+my @menu = (
+    {-label => 'File', -submenu => \@file_menu},
+    {-label => 'Edit', -submenu => \@file_menu},
+    {-label => 'Help', -submenu => \@help_menu}
+);
+
+# ----------------------------------------------------------------------
+# Callback routines
+# ----------------------------------------------------------------------
 
 sub menu_openfile()
 {
@@ -65,44 +95,9 @@ sub exit_dialog()
 	}
 }
 
-my @submenu2 = (
-    {
-	-label => 'Option 1',
-	-return => "SUBMENU_2_OPTION_1",
-    },{
-	-label => 'Option 2',
-	-submenu => \@file_menu,
-    },{
-	-label => 'Option 3',
-	-return => "SUBMENU_2_OPTION_3",
-    }
-);
-
-my @help_menu = (
-    {
-	-label => 'About',
-	-callback => sub { print STDERR "Help -> About selected\n" },
-    },{
-	-label => 'Submenu 1',
-	-submenu => \@file_menu,
-    },{
-	-label => 'Submenu 2',
-	-submenu => \@submenu2,
-    }
-);
-
-my @menu = (
-    {
-	-label => 'File',
-	-submenu => \@file_menu,
-    },{
-	-label => 'Edit',
-	-submenu => \@file_menu,
-    },{
-	-label => 'Help',
-	-submenu => \@help_menu,
-    }
-);
+# ----------------------------------------------------------------------
+# Create widgets
+# ----------------------------------------------------------------------
 
 $root->add('menu','Curses::UI::MenuBar', 
 	-menu => \@menu,
@@ -124,10 +119,12 @@ $page1->add('checkbox2', 'Curses::UI::CheckBox',
 	-label => 'Another checkbox',
 );
 
-$root->returnkeys("\cN", KEY_F(10));
 $page1->returnkeys("\cX", KEY_F(10));
 
-$root->ontop('page1');
+# ----------------------------------------------------------------------
+# The main loop
+# ----------------------------------------------------------------------
+
 $root->draw;
 
 for (;;)
@@ -135,9 +132,3 @@ for (;;)
 	$root->getobj('page1')->focus;
 	$root->getobj('menu')->focus;
 }
-
-
-
-
-
-

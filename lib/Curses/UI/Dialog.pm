@@ -1,3 +1,14 @@
+# ----------------------------------------------------------------------
+# Curses::UI::Dialog
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::Dialog;
 
 use strict;
@@ -6,7 +17,7 @@ use Curses;
 use Curses::UI::Common;
 use Curses::UI::Window;
 use Curses::UI::Buttons; # for compute_buttonwidth()
-use Curses::UI::Frame;   # for process_padding()
+use Curses::UI::Widget;  # for process_padding()
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Window Curses::UI::Common);
@@ -98,7 +109,7 @@ sub layout()
 #		confess "Not enough room for the $this object";
 	}
 
-	# Compute the size of the widget frame.
+	# Compute the size of the widget.
 
 	my $w = $longest_line;
 	$w += 2; # border of textviewer

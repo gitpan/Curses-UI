@@ -1,3 +1,14 @@
+# ----------------------------------------------------------------------
+# Curses::UI::FileBrowser
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::FileBrowser;
 
 use strict;
@@ -15,8 +26,9 @@ sub new ()
 	my $class = shift;
 	my %args = ( 
 		-title 		=> 'Select file',
-		-path		=> '/',	
+		-path		=> undef,	
 		-file		=> '', 
+		-show_hidden    => 0,
 		-mask_values 	=> undef,
 		-mask_labels 	=> undef,
 		-mask_selected 	=> 0,
@@ -30,6 +42,10 @@ sub new ()
 
 	my $this = $class->SUPER::new(%args);
 	$this->layout();
+
+	# Start at home? Goto the homedirectory of the current user
+	# if the -path is not defined.
+	$this->goto_homedirectory unless defined $this->{-path};
 
 	my $buttons = $this->add('buttons', 'Curses::UI::Buttons',
 		-y 		 => -1,
@@ -52,6 +68,8 @@ sub new ()
 		-labels		 => { '..' => '.. (One directory up)' } 
 	);	
 	$dirbrowser->set_routine('option-select',\&dirselect);
+	$dirbrowser->set_routine('goto-homedirectory',\&select_homedirectory);
+	$dirbrowser->set_binding('goto-homedirectory', '~');
 	
 	my $filebrowser = $this->add('filebrowser', 'Curses::UI::ListBox',
 		-y 		 => 0,
@@ -62,6 +80,8 @@ sub new ()
 		-values 	 => ["info.txt","passwd"],
 	);	
 	$filebrowser->set_routine('option-select', \&fileselect);
+	$filebrowser->set_routine('goto-homedirectory',\&select_homedirectory);
+	$filebrowser->set_binding('goto-homedirectory', '~');
 
 	my $labeloffset = 1;
 	my $textoffset = 7;
@@ -189,11 +209,12 @@ sub get_dir()
 	{
 		my $error = "Can't open the directory\n"
 		          . "$path\nError: $!";
-		return $this->root->error(-message => $error);
+		return $this->root->error($error);
 	}
 	foreach my $f (sort readdir D)
 	{
-		next if $f =~ /^.$|^..$/;
+		next if $f =~ /^\.$|^\.\.$/;
+		next if $f =~ /^\./ and not $this->{-show_hidden};
 		push @dirs,  $f if -d "$path/$f";
 		if (-f "$path/$f")
 		{
@@ -218,20 +239,54 @@ sub get_dir()
 	return $this;
 }
 
+# Set $this->{-path} to the homedirectory of the current user.
+sub goto_homedirectory()
+{
+	my $this = shift;
+
+	my @pw = getpwuid($>);	
+	if (@pw) {
+	    if (-d $pw[7]) {
+		$this->{-path} = $pw[7];
+	    } else {
+		$this->{-path} = '/';
+		return $this->root->error("Homedirectory $pw[7] not found");
+	    }
+	} else {
+	    $this->{-path} = '/';
+	    return $this->root->error("Can't find a passwd entry for uid $>");
+	}
+
+	return $this;
+}
+
+sub select_homedirectory()
+{
+	my $b = shift; # dir-/filebrowser
+	my $this = $b->parent;
+	my $pv = $this->getobj('pathvalue');
+
+	$this->goto_homedirectory or return $b;
+	$pv->text($this->{-path});
+	$this->get_dir;
+
+	return $b;
+}
+
 sub dirselect()
 {
 	my $db = shift; # dirbrowser
 	my $this = $db->parent;
 	my $fv = $this->getobj('filevalue');
-	my $dv = $this->getobj('pathvalue');
+	my $pv = $this->getobj('pathvalue');
 
 	my $add = $db->{-values}->[$db->{-ypos}];
-	my $savepath = $dv->text;
+	my $savepath = $pv->text;
 	$this->{-selected_cache}->{$savepath} = $db->{-ypos};
-	$dv->text("/$savepath/$add");
+	$pv->text("/$savepath/$add");
 	$fv->text('');
 	unless ($this->get_dir) {
-		$dv->text($savepath);
+		$pv->text($savepath);
 	}
 
 	return $db;
@@ -337,7 +392,7 @@ sub return()
 	my $ok_pressed = $this->getobj('buttons')->get;
 	if ($ok_pressed and $file =~ m|/$|)
 	{
-		$this->root->error(-message => "You have not yet selected a file!");
+		$this->root->error("You have not yet selected a file!");
 		return 'STAY_AT_FOCUSPOSITION';
 	} else {
 		return 'LEAVE_CONTAINER';

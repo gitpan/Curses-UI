@@ -1,12 +1,23 @@
+# ----------------------------------------------------------------------
+# Curses::UI::Container
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::Container;
 
 use Curses;
 use Carp qw(confess);
-use Curses::UI::Frame;
+use Curses::UI::Widget;
 use Curses::UI::Common;
 
 use vars qw(@ISA $VERSION);
-@ISA = qw(Curses::UI::Frame Curses::UI::Common);
+@ISA = qw(Curses::UI::Widget Curses::UI::Common);
 $VERSION = "1.0.0";
 
 # ----------------------------------------------------------------------
@@ -114,7 +125,7 @@ sub draw(;$)
         # Return immediately if this object is hidden.
         return $this if $this->hidden;
 	
-	# Draw the Frame.
+	# Draw the Widget.
 	$this->SUPER::draw(1);
 
 	# Draw all contained object.

@@ -1,11 +1,19 @@
-Curses::UI::*
+Distribution  : Curses::UI
+Author        : Maurice Makaay
+E-mailaddress : maurice@gitaar.net
+Licence       : Curses::UI is distributed under the same license 
+                as perl itself
 
-A UI framework based on the curses library. Curses::UI::* contains
+
+What is Curses::UI?
+===================
+
+A UI framework based on the curses library. Curses::UI contains
 several widgets which can be used to build a user interface:
 
-- Frame (base element)
-- Container (base element)
-- RootWindow 
+- Widget (widget base element)
+- Container (form base element)
+- RootWindow (the base window from which all windows are built)
 - Window
 - Label
 - Listbox 
@@ -22,9 +30,11 @@ several widgets which can be used to build a user interface:
 - Textviewer
 - Textentry
 
-Some random features:
 
-- Only basic curses library calls are used, so the Curses::UI::* 
+Some random features:
+=====================
+
+- Only basic curses library calls are used, so the Curses::UI
   modules will work on non-ncurses systems (they were developed on 
   a Solaris 5.8 system without ncurses);
 
@@ -55,7 +65,7 @@ Some random features:
   been told that it only contains a single line. So all texteditor
   features are available in the TextEntry (as far as applicable);
 
-- The base element of most widgets (Curses::UI::Frame) has the 
+- The base element of most widgets (Curses::UI::Widget) has the 
   ability of showing "scrollbars" for both the x- and y-direction. 
   These scrollbars can be drawn on all sides of the widget
   (left, right, top and bottom). The scrollbar is not really a 
@@ -65,10 +75,13 @@ Some random features:
   with scrollbars on them.
   
   
+Examples:
+=========
 
+Examples are in the distribution's "examples" directory.
 There aren't many examples yet, but the widgets are pretty much
-finished and functional. So far I only built some small example
-applications using the Curses::UI::* widget-set, so interfacing with 
+finished and functional. So far I have only built some small example
+applications using the Curses::UI widget-set, so interfacing with 
 them might miss out on some aspects, but as soon as I am going to
 build the project for which I created these widgets, this might
 change. If you want me to add a particular functionality or 
@@ -76,6 +89,7 @@ widget type, please feel free to send me an e-mail
 (maurice@gitaar.net) and I'll see what I can do for you.
 Patches are even better :-)
 
-Author: Maurice Makaay
-E-mail: maurice@gitaar.net
+
+Please do let me know if you find these modules useful and let me
+know if any appliction is built using them.
 

@@ -1,9 +1,20 @@
+# ----------------------------------------------------------------------
+# Curses::UI::ListBox
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::ListBox;
 
 use strict;
 use Curses;
 use Curses::UI::Common;
-use Curses::UI::Frame;
+use Curses::UI::Widget;
 use Curses::UI::TextEntry;
 use Curses::UI::TextViewer;
 use Curses::UI::Searchable;
@@ -11,7 +22,7 @@ use Curses::UI::Searchable;
 use vars qw($VERSION @ISA @EXPORT);
 require Exporter;
 @ISA = qw(
-	Curses::UI::Frame Curses::UI::Common 
+	Curses::UI::Widget Curses::UI::Common 
 	Curses::UI::Searchable Exporter
 );
 $VERSION = '1.0.0';
@@ -66,9 +77,6 @@ sub new ()
 {
 	my $class = shift;
 
-	my %myroutines = %routines;
-	my %mybindings = %bindings;
-
 	my %args = ( 
 		-values     => [],	# values to show
 		-labels     => {},	# optional labels for the values 
@@ -83,8 +91,8 @@ sub new ()
 		-wraparound => 0,	# wraparound on first/last item
 		@_,
 		-yscrpos    => 0,
-		-routines   => \%myroutines,
-		-bindings   => \%mybindings,
+		-routines   => {%routines},
+		-bindings   => {%bindings},
 	);
 
 	if ($args{-multi})
@@ -193,7 +201,7 @@ sub draw(;$)
         # Return immediately if this object is hidden.
         return $this if $this->hidden;
 	
-	# Draw the frame
+	# Draw the widget
 	$this->SUPER::draw(1);
 
 	# No values? 

@@ -1,3 +1,14 @@
+# ----------------------------------------------------------------------
+# Curses::UI::Common
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::Common;
 
 use strict;
@@ -14,7 +25,7 @@ use vars qw(
 ); 
 
 $VERSION = '1.0.4';
-$DEBUG = 1;
+$DEBUG = 0;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -80,15 +91,28 @@ sub delallwin()
 {
         my $this = shift;
 
-        while (my ($id,$val) = each %{$this}) {
+	my @delete = ();
+	my %didit  = ();
+        while (my ($id,$val) = each %{$this}) 
+	{
             next unless ref $val;
             eval { # in case $val is no object
-                if ($val->isa('Curses::Window')) {
-                        delwin($val);
-                        delete $this->{$id};
+                if ($val->isa('Curses::Window')) 
+		{
+			if (not defined $didit{$val}) 
+			{
+				delwin($val);
+				$didit{$val} = 1;
+			}
+                        push @delete, $id;
                 }
             };
         }
+
+	foreach my $id (@delete) 
+	{ 
+		delete $this->{$id} 
+	}
 
         return $this;
 }

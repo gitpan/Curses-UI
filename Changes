@@ -1,0 +1,35 @@
+Version 0.54
+============
+
+2002-01-04:	- Some small changes in the examples and a new example
+                  (basic_test) added.
+
+		- Added -show_hidden option to the FileBrowser.
+
+		- Added ~ keybinding to the FileBrowser. If ~ is pressed in the
+		  directory- or filebrowser, the FileBrowser will go to the 
+		  homedirectory of the current user.
+
+		- If at creation time of the FileBrowser, the -path is 
+                  not defined, the FileBrowser will start at the 
+                  homedirectory of the user.
+
+                - The Curses::UI::Frame class is now called Curses::UI::Widget.
+
+                - Solved a bug in Curses::UI::Common::delallwin() which
+                  caused a segmentation fault on some systems (by doing
+                  a delwin on an already deleted curses window).
+               
+                - Made a test.pl to test the loading of all classes.
+
+                - Updated Makefile.PL, so required modules are checked.
+
+                - Made a start on documenting Curses::UI. The first bit
+                  of documentation is in Curses::UI::Widget. More will
+                  follow.
+
+Version 0.53
+============
+
+2002-01-03:	- Initial import to CPAN.
+

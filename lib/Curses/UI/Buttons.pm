@@ -1,16 +1,27 @@
+# ----------------------------------------------------------------------
+# Curses::UI::Buttons
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::Buttons;
 
 use strict;
 use Carp qw(confess);
 use Curses;
-use Curses::UI::Frame;
+use Curses::UI::Widget;
 use Curses::UI::Common;
 
 use vars qw($VERSION @ISA @EXPORT);
 $VERSION = '1.0.1';
 
 require Exporter;
-@ISA = qw(Curses::UI::Frame Exporter Curses::UI::Common);
+@ISA = qw(Curses::UI::Widget Exporter Curses::UI::Common);
 @EXPORT = qw(compute_buttonwidth);
 
 my $default_btn = [ '< OK >' ];
@@ -39,9 +50,6 @@ sub new ()
 {
 	my $class = shift;
 	
-	my %myroutines = %routines;
-	my %mybindings = %bindings;
-
 	my %args = (
 		-parent		 => undef,	  # the parent window
 		-buttons 	 => $default_btn, # buttons (arrayref)
@@ -49,13 +57,13 @@ sub new ()
 		-shortcuts	 => undef,	  # shortcut keys
 		-buttonalignment => undef,  	  # left / middle / right
 		-selected 	 => 0,		  # which selected
-		-width		 => undef,	  # the width of the buttonframe
+		-width		 => undef,	  # the width of the buttonwidget
 		-x		 => 0,		  # the horizontal position rel. to parent
 		-y		 => 0,		  # the vertical position rel. to parent
 
 		-mayloosefocus	 => 0,		  # Enable TAB to loose focus?
-		-routines	 => \%myroutines,
-		-bindings	 => \%mybindings,
+		-routines	 => {%routines},
+		-bindings	 => {%bindings},
 
 		@_,
 
@@ -65,7 +73,7 @@ sub new ()
 	# The windowscr height should be 1.
 	$args{-height} = height_by_windowscrheight(1,%args);
 
-	# Create the frame.
+	# Create the widget.
 	my $this = $class->SUPER::new( %args );
 
 	$this->layout();
@@ -165,7 +173,7 @@ sub draw(;$)
 	$this->{-selected} = $this->{-max_selected} 
 		if $this->{-selected} > $this->{-max_selected};
 
-	# Draw the frame.
+	# Draw the widget.
 	$this->SUPER::draw(1);
 	
 	# Draw the buttons.

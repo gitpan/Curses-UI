@@ -1,13 +1,28 @@
-#!/usr/bin/perl -w
+use Test;
 
-use strict;
+BEGIN { plan tests => 1 };
 
-print STDERR "\n";
-print STDERR "-"x70 . "\n";
-print STDERR "Sorry, no tests yet...\n";
-print STDERR "Maybe there will be a Tk like test in the\n";
-print STDERR "near future.\n";
-print STDERR "-"x70 . "\n";
-print STDERR "\n";
+use Curses::UI::Buttons;
+use Curses::UI::CheckBox;
+use Curses::UI::Common;
+use Curses::UI::Container;
+use Curses::UI::Dialog;
+use Curses::UI::ErrorDialog;
+use Curses::UI::FileBrowser;
+use Curses::UI::Label;
+use Curses::UI::ListBox;
+use Curses::UI::MenuBar;
+use Curses::UI::MenuListBox;
+use Curses::UI::PopupBox;
+use Curses::UI::ProgressBar;
+use Curses::UI::RadioButtonBox;
+use Curses::UI::RootWindow;
+use Curses::UI::SearchEntry;
+use Curses::UI::Searchable;
+use Curses::UI::TextEditor;
+use Curses::UI::TextEntry;
+use Curses::UI::TextViewer;
+use Curses::UI::Widget;
+use Curses::UI::Window;
 
-exit(0);
+ok(1);

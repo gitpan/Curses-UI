@@ -1,4 +1,18 @@
-TextEditor:
+TODO list for Curses::UI:
+=========================
 
-- add -mask functionality
+- Pasting a lot of data repeatingly and fast can
+  cause some recursion error (seen on Linux but
+  I have been unable to reproduce this error).
+  It is for sure somewhere in the pasting routine.
+
+- Add some kind of -mask functionality to the TextEntry widget.
+
+- Find a nice solution for notifying the user that his/her screen is
+  to small to show all the widgets. Right now, the application will just
+  die if the screen is to small. Not too good for mission critical 
+  applications! 
+
+- See if the TextEditor can be improved to work better with large files.
+  Right now the display- and wrapping code is slowing down the editor.
 

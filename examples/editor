@@ -1,6 +1,19 @@
 #!/usr/bin/perl -w
+
+# ----------------------------------------------------------------------
+# Script: editor
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 use strict;
 use Curses;
+use Cwd;
 
 $ENV{PATH} = "/bin:/usr/bin"; # for "clear" command.
 
@@ -25,8 +38,8 @@ if (defined $currentfile and -f $currentfile)
 #
 # Hint: If you need STDERR, write it out to a file and put 
 # a tail on that file to see the STDERR output. Example:
-# open STDERR, ">>/tmp/editor_errors.$$";
-open STDERR, ">/dev/null" or die "Can't redirect STDERR to /dev/null";
+open STDERR, ">>/tmp/editor_errors.$$";
+#open STDERR, ">/dev/null" or die "Can't redirect STDERR to /dev/null";
 
 # ----------------------------------------------------------------------
 # Menu definition
@@ -80,7 +93,7 @@ my $editor = $screen->add(
 	-sbborder	 => 0,
 	-vscrollbar	 => 1,
 	-hscrollbar	 => 1,
-	-showhardreturns => 1,
+	-showhardreturns => 0,
 	-wrapping        => 0, # wrapping slows down the editor :-(
 	-text		 => $text,
 );
@@ -125,12 +138,14 @@ $screen->returnkeys(
 sub split_currentfile()
 {
 	my $c_file = "";
-	my $c_path = "/";
+	my $c_path = cwd;
 	if (defined $currentfile)
 	{
 		my @path = split /\//, $currentfile;
 		$c_file = pop @path;
-		$c_path = join "/", @path;
+		if (@path) {
+			$c_path = join "/", @path;
+		}
 	}
 	return ($c_path, $c_file);
 }

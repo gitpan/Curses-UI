@@ -1,14 +1,25 @@
+# ----------------------------------------------------------------------
+# Curses::UI::CheckBox
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::CheckBox;
 
 use strict;
 use Curses;
 use Curses::UI::Label;
 use Curses::UI::Common;
-use Curses::UI::Frame;
+use Curses::UI::Widget;
 
 use vars qw($VERSION @ISA);
 $VERSION = '1.0.0';
-@ISA = qw(Curses::UI::Frame Curses::UI::Common);
+@ISA = qw(Curses::UI::Widget Curses::UI::Common);
 
 my %routines = (
         'return'   	=> 'RETURN',
@@ -34,9 +45,6 @@ sub new ()
 {
 	my $class = shift;
 
-	my %myroutines = %routines;
-	my %mybindings = %bindings;
-
 	my %args = (
 		-parent		 => undef,	# the parent window
 		-width		 => undef,	# the width of the checkbox
@@ -45,8 +53,8 @@ sub new ()
 		-checked	 => 0,		# checked or not?
 		-label		 => '',		# the label text
 
-		-bindings	 => \%mybindings,
-		-routines	 => \%myroutines,
+		-bindings	 => {%bindings},
+		-routines	 => {%routines},
 
 		@_,
 	
@@ -75,7 +83,7 @@ sub layout()
 
 	$this->SUPER::layout;
 
-	# Create the label on the frame.
+	# Create the label on the widget.
 	my $label = new Curses::UI::Label(
 		-parent   => $this,
 		-text     => $this->{-label},
@@ -95,7 +103,7 @@ sub draw(;$)
         # Return immediately if this object is hidden.
         return $this if $this->hidden;
 		
-	# Draw the frame.
+	# Draw the widget.
 	$this->SUPER::draw(1);
 
 	# Draw the label

@@ -1,14 +1,25 @@
+# ----------------------------------------------------------------------
+# Curses::UI::TextEditor
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::TextEditor;
 
 use strict;
 use Curses;
 use Curses::UI::Common;
-use Curses::UI::Frame;
+use Curses::UI::Widget;
 use Curses::UI::Dialog;
 use Curses::UI::Searchable;
 
 use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Frame Curses::UI::Common Curses::UI::Searchable);
+@ISA = qw(Curses::UI::Widget Curses::UI::Common Curses::UI::Searchable);
 $VERSION = '1.0.0';
 	
 # Configuration: routine name to subroutine mapping.
@@ -95,8 +106,6 @@ sub new ()
 {
 	my $class = shift;
 
-	my %myroutines = %routines;
-
 	my %args = ( 
 		# Parent info
 		-parent		=> undef,	# the parent object
@@ -136,7 +145,7 @@ sub new ()
 		-maxlines	 => undef,	  # max lines. undef = infinite
 		
 		# Bindings
-		-routines 	 => \%myroutines, # binding routines
+		-routines 	 => {%routines},  # binding routines
 		-bindings 	 => {},		  # these are set by viewmode()
 		
 		@_,
@@ -164,7 +173,7 @@ sub new ()
 	    $args{-height} = $height;
 	}
 	
-	# Create the Frame.
+	# Create the Widget.
 	my $this = $class->SUPER::new( %args );
 	bless $this, $class;
 

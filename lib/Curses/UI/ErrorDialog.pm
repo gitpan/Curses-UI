@@ -1,3 +1,14 @@
+# ----------------------------------------------------------------------
+# Curses::UI::ErrorDialog
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::ErrorDialog;
 
 use strict;
@@ -31,7 +42,7 @@ sub draw(;$)
 	my $this = shift;
 	my $no_doupdate = shift || 0;
 	
-	# Draw frame
+	# Draw widget
 	$this->SUPER::draw(1);
 
 	# Draw sign

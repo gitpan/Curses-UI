@@ -1,7 +1,18 @@
+# ----------------------------------------------------------------------
+# Curses::UI::SearchEntry
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::SearchEntry;
 
 use Curses;
-use Curses::UI::Frame; # For height_by_windowscrheight()
+use Curses::UI::Widget; # For height_by_windowscrheight()
 use Curses::UI::Container;
 use vars qw($VERSION @ISA);
 $VERSION = "1.0.0";

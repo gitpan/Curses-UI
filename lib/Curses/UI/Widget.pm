@@ -1,4 +1,15 @@
-package Curses::UI::Frame;
+# ----------------------------------------------------------------------
+# Curses::UI::Widget
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
+package Curses::UI::Widget;
 
 use strict;
 use Carp qw(confess);
@@ -32,17 +43,17 @@ sub new ()
 
 		-titlefullwidth => 0,		# full width for title?
 		-titlereverse   => 1,		# reverse chars for title? 
-		-title		=> undef,	# A title to add to the frame (only for 
+		-title		=> undef,	# A title to add to the widget (only for 
 						# -border = 1)
 
-						# padding outside frame
+						# padding outside widget
 		-pad		=> undef,	# all over padding
 		-padright	=> undef,	# free space on the right side
 		-padleft	=> undef,	# free space on the left side
 		-padtop		=> undef,	# free space above
 		-padbottom	=> undef,	# free space below
 
-						# padding inside frame
+						# padding inside widget
 		-ipad		=> undef,	# all over padding
 		-ipadright	=> undef,	# free space on the right side
 		-ipadleft	=> undef,	# free space on the left side
@@ -60,7 +71,7 @@ sub new ()
 		@_,
 	
 		-scr		=> undef,	# generic window handler
-		-focus		=> 0,	  	# has the frame focus?	
+		-focus		=> 0,	  	# has the widget focus?	
 	);
 
 	# Allow the value -1 for using the full width and/or
@@ -106,7 +117,7 @@ sub layout()
 	delete $this->{-scr};
         
 	# -------------------------------------------------------
-	# Compute the space that we have for the frame.
+	# Compute the space that we have for the widget.
 	# -------------------------------------------------------
 
 	if ($this->{-assubwin} and defined $this->{-parent}
@@ -156,7 +167,7 @@ sub layout()
 	$height = $min_h   if $height < $min_h;
 	$height = $avail_h if $height > $avail_h;
 
-	# Check if the frame fits in the window.
+	# Check if the widget fits in the window.
 	if ($width > $avail_w or $height > $avail_h 
 	    or $width == 0 or $height == 0) {
 		# TODO?: no fit error
@@ -178,7 +189,7 @@ sub layout()
 	$this->{-by} = $this->{-realy} + $this->{-padtop};
 
 	# -------------------------------------------------------
-	# Create a window for the frame border, if a border 
+	# Create a window for the widget border, if a border 
 	# and/or scrollbars are wanted.
 	# -------------------------------------------------------
 
@@ -366,7 +377,7 @@ sub windowparameters
 }
 
 # Must be overridden in child class, to make
-# the frame focusable.
+# the widget focusable.
 sub focus { shift()->show; return ('RETURN',''); }
 
 sub draw(;$)
@@ -563,4 +574,220 @@ sub draw_scrollbars()
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Widget - The base class for all widgets
+
+
+=head1 SYNOPSIS
+
+This class is not used directly by somebody who is building an application
+using Curses::UI. It's a base class that is expanded by the Curses::UI widgets.
+Here's an example of how to start out creating a new widget:
+
+    package Curses::UI::YourWidget
+    
+    use Curses;
+    use Curses::UI::Widget;  
+    use Curses::UI::Common; # some common widget routines
+
+    use vars qw($VERSION @ISA);
+    $VERSION = '1.0.0';
+    @ISA = qw(Curses::UI::Widget Curses::UI::Common);
+
+    # For a widget that can get focus, you should define
+    # the routines that are used to control the widget.
+    # Each routine has a name. This name is used in 
+    # the definition of the bindings. 
+    # The value can be a string or a subroutine reference. 
+    # A string will make the widget return from focus.
+    #
+    my %routines = (
+        'return'    => 'RETURN',
+        'key-a'     => \&key_a,
+        'key-other' => \&other_key
+    );
+
+    # Using the bindings, the routines can be binded to key-
+    # presses. If the keypress is an empty string, this means
+    # that this is the default binding. If the key is not 
+    # handled by any other binding, it's handled by this
+    # default binding.
+    #
+    my %bindings = (
+        KEY_DOWN()  => 'return',   # down arrow will make the 
+                                   # widget loose it's focus
+        'a'         => 'key-a',    # a-key will trigger key_a()
+        ''          => 'key-other' # any other key will trigger other_key()
+    );
+
+    # The creation of the widget. When doing it this way,
+    # it's easy to make optional and forced arguments 
+    # possible. A forced argument could for example be 
+    # -border => 1, which would mean that the widget
+    # always has a border, which can't be disabled by the
+    # programmer. The arguments can of course be used 
+    # for storing the current state of the widget.
+    #
+    sub new () {
+        my $class = shift;
+        my %args = (
+            -optional_argument_1 => "default value 1",
+            -optional_argument_2 => "default value 2",
+            ....etc....
+            @_,
+            -forced_argument_1   => "forced value 1", 
+            -forced_argument_2   => "forced value 2", 
+            ....etc....
+            -bindings            => {%bindings},
+            -routines            => {%routines},
+        );
+
+        # Create the widget and do the layout of it.
+        my $this = $class->SUPER::new( %args );
+	$this->layout;
+
+	return $this;
+    }
+
+    # Each widget should have a layout() routine. Here,
+    # the widget itself and it's contents can be layouted.
+    # In case of a very simple widget, this will only mean
+    # that the Widget has to be layouted (in which case the
+    # routine could be left out, since it's in the base
+    # class already). In other cases you will have to add
+    # your own layout code. This routine is very important,
+    # since it will enable the resizeability of the widget!
+    #
+    sub layout () {
+        my $this = shift;
+        $this->SUPER::layout;
+
+        ....your own layout stuff....
+
+        return $this;
+    }
+
+    # The widget is drawn by the draw() routine. The
+    # $no_update part is used to disable screen flickering
+    # if a lot of widgets have to be drawn at once (for
+    # example on resizing or redrawing). The curses window
+    # which you can use for drawing is $this->{-windowscr}.
+    #
+    sub draw(;$) {
+        my $this = shift;
+        my $no_doupdate = shift || 0;
+        return $this if $this->hidden;
+        $this->SUPER::draw(1);
+
+        ....your own draw stuff....
+
+        $this->{-windowscr}->noutrefresh;
+        doupdate() unless $no_doupdate;
+	return $this;
+    }
+
+    # Focus the widget. If you do not override this routine
+    # from Curses::UI::Widget, the widget will not be 
+    # focusable. Mostly you will use generic_focus() from
+    # Curses::UI::Common. 
+    #
+    sub focus()
+    {
+        my $this = shift;
+        $this->show;
+        return $this->generic_focus(
+            undef,             # delaytime, default = 2 (1/10 second).
+            NO_CONTROLKEYS,    # disable controlkeys like CTRL+C. To enable
+                               # them use CONTROLKEYS instead.
+            CURSOR_INVISIBLE,  # do not show the cursor (if supported). To
+                               # show the cursor use CURSOR_VISIBLE.
+            \&pre_key_routine, # optional callback routine to execute
+                               # before a key is read. Mostly unused.
+        );
+    }  
+    
+    ....your own widget handling routines....
+
+
+=head1 STANDARD OPTIONS
+
+The standard options for (most) widgets are the options that are enabled
+by this class. So this class doesn't really have standard options.
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+GENERAL:
+
+-parent         The parent of the object 
+-border         0 = no border, 1 = show border
+-sbborder       Square bracket border (using [ and ] symbols)
+                instead of normal border (especially useful for
+                single line widgets)
+
+POSITIONING:
+
+-x              The x-position of the widget, relative to the parent
+-y              The y-position of the widget, relative to the parent
+
+-width          The width of the widget. Undef or -1 mean "full width"
+-height         The height of the widget. Undef or -1 mean "full height"
+
+-pad            Overall padding outside the widget
+-padtop         Specific padding for each side of the widget. If 
+-padbottom      one of these four is defined, it will override the
+-padleft        basic -pad setting.
+-padright
+
+-ipad           Overall padding inside the widget
+-ipadtop        See -padtop, -padbottom, -padleft, -padright
+-ipadbottom
+-ipadleft
+-ipadright
+
+TITLE:
+
+(titles will only be visible if border = 1)
+
+-title          The text for the title
+-titlereverse   0 = normal title, 1 = title in reverse font
+-titlefullwidth 0 = titlewidth is textwidth, 1 = title is full width
+
+SCROLLBARS:
+
+-vscrollbar     0 = no vertical scrollbar
+                1 = show vertical scrollbar (on the right side)
+                'right' = show scrollbar on the right side of the widget
+                'left'  = show scrollbar on the right side of the widget
+-hscrollbar     0 = no horizontal scrollbar
+                1 = show horizontal scrollbar (at the bottom)
+                'top' = show scrollbar at the top of the widget
+                'bottom' = show scrollbar at the bottom of the widget
+
+
+=head1 SEE ALSO
+
+L<Curses|Curses>
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty.  It may be used, redistributed and/or modified
+under the terms of the Perl Artistic License (see
+http://www.perl.com/perl/misc/Artistic.html)
+
+=end
+
+
+
+
 

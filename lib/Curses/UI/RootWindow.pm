@@ -1,3 +1,14 @@
+# ----------------------------------------------------------------------
+# Curses::UI::RootWindow
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::RootWindow;
 
 # If we do not know a terminal type, then imply VT100.
@@ -97,7 +108,11 @@ sub tempscreen()
 sub error()
 {
 	my $this = shift;
+
+	# make ->error("message") possible.
+	if (@_ == 1) { @_ = (-message => $_[0]) } 
 	my %args = @_;
+
 	$this->tempscreen(
 		'_error',
 		'Curses::UI::ErrorDialog',

@@ -1,12 +1,23 @@
+# ----------------------------------------------------------------------
+# Curses::UI::Label
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::Label;
 use strict;
 use Curses;
-use Curses::UI::Frame;
+use Curses::UI::Widget;
 use Curses::UI::Common;
 
 use vars qw($VERSION @ISA);
 $VERSION = '1.0.0';
-@ISA = qw(Curses::UI::Frame Curses::UI::Common);
+@ISA = qw(Curses::UI::Widget Curses::UI::Common);
 
 sub new ()
 {
@@ -31,12 +42,12 @@ sub new ()
 	
 	# No width given? Then make the width the same size
 	# as the text. No initial text? Then let
-	# Curses::UI::Frame figure it out.
+	# Curses::UI::Widget figure it out.
 	$args{-width} = width_by_windowscrwidth(length($args{-text}), %args)
 		unless defined $args{-width} or not defined $args{-text};
 	$args{-text} = '' unless defined $args{-text};
 
-	# Create the frame.
+	# Create the widget.
 	my $this = $class->SUPER::new( %args );
 
 	$this->layout();
@@ -115,7 +126,7 @@ sub draw(;$)
         # Return immediately if this object is hidden.
         return $this if $this->hidden;
 		
-	# Draw the frame.
+	# Draw the widget.
 	$this->SUPER::draw(1);
 	
 	# Set attributes

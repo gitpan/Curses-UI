@@ -1,5 +1,12 @@
 # ----------------------------------------------------------------------
-# Curses::UI::MenuListBox package
+# Curses::UI::MenuListBox
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
 package Curses::UI::MenuListBox;
@@ -10,7 +17,7 @@ use Curses::UI::Common;
 use Curses::UI::Container;
 use Curses::UI::Window;
 use Curses::UI::ListBox;
-use Curses::UI::Frame;
+use Curses::UI::Widget;
 
 use vars qw($VERSION @ISA);
 $VERSION = '1.0.0';

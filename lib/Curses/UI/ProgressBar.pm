@@ -1,12 +1,23 @@
+# ----------------------------------------------------------------------
+# Curses::UI::ProgressBar
+#
+# (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# This file is part of Curses::UI. Curses::UI is free software.
+# You can redistribute it and/or modify it under the same terms
+# as perl itself.
+#
+# e-mail: maurice@gitaar.net
+# ----------------------------------------------------------------------
+
 package Curses::UI::ProgressBar;
 
 use strict;
 use Curses;
 use Curses::UI::Common;
-use Curses::UI::Frame;
+use Curses::UI::Widget;
 
 use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Frame Curses::UI::Common);
+@ISA = qw(Curses::UI::Widget Curses::UI::Common);
 $VERSION = '1.0.0';
 
 sub new ()
@@ -62,7 +73,7 @@ sub draw(;$)
         # Return immediately if this object is hidden.
         return $this if $this->hidden;
 
-	# Draw the frame
+	# Draw the widget
 	$this->SUPER::draw(1);
 
 	# Check bounds for the position.
