@@ -1213,7 +1213,6 @@ sub readonly($;)
 
 sub get() {shift()->text}
 
-# TODO: document
 sub pos(;$)
 {
     my $this = shift;
@@ -1489,6 +1488,7 @@ This method can be used to set the B<-onchange> event handler
 (see above) after initialization of the texteditor. 
 
 =back
+
 
 
 

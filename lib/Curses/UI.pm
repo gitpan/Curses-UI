@@ -29,7 +29,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.72";
+$VERSION = "0.73";
 
 @EXPORT = qw(
     MainLoop
@@ -45,9 +45,9 @@ $Curses::UI::debug            = 0;
 $Curses::UI::screen_too_small = 0; 
 $Curses::UI::initialized      = 0;
 
-# Detect ncurses functionality.
-$Curses::UI::ncurses_mouse    = (Curses->can("NCURSES_MOUSE_VERSION") and
-                                 NCURSES_MOUSE_VERSION() >= 1);
+# Detect ncurses functionality. Magic for Solaris 8
+eval { $Curses::UI::ncurses_mouse    = (Curses->can('NCURSES_MOUSE_VERSION') and
+                                 (NCURSES_MOUSE_VERSION() >= 1 ) ) };
 
 # ----------------------------------------------------------------------
 # Constructor
@@ -68,6 +68,9 @@ sub new()
 	-language      => undef, # Which language to use?
 	-mouse_support => 1,     # Do we want mouse support
 
+        #user data
+        -userdata       => undef,    #user internal data
+ 
         %userargs,
 
 	-read_timeout  => -1,    # full blocking read by default
@@ -201,7 +204,6 @@ sub MainLoop ()
     $Curses::UI::rootobject->mainloop;
 }
 
-# TODO: document
 sub mainloop ()
 {
     my $this = shift;
@@ -571,7 +573,6 @@ sub fatalerror($$;$)
     exit($exit);
 }
 
-# TODO: document
 sub usemodule($;)
 {
     my $this = shift;
@@ -643,6 +644,17 @@ sub add()
     ) unless $class->isa('Curses::UI::Window');
 
     $this->SUPER::add($id, $class, %args);
+}
+
+# Sets/Get the user data
+sub userdata
+{
+    my $this = shift;
+    if (defined $_[0])
+    {
+        $this->{-userdata} = $_[0];
+    }
+    return $this->{-userdata};
 }
 
 # ----------------------------------------------------------------------
@@ -839,6 +851,19 @@ sub noprogress()
     return $this;
 }
 
+sub leave_curses() 
+{
+    my $this = shift;
+    def_prog_mode(); 
+    endwin();
+}
+
+sub reset_curses()
+{
+    my $this = shift;
+    reset_prog_mode();
+}
+
 1;
 
 
@@ -965,6 +990,12 @@ If the B<-mouse_support> option is set to a false value
 mouse support will be disabled. This is used to override
 the auto determined value and to disable mouse support.
 
+=item * B<-userdata> < SCALAR >
+
+This option specifies a user data that can be retrieved with
+the B<userdata>() method.  It is usefull to store application's
+internal data that otherwise would not be accessible in callbacks.
+
 =back
 
 
@@ -983,6 +1014,15 @@ for Curses::UI.
 Create a new Curses::UI instance. See the OPTIONS section above 
 to find out what options can be used.
 
+=item B<leave_curses> ( )
+
+Temporarily leaves curses mode and recovers normal terminal
+mode.
+
+=item B<reset_curses> ( )
+
+Return to curses mode after B<leave_curses()>.
+
 =item B<add> ( ID, CLASS, OPTIONS )
 
 The B<add> method of Curses::UI is almost the same as the B<add>
@@ -990,6 +1030,24 @@ method of Curses::UI::Container. The difference is that Curses::UI
 will only accept classes that are (descendants) of the
 Curses::UI::Window class. For the rest of the information
 see L<Curses::UI::Container|Curses::UI::Container>.
+
+=item B<mainloop> ( )
+
+Starts a Tk like main loop that will handle input and events.
+
+=item B<MainLoop> ( )
+
+Same as B<mainloop>, for Tk compatibility.
+
+=item B<usemodule> ( CLASSNAME )
+
+Loads the with CLASSNAME given module.
+
+=item B<userdata> ( [ SCALAR ] )
+
+This method will return the user internal data stored in the UI object.
+If a SCALAR parameter is specified it will also set the current user
+data to it.
 
 =item B<layout> ( )
 

@@ -10,8 +10,6 @@
 # e-mail: marcus@cpan.thiesenweb.de
 # ----------------------------------------------------------------------
 
-# TODO: fix dox
-
 package Curses::UI::Window;
 
 use strict;

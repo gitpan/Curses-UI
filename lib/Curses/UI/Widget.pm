@@ -25,7 +25,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = '1.11';
+$VERSION = '1.12';
 
 @ISA = qw(
     Curses::UI::Common
@@ -38,7 +38,6 @@ $VERSION = '1.11';
     process_padding
     loose_focus
 );
-
 
 sub new ()
 {
@@ -60,7 +59,6 @@ sub new ()
         -titlereverse   => 1,        # reverse chars for title? 
         -title          => undef,    # A title to add to the widget (only for 
                                      # -border = 1)
-
         # padding outside widget
         -pad            => undef,    # all over padding
         -padright       => undef,    # free space on the right side
@@ -87,6 +85,10 @@ sub new ()
         -onblur         => undef,    # onBlur event handler
         -intellidraw    => 1,        # Support intellidraw()?
         -focusable      => 1,        # This widget can get focus
+
+	#user data
+	-userdata	=> undef,    #user internal data
+
 
         %userargs,
     
@@ -128,7 +130,16 @@ sub DESTROY()
     $this->delete_subwindows();
 }
 
-# TODO: document
+sub userdata
+{
+    my $this = shift;
+    if (defined $_[0])
+    {
+        $this->{-userdata} = $_[0];
+    }
+    return $this->{-userdata};
+}
+
 sub focusable(;$) { 
     my $this = shift;
     my $focusable = shift;
@@ -149,6 +160,8 @@ sub focusable(;$) {
 
 sub layout()
 {
+    cbreak();
+    
     my $this = shift;
 
     return if $Curses::UI::screen_too_small;
@@ -302,7 +315,7 @@ sub layout()
         $this->{-bx}  = $this->{-sx};
         $this->{-by}  = $this->{-sy};
     }
-        
+
     return $this;
 }
 
@@ -414,7 +427,6 @@ sub windowparameters()
     };
 }
 
-# TODO: document
 sub loose_focus()
 {
     my $this = shift;
@@ -452,7 +464,6 @@ sub loose_focus()
     return $this;
 }
 
-# TODO: document
 sub focus()
 { 
     my $this = shift;
@@ -465,7 +476,6 @@ sub focus()
     return $this;
 }
 
-# TODO: document
 sub modalfocus ()
 {
     my $this = shift;
@@ -543,7 +553,9 @@ sub draw(;$)
                 if $this->{-titlereverse};
             if ($this->{-titlefullwidth} 
                 and $this->{-titlereverse}) {
+            	$this->{-borderscr}->attron(A_BOLD); 
                 $this->{-borderscr}->addstr(0, 1, " "x($this->{-bw}-2));
+                $this->{-borderscr}->attroff(A_BOLD);
             }
             my $t = $this->{-title};
             my $l = $this->{-bw}-4;
@@ -552,8 +564,10 @@ sub draw(;$)
                 $t = substr($t, 0, $l) if $l < length($t);
                 $t =~ s/.$/\$/;
             }
+            $this->{-borderscr}->attron(A_BOLD);   
             $this->{-borderscr}->addstr(0, 1, " $t ");
             $this->{-borderscr}->attroff(A_REVERSE);
+            $this->{-borderscr}->attroff(A_BOLD);   
         }
         }
         
@@ -1119,6 +1133,12 @@ If BOOLEAN has a true value (which is the default), the
 B<intellidraw> method (see below) will be suported. This
 option is mainly used in widget building.
 
+=item * B<-userdata> < SCALAR >
+
+This option specifies a user data that can be retrieved with
+the B<userdata>() method.  It is usefull to store application's
+internal data that otherwise would not be accessible in callbacks.
+
 =item * B<-border> < BOOLEAN >
 
 Each widget can be drawn with or without a border. To enable
@@ -1376,6 +1396,21 @@ Give focus to the widget. In Curses::UI::Widget, this method
 immediately returns, so the widget will not get focused. 
 A derived class that needs focus, must override this method.
 
+=item * B<focusable> ( [BOOLEAN] )
+
+If BOOLEAN is set to a true value the widget will be focusable,
+false will make it unfocusable. If not argument is given,
+it will return the current state.
+
+=item * B<loose_focus> ( )
+
+This method makes the current widget loose it's focus.
+It returns the current widget.
+
+=item * B<modalfocus> ( )
+
+??? 
+
 =item * B<title> ( TEXT )
 
 Change the title that is shown in the border of the widget
@@ -1545,6 +1580,12 @@ no parent window can be found (this should not happen).
 Returns true if the widget is in the window that is 
 currently on top.
 
+=item * B<userdata> ( [ SCALAR ] )
+
+This method will return the user internal data stored in this widget.
+If a SCALAR parameter is specified it will also set the current user 
+data to it.
+
 =item B<beep_on> ( )
 
 This sets the data member $this->{B<-nobeep>} of the class instance
@@ -1561,8 +1602,6 @@ This will call the curses beep() routine, but only if B<-nobeep>
 is false.
 
 =back
-
-
 
 
 =head1 WIDGET STRUCTURE

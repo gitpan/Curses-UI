@@ -17,9 +17,18 @@ my $default_lang = 'English';
 my %lang_alias = (
     'en'        => 'english',
     'uk'        => 'english',
+    'us'        => 'english',
+
+    'it'        => 'italian',
+    'pl'        => 'polish',
+    'ru'        => 'russian',
+
+    'de'        => 'german',
+    'at'        => 'german',
+    'ch'        => 'german',
 
     'du'        => 'dutch',
-    'nl'        => 'dutch',
+    'nl'        => 'dutch'
 );
 
 sub new()

@@ -24,7 +24,11 @@ lib/Curses/UI/Dialog/Progress.pm
 lib/Curses/UI/Dialog/Status.pm
 lib/Curses/UI/Label.pm
 lib/Curses/UI/Language.pm
+lib/Curses/UI/Language/german.pm
 lib/Curses/UI/Language/dutch.pm
+lib/Curses/UI/Language/russian.pm
+lib/Curses/UI/Language/polish.pm
+lib/Curses/UI/Language/italian.pm
 lib/Curses/UI/Language/english.pm
 lib/Curses/UI/Listbox.pm
 lib/Curses/UI/Menubar.pm

@@ -10,8 +10,6 @@
 # e-mail: marcus@cpan.thiesenweb.de
 # ----------------------------------------------------------------------
 
-# TODO: fix dox
-
 package Curses::UI::Listbox;
 
 use strict;
@@ -29,7 +27,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = '1.2';
+$VERSION = '1.21';
 
 @ISA = qw(
     Curses::UI::Widget Curses::UI::Common 
@@ -408,7 +406,7 @@ sub clear_selection()
 	    $selection->{$id} = 0;
 	}
     } else {
-	$this->{-selected} = 0;
+	$this->{-selected} = undef;
     }
     $this->schedule_draw(1);
 }

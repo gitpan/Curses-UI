@@ -23,7 +23,7 @@ use vars qw(
     $VERSION
 );
 
-$VERSION = "1.10";
+$VERSION = "1.11";
 
 @ISA = qw(
     Curses::UI::Widget 
@@ -61,17 +61,17 @@ DESTROY()
     $this->SUPER::delete_subwindows();
 }
 
-# Add an object to the container.
+# Add an object to the container
 sub add($@;)
 {
     my $this = shift;
     my $id = shift;
     my $class = shift;
     my %args = @_;
-
+    
     $this->root->fatalerror(
 	"The object id \"$id\" is already in use!"
-    ) if defined $id and 
+    ) if defined $id and  
          defined $this->{-id2object}->{$id};
 
     # If $id is not defined, create an auto-id.
@@ -129,9 +129,21 @@ sub delete(;$)
 
     foreach my $param (qw(-focusorder -draworder))
     {
+        my ($current_focused_id, $new_focused_id, $new_focused_obj);
+        $current_focused_id = $this->{-draworder}->[-1];
         my $idx = $this->base_id2idx($param, $id);
         splice(@{$this->{$param}}, $idx, 1)
             if defined $idx;
+
+        #did the deleted id had the focus?
+        if ($current_focused_id eq $id)
+        {
+            $new_focused_id = $this->{-draworder}->[-1];
+            $new_focused_obj = $this->{-id2object}->{$new_focused_id}
+                if $new_focused_id;
+            $new_focused_obj->event_onfocus
+                if $new_focused_obj;
+        }
     }
 
     return $this;
@@ -160,7 +172,7 @@ sub draw(;$)
     # Draw all contained object.
     foreach my $id (@{$this->{-draworder}}) {
         $this->{-id2object}->{$id}->draw(1);
-    }
+      }
 
     # Update the screen unless suppressed.
     doupdate() unless $no_doupdate;

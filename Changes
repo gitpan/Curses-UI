@@ -1,5 +1,19 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.73
+============
+
+2003-03-28	- Added Russian, Polish, Italian and German language
+		  pack
+
+		- Applied focusdelete and userdata patch by Raul Dias
+
+		- Fixed unselect for single selects in Listbox
+
+		- Fixed Solaris 8 Compile bug
+
+		- Did some documentation work
+
 Version 0.72
 ============
 

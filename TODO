@@ -12,5 +12,7 @@ BUGS:
 TODO list for Curses::UI:
 =========================
 
+The documentation is still very outdated, patches welcome !
+
 As this module is not developed any further, look at the new Curses::UI
 2.0 interface.

@@ -1,32 +1,48 @@
 #!/usr/bin/perl -w
 use strict;
+use warnings;
 
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
+use File::Spec;
+use File::Temp qw ( :POSIX );
 
 my $debug = 0;
+my $fh = tmpfile();
+open STDERR, ">&$fh";
+ 
 if (@ARGV and $ARGV[0] eq '-d') {
-    open STDERR, ">>/tmp/Curses::UI_debug";
     $debug = 1;
-} else {
-    # We do not want STDERR to clutter our screen.
-    open STDERR, ">/dev/null";
 }
 
-
 my $cui = new Curses::UI (
-    -clear_on_exit => 1,
-    -language      => 'Dutch',
+    -clear_on_exit => 0,
     -debug         => $debug,
 );
 
-$cui->dialog(
-      "This demo shows how easy the language for an application\n"
-    . "can be set. This application is set to Dutch and if you close\n"
-    . "this dialog, a Dutch filebrowser will be shown (all labels, titles\n"
-    . "and error messages are in Dutch). Of course this filebrowser\n"
-    . "will not actually write a file.");
+$cui->dialog( "This demo will present all languages of Curses::UI to you.");
 
-$cui->savefilebrowser();
+my $filename;
+foreach my $mod (keys %INC) {
+	$filename  = $INC{$mod} if ($mod =~ /UI\.pm/);
+}
 
+$filename =~ s/\.pm//;
+$filename = File::Spec->catfile($filename, "Language");
+
+opendir DIR, "$filename" or die "Couldn't open language dir $filename: $!\n";
+my @entries = readdir(DIR);
+
+foreach my $entry (@entries) {
+    if ($entry =~ /\.pm/) {
+	$entry =~s/\.pm//;
+	my $lang = new Curses::UI::Language("$entry");
+
+	$cui->lang($lang);
+
+	$cui->dialog("\u$entry");
+
+	$cui->savefilebrowser();
+    }
+}
