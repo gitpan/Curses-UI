@@ -95,6 +95,7 @@ sub new ()
         -onchange   => undef,   # Event handler    
 	-fg         => -1,
         -bg         => -1,
+	-drawline   => 1,       # Draw a line under the widget?
 
         %userargs,
 
@@ -278,8 +279,10 @@ sub draw(;$)
     $this->{-canvasscr}->attroff(A_BOLD) if $this->{-focus};
 
     # Draw a line under the date.
-    $this->{-canvasscr}->move(1,0);
-    $this->{-canvasscr}->hline(ACS_HLINE,$this->canvaswidth);
+    if ($this->{-drawline}) {
+	$this->{-canvasscr}->move(1,0);
+	$this->{-canvasscr}->hline(ACS_HLINE,$this->canvaswidth);
+    }
 
     # Create the list of days in the current month.
     my @month = build_month($this->{"-${c}year"}, $this->{"-${c}month"});
@@ -750,6 +753,11 @@ you can use for this date is one of:
 This sets the onChange event handler for the calendar widget.
 If a new date is selected, the code in CODEREF will be executed.
 It will get the widget reference as its argument.
+
+=item * B<-drawline> < CODEREF >
+
+This option specifies whether or not a line should be drawn under
+the calendar.
 
 =back
 

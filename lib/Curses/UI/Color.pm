@@ -182,6 +182,8 @@ This function defines a new color in the Color object. The
 RGB values can be between 0 and 1000. Existing colors can
 be redefined. 
 
+=back
+
 =head1 USAGE
 
 Curses::UI has 7 predefined colors:
@@ -224,8 +226,6 @@ the title foreground and background color.
 
 Check also the examples/color_editor for seeing what is possible
 at the moment. 
-
-=back
 
 =head1 SEE ALSO
 

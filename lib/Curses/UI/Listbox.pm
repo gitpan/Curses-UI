@@ -27,7 +27,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = '1.21';
+$VERSION = '1.22';
 
 @ISA = qw(
     Curses::UI::Widget Curses::UI::Common 
@@ -248,7 +248,7 @@ sub get_active_value($;)
 {
     my $this = shift;
     my $id = $this->{-ypos};
-    my $value = $this->{-values}->[$id];    
+    my $value = $this->{'-values'}->[$id];    
     return $value;
 }
 
@@ -428,23 +428,25 @@ sub clear_selection()
 sub set_selection() 
 {
     my $this = shift;
-    my $id = shift;
+    my $id;
 
-    if ($this->{-multi})
-    {
-        my $changed = ($this->{-selected}->{$id} ? 0 : 1);
-        $this->{-selected}->{$id} = 1;
-        $this->run_event('-onchange') if $changed;
-        $this->schedule_draw(1);
-        return $this;
-    } else {
-        my $changed = (not defined $this->{-selected} or
-                       ($this->{-selected} != $id));
-        $this->{-selected} = $id;
-        $this->run_event('-onchange') if $changed;
-        $this->schedule_draw(1);
-        return ($this->{-radio} ? $this : undef);
+    foreach $id (@_) {
+	next if $id > @{$this->{-values}};
+	if ($this->{-multi})
+	{
+	    my $changed = ($this->{-selected}->{$id} ? 0 : 1);
+	    $this->{-selected}->{$id} = 1;
+	    $this->run_event('-onchange') if $changed;
+	    $this->schedule_draw(1);
+	} else {
+	    my $changed = (not defined $this->{-selected} or
+			   ($this->{-selected} != $id));
+	    $this->{-selected} = $id;
+	    $this->run_event('-onchange') if $changed;
+	    $this->schedule_draw(1);
+	}
     }
+    return $this;
 }
 
 sub option_next()
@@ -818,6 +820,13 @@ value will be returned of course.
 
 This method will return the value of the currently active (i.e 
 highlighted line).
+
+=item * B<set_selection> ( LIST )
+
+This method marks the items at the positions specified in LIST
+as selected. In a multi-select listbox you can set multiple items 
+with giving multiple values, in a single-select listbox only the
+last item in LIST will be selected
 
 =item * B<clear_selection> ( )
 

@@ -25,7 +25,7 @@ use vars qw(
     @ISA
 );
 
-$VERSION = '1.10';
+$VERSION = '1.11';
 
 @ISA = qw(
     Curses::UI::Widget 
@@ -1164,6 +1164,7 @@ sub do_new_pastebuffer(;$)
     my $value = shift;
     $this->{-do_new_pastebuffer} = $value     
         if defined $value;
+    $this->{-pastebuffer} = '' unless defined $this->{-pastebuffer};
     return $this->{-do_new_pastebuffer};
 }
 

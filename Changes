@@ -1,5 +1,24 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.80
+============
+		- small fixes to avoid warnings
+
+		- workaround for a strange win32 compile bug
+
+		- fixes to polish translation
+
+		- more tests
+
+		- small changes to some widgets
+
+		- color support changes
+			- fixed colors in submenus
+			- fixed colors for status messages
+
+		- norwegian translation by Vlad Tepes
+
+
 Version 0.75     
 ============
 2003-07-28	- WE GOT COLOR!!! see Curses::UI::Color for details and

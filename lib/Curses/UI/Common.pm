@@ -272,7 +272,9 @@ sub key_to_ascii($;)
 
 # For the select() syscall in char_read().
 my $rin = '';
-vec($rin, fileno(STDIN),  1) = 1;
+my $fno = fileno(STDIN);
+$fno = 0 unless $fno >= 0;
+vec($rin, $fno ,  1) = 1;
 
 sub char_read(;$)
 {

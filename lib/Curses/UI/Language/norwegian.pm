@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------------
-# Curses::UI::Language::polish
-# Maintainer: ak@min.pl
+# Curses::UI::Language::english
+# Maintainer: marcus@thiesenweb.de
 # ----------------------------------------------------------------------
 
-package Curses::UI::Language::polish; 
+package Curses::UI::Language::english; 
 1;
 __DATA__
 
@@ -12,64 +12,65 @@ __DATA__
 # ----------------------------------------------------------------------
 
 [screen_too_small]
-Rozmiar twojego ekranu jest zbyt ma³y dla tej aplikacji.
-Zmieñ rozmiar ekranu i uruchom ponownie aplikacjê.
-Naci¶nij <CTRL+C> aby zakoñczyæ...
+Your screen is currently too small for this application.
+Resize the screen and restart the application.
+Press <CTRL+C> to exit...
 
 # ----------------------------------------------------------------------
 # For Curses::UI::Calendar
 # ----------------------------------------------------------------------
 
 [months]
-Styczeñ Luty Marzec Kwiecieñ Maj Czerwiec Lipiec 
-Sierpieñ Wrzesieñ Pa¼dziernik Listopad Grudzieñ
+Januar Februar Mars April Mai Juni Juli
+August September Oktober November Desember
 
-[days_short] Ni Po Wt Œr Cz Pi So
+[days_short] Sø Ma Ti On To Fr Lø
 
 # ----------------------------------------------------------------------
 # For Curses::UI::Buttonbox
 # ----------------------------------------------------------------------
 
 [button_ok]      o:OK
-[button_cancel]  a:Anuluj
-[button_yes]     t:Tak
-[button_no]      n:Nie
+[button_cancel]  c:Avbryt
+[button_yes]     y:Ja
+[button_no]      n:Nei
 
 # ----------------------------------------------------------------------
 # For Curses::UI::Dialog::Error
 # ----------------------------------------------------------------------
 
-[error_title]    Komunikat o b³êdzie
+[error_title]    Feilmelding
 
 # ----------------------------------------------------------------------
 # For Curses::UI::Dialog::FileBrowser
 # ----------------------------------------------------------------------
 
 # The filebrowser title
-[file_title]     Wybierz plik
-[file_savetitle] Wybierz plik do zapisu
-[file_loadtitle] Wybierz plik do odczytu
+[file_title]     Velg en fil
+[file_savetitle] Velg filnavn for lagring
+[file_loadtitle] Velg fil for åpning
 
 # The labels for the dialog screen.
-[file_path]      ¦Œcie¿ka :
-[file_file]      Plik :
-[file_mask]      Maska :
+[file_path]      Sti :
+[file_file]      Fil :
+[file_mask]      Maske :
 
 # The size of the longest label
-[file_labelsize] 9
+[file_labelsize] 6
 
 # On directory up
-[file_dirup] Katalog nadrzêdny
+[file_dirup] Opp ett nivå
 
 # For asking the user if a file may be overwritten
-[file_overwrite_title] Potwierdzenie
+[file_overwrite_title] Bekreft
 [file_overwrite_question_pre] 
-Plik "
+Er du sikker på at du vil overskrive "
 [file_overwrite_question_post] 
-" ju¿ istnieje. Czy chcesz zamieniæ istniej±cy plik?
+"?
 
 # Errors
-[file_err_opendir_pre] Nie mo¿na otworzyæ katalogu "
+[file_err_opendir_pre] Kan ikke åpne mappen "
 [file_err_opendir_post] "
-[file_err_nofileselected] Nie wybrano pliku!
+[file_err_nofileselected] Ingen fil er valgt!
+
 

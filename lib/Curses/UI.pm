@@ -30,7 +30,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.75";
+$VERSION = "0.80";
 
 @EXPORT = qw(
     MainLoop
@@ -704,12 +704,21 @@ sub tempdialog()
 #
 #    $cui->dialog(-message => "Some dialog message");
 #
-sub process_args($$;)
+sub process_args()
 {
     my $this = shift;        
     my $ifone = shift;
-    if (@_ == 1) { @_ = ($ifone => $_[0]) }
-    return @_;
+    my %new;
+
+    if (@_ == 1) { 
+	%new = ($ifone => $_[0]);
+    } else {
+	$new{$ifone} = shift @_;
+	    if ((@_ % 2) == 0) {
+		%new = (%new, @_);
+	    }
+    }
+    return %new;
 }
 
 sub error()
@@ -888,7 +897,7 @@ sub color() {
     return $Curses::UI::color_object;
 }
 
-sub color_set {
+sub set_color {
     my $this = shift;
     my $co   = shift;
     
@@ -1249,8 +1258,6 @@ Example:
 
     $cui->noprogress;
 
-=back
-
 =item B<color> ( )
 
 Returns the currently used Curses::UI::Color object
@@ -1260,6 +1267,7 @@ Returns the currently used Curses::UI::Color object
 Replaces the currently used Color object with an other. This
 can be used to fast change all colors in a Curses::UI application.
 
+=back
 
 
 =head1 SEE ALSO
@@ -1432,6 +1440,9 @@ be found in the examples directory of the distribution
 (examples/demo-Curses::UI).
 
 
+=head1 REFERENCES
+
+Curses::UI::POE is a POE eventsystem and mainloop for Curses::UI
 
 
 =head1 AUTHOR

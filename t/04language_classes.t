@@ -1,5 +1,5 @@
 use strict;
-use Test::Simple tests => 8;
+use Test::Simple tests => 9;
 use File::Spec;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";

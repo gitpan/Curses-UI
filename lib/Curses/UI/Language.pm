@@ -38,6 +38,8 @@ my %lang_alias = (
     'pt_BR'     => 'portuguese',
     'br'        => 'portuguese',
 
+    'no'        => 'norwegian',
+
 );
 
 sub new()

@@ -1696,17 +1696,17 @@ This method will return the user internal data stored in this widget.
 If a SCALAR parameter is specified it will also set the current user 
 data to it.
 
-=item B<beep_on> ( )
+=item * B<beep_on> ( )
 
 This sets the data member $this->{B<-nobeep>} of the class instance
 to a false value.
 
-=item B<beep_off> ( )
+=item * B<beep_off> ( )
 
 This sets the data member $this->{B<-nobeep>} of the class instance
 to a true value.
 
-=item B<dobeep> ( )
+=item * B<dobeep> ( )
 
 This will call the curses beep() routine, but only if B<-nobeep>
 is false.

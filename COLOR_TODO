@@ -18,10 +18,11 @@ What works:
 	- Menubars and Menuentries
 	- Button colors
 
-
 TODO:
 	- More documentation
-	- the set functions for all options don't exist yet.
+	- Make menubar more configureable (i.e. subwidgets own
+	  color)
+	- Dialog widgets are not filled with the color
 
 General considerations:
 	- Default color for Widgets if color support is turned on,

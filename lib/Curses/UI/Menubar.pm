@@ -190,6 +190,10 @@ sub cursor_right()
             -x          => $x,
             -y          => $y,
             -menu       => $this->{-menu}->[$this->{-ypos}]->{-submenu},
+            -bg         => $this->{-bg},
+            -fg         => $this->{-fg},
+            -bbg        => $this->{-bbg},
+            -bfg        => $this->{-bfg},
         );
 
         # Show the submenu and wait for it to return.
@@ -543,10 +547,33 @@ sub pulldown()
 
     # Find the x position of the selected menu.
     my $x = 1;
+    my $y = 1;
+    
+    # am I in a window
+    if ($this->{-parent}->{-x}) {
+	$x += $this->{-parent}->{-x};
+    }
+
+    # does it have a border
+    if ($this->{-parent}->{-border}) {
+	$x += 1;
+    }
+
+    # find real x value
     for my $idx (1 .. $this->{-selected})
     {
         $x += length($this->{-menu}->[$idx-1]->{-label});
         $x += 2;
+    }
+
+    # same for y
+    if ($this->{-parent}->{-y}) {
+	$y += $this->{-parent}->{-y};
+    }
+
+    # does it have a border
+    if ($this->{-parent}->{-border}) {
+	$y += 1;
     }
 
     # Add the submenu.
@@ -554,7 +581,7 @@ sub pulldown()
     my $submenu = $this->root->add(
         $id, 'MenuListbox',
         -x          => $x,
-        -y          => 1,
+        -y          => $y,
         -is_topmenu => 1,
         -menu       => $this->{-menu}->[$this->{-selected}]->{-submenu},
         -menubar    => $this,
