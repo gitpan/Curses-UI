@@ -6,7 +6,8 @@
 # You can redistribute it and/or modify it under the same terms
 # as perl itself.
 #
-# e-mail: maurice@gitaar.net
+# Currently maintained by Marcus Thiesen
+# e-mail: marcus@cpan.thiesenweb.de
 # ----------------------------------------------------------------------
 
 package Curses::UI::Widget;
@@ -24,7 +25,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = '1.10';
+$VERSION = '1.11';
 
 @ISA = qw(
     Curses::UI::Common
@@ -501,6 +502,7 @@ sub draw(;$)
     my $scr = defined $this->{-borderscr} 
             ? $this->{-borderscr} 
             : $this->{-canvasscr};
+    return unless defined $scr;
     $scr->erase;
     $scr->noutrefresh();
 
@@ -1720,6 +1722,9 @@ L<Curses::UI|Curses::UI>
 =head1 AUTHOR
 
 Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+Maintained by Marcus Thiesen (marcus@cpan.thiesenweb.de)
+
 
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified

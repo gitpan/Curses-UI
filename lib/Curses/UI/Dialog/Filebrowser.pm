@@ -6,7 +6,8 @@
 # You can redistribute it and/or modify it under the same terms
 # as perl itself.
 #
-# e-mail: maurice@gitaar.net
+# Currently maintained by Marcus Thiesen
+# e-mail: marcus@cpan.thiesenweb.de
 # ----------------------------------------------------------------------
 
 package Curses::UI::Dialog::Filebrowser;
@@ -616,6 +617,9 @@ L<Curses::UI::Buttonbox|Curses::UI::Buttonbox>
 =head1 AUTHOR
 
 Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+Maintained by Marcus Thiesen (marcus@cpan.thiesenweb.de)
+
 
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified

@@ -6,7 +6,8 @@
 # You can redistribute it and/or modify it under the same terms
 # as perl itself.
 #
-# e-mail: maurice@gitaar.net
+# Currently maintained by Marcus Thiesen
+# e-mail: marcus@cpan.thiesenweb.de
 # ----------------------------------------------------------------------
 
 package Curses::UI::Language;

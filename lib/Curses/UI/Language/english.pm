@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------
 # Curses::UI::Language::english
-# Maintainer: maurice@gitaar.net
+# Maintainer: marcus@thiesenweb.de
 # ----------------------------------------------------------------------
 
 package Curses::UI::Language::english; 

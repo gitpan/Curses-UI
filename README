@@ -9,7 +9,8 @@
 
              A curses based user interface framework in perl
 
-       Copyright (c) 2001-2002 Maurice Makaay (maurice@gitaar.net)
+          Maintained by Marcus Thiesen (marcus@cpan.thiesenweb.de)
+	       Copyright (c) 2001-2002 Maurice Makaay
 		           All rights reserved.
 
    This package is free software and is provided "as is" without express
@@ -18,9 +19,12 @@
 
 ==============================================================================
 
-WARNING: Due to a lot of code reorganisation, the pod documentation
-         is currently not up-to-date. I'll fix this as soon as
-	 possible! 
+WARNING: As soon as Curses::UI 2.0 is released this module will be
+	considered as deprecated. Only bugfix changes will be done.
+	Any new work should be based on Curses::UI 2.0
+
+	The documentation is still very outdated. I only made changes
+	to the main Pod (Curses::UI) and the Listbox widget.
 
 Please do let me know if you find these modules useful and let me
 know if any appliction is built using them. If you have a nice
@@ -86,7 +90,7 @@ change.
 
 If you want me to add a particular functionality or 
 widget type, please feel free to send me an e-mail 
-(maurice@gitaar.net) and I'll see what I can do for you.
+(marcus@cpan.thiesenweb.de) and I'll see what I can do for you.
 Patches are even better :-)
 
 
@@ -119,9 +123,10 @@ Some random features:
   with scrollbars on them.
   
   
-
+ 
 Credits:
 ========
+As the original code is by Maurice Maakay, these are his credits:
 
 Esther Bronk   : (my girl) For being so patient while I was harassing 
                  her about the beauty of curses based user interfaces 

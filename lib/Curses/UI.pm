@@ -6,7 +6,8 @@
 # You can redistribute it and/or modify it under the same terms
 # as perl itself.
 #
-# e-mail: maurice@gitaar.net
+# Currently maintained by Marcus Thiesen
+# e-mail: marcus@cpan.thiesenweb.de
 # ----------------------------------------------------------------------
 
 package Curses::UI;
@@ -28,7 +29,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.71";
+$VERSION = "0.72";
 
 @EXPORT = qw(
     MainLoop
@@ -65,6 +66,7 @@ sub new()
         -cursor_mode   => 0,     # What is the current cursor_mode?
 	-debug         => undef, # Turn on debugging mode?
 	-language      => undef, # Which language to use?
+	-mouse_support => 1,     # Do we want mouse support
 
         %userargs,
 
@@ -73,6 +75,9 @@ sub new()
 
     $Curses::UI::debug = $args{-debug} 
         if defined $args{-debug};
+
+    $Curses::UI::ncurses_mouse = $args{-mouse_support}
+        if defined $args{-mouse_support};
 
     $Curses::UI::rootobject->fatalerror(
         "You can only initiate one Curses::UI rootobject!\n"
@@ -954,6 +959,12 @@ a Curses::UI program will call the "clear" program on exit
 (through the DESTROY method of Curses::UI). By default
 this option is set to false.
 
+=item B<-mouse_support> < BOOLEAN >
+
+If the B<-mouse_support> option is set to a false value
+mouse support will be disabled. This is used to override
+the auto determined value and to disable mouse support.
+
 =back
 
 
@@ -1287,45 +1298,9 @@ added.
 
 =head1 The main loop
 
-Now that we have constructed the windows and some widgets
-on them, we will have to make things work like they should.
+The main loop is called by
 
-    MAINLOOP: for(;;) {
-        WINDOW: foreach my $win_id ('win1','win2') {
-            # Bring the current window on top
-            $cui->ontop($win_id);
-
-            # Get the window object.
-            my $win = $cui->getobj($win_id);
-
-            # Bring the focus to this window. Focus routines
-            # will return a returnvalue (which is always
-            # "LEAVE_CONTAINER" for a Container object) and
-            # the last key that was pressed.
-            my ($returnvalue, $lastkey) = $win->focus;
-
-            # First check if the $lastkey is one of the
-            # shortcut keys we created using returnkeys().
-            if ($lastkey eq "\cN") {
-                next WINDOW;
-        } elsif ($lastkey eq "\cQ") {
-                last MAINLOOP;
-            }
-
-            # Nope. Then we can assume that a button
-            # was pressed. Check which button it was.
-
-            # First get the button object of the focused window.
-            my $btn = $win->getobj('buttons');
-
-            # Get the index of the pressed button.
-            my $button_value = $btn->get;
-
-            # If the $button_value is 'quit', the Quit button 
-            # was pressed.
-            last MAINLOOP if $button_value eq 'quit';
-        }
-    }
+    $cui->MainLoop;
 
 =head1 Add a good-bye dialog
 
@@ -1349,6 +1324,8 @@ be found in the examples directory of the distribution
 =head1 AUTHOR
 
 Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+Maintained by Marcus Thiesen (marcus@cpan.thiesenweb.de)
 
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified

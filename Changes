@@ -1,5 +1,18 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.72
+============
+
+2003-03-24	- Maintainer changed, new maintainer is now Marcus
+		  Thiesen (MARCUS) <marcus@cpan.thiesenweb.de>
+
+		- Small bug fix to the delete call that will now 
+		  work right
+
+		- Mouse support is now optional
+
+		- Some additions to the Listbox widget
+
 Version 0.71
 ============
 

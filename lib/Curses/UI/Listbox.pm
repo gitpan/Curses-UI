@@ -6,7 +6,8 @@
 # You can redistribute it and/or modify it under the same terms
 # as perl itself.
 #
-# e-mail: maurice@gitaar.net
+# Currently maintained by Marcus Thiesen
+# e-mail: marcus@cpan.thiesenweb.de
 # ----------------------------------------------------------------------
 
 # TODO: fix dox
@@ -28,7 +29,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = '1.10';
+$VERSION = '1.2';
 
 @ISA = qw(
     Curses::UI::Widget Curses::UI::Common 
@@ -102,6 +103,7 @@ sub new ()
         -selected   => undef, # the selected item
         -wraparound => 0,     # wraparound on first/last item
         -onchange   => undef, # onChange event handler
+	-onselchange=> undef, # onSelectionChange event handler
         
         %userargs,
 
@@ -136,19 +138,25 @@ sub new ()
 
 sub onChange(;$) { shift()->set_event('-onchange', shift()) }
 
-# TODO: document
+sub onSelectionChange(;$) { shift()->set_event('-onselchange', shift()) };
+
 sub values(;$)
 {
     my $this = shift;
     my $values = shift;
 
+    # Clear ang go to first item if we get new data
+    $this->clear_selection();
+ 
     if (defined $values and ref $values eq 'ARRAY') {
         $this->{-values} = $values;
+	$this->option_first() if defined $values;
 
         # Make this widget non-focusable if there are
         # no values in it.
         $this->focusable(scalar(@{$values}));
     }
+
     return $this->{-values}
 }
 
@@ -232,6 +240,15 @@ sub getlabel($;)
     $label =~ s/\t/ /g; # do not show TABs
     
     return $label;
+}
+
+
+sub get_active_value($;)
+{
+    my $this = shift;
+    my $id = $this->{-ypos};
+    my $value = $this->{-values}->[$id];    
+    return $value;
 }
 
 sub draw(;$)
@@ -350,6 +367,7 @@ sub option_last()
 {
     my $this = shift;
     $this->{-ypos} = @{$this->{-values}} - 1;
+    $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
 }
@@ -362,6 +380,7 @@ sub option_nextpage()
         return $this;
     }
     $this->{-ypos} += $this->canvasheight - 1;
+    $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
 }
@@ -374,8 +393,46 @@ sub option_prevpage()
         return $this;
     }
     $this->{-ypos} -= $this->canvasheight - 1;
+    $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
+}
+
+sub clear_selection()
+{
+    my $this = shift;
+    if ($this->{-multi}) {
+	my $selection = $this->{-selected};
+	return unless defined $selection;
+	foreach my $id (keys %$selection) {
+	    $selection->{$id} = 0;
+	}
+    } else {
+	$this->{-selected} = 0;
+    }
+    $this->schedule_draw(1);
+}
+
+sub set_selection() 
+{
+    my $this = shift;
+    my $id = shift;
+
+    if ($this->{-multi})
+    {
+        my $changed = ($this->{-selected}->{$id} ? 0 : 1);
+        $this->{-selected}->{$id} = 1;
+        $this->run_event('-onchange') if $changed;
+        $this->schedule_draw(1);
+        return $this;
+    } else {
+        my $changed = (not defined $this->{-selected} or
+                       ($this->{-selected} != $id));
+        $this->{-selected} = $id;
+        $this->run_event('-onchange') if $changed;
+        $this->schedule_draw(1);
+        return ($this->{-radio} ? $this : undef);
+    }
 }
 
 sub option_next()
@@ -391,6 +448,7 @@ sub option_next()
         $this->{-ypos}++;
     }
     $this->layout_content;
+    $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
 }
@@ -408,6 +466,7 @@ sub option_prev()
         $this->{-ypos}--;
     }
     $this->layout_content;
+    $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
 }
@@ -437,6 +496,7 @@ sub option_first()
 {
     my $this = shift;
     $this->{-ypos} = 0;
+    $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
 }
@@ -689,6 +749,12 @@ This sets the onChange event handler for the listbox widget.
 If a new item is selected, the code in CODEREF will be executed.
 It will get the widget reference as its argument.
 
+=item * B<-onselchange> < CODEREF >
+
+This sets the onSelectionChange event handler for the listbox widget.
+If a new item is marked as active CODEREF will be executed.
+It will get the widget reference as its argument.
+
 
 
 =back
@@ -723,9 +789,28 @@ This method will return the values of the currently selected items
 in the list. If the listbox is not a multi-select listbox only one
 value will be returned of course.
 
+=item * B<get_active_value> ( )
+
+This method will return the value of the currently active (i.e 
+highlighted line).
+
+=item * B<clear_selection> ( )
+
+This method clears the selected objects of a multi and radiobutton
+listbox.
+
+=item * B<values> ( LIST )
+
+This method sets the values to use. 
+
 =item * B<onChange> ( CODEREF )
 
 This method can be used to set the B<-onchange> event handler
+(see above) after initialization of the listbox. 
+
+=item * B<onSelectionChange> ( CODEREF )
+
+This method can be used to set the B<-onselchange> event handler
 (see above) after initialization of the listbox. 
 
 
@@ -821,6 +906,8 @@ L<Curses::UI::Common|Curses::UI::Common>
 =head1 AUTHOR
 
 Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+Maintained by Marcus Thiesen (marcus@cpan.thiesenweb.de)
 
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
