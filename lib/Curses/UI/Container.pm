@@ -18,7 +18,7 @@ use Curses::UI::Common;
 
 use vars qw(@ISA $VERSION);
 @ISA = qw(Curses::UI::Widget Curses::UI::Common);
-$VERSION = "1.0.0";
+$VERSION = "1.00";
 
 # ----------------------------------------------------------------------
 # Public interface
@@ -69,6 +69,10 @@ sub add($@;)
 
 	confess "The object id \"$id\" is already in use!"
 		if (defined $this->{-container}->{$id});
+
+	# Make it possible to specify WidgetType instead of
+	# Curses::UI::WidgetType.
+	$class = "Curses::UI::$class" if $class !~ /\:\:/;
 
 	# Create a new object of the wanted class.
 	$this->usemodule($class);
@@ -206,7 +210,7 @@ sub hasa($;)
 	return $count;
 }
 
-# Recursive rebuild from the RootWindow up.
+# Recursive rebuild from the root up.
 sub rebuild_from_scratch()
 {
 	my $this = shift;
@@ -241,6 +245,9 @@ sub ontop($;$)
 	my $id = shift;
 	my $force = shift || 0;
 	
+	# If we have a stack of no windows, return immediately.
+	return $this if @{$this->{-windoworder}} == 0;
+
 	# If we have a stack of only 1 window, the -windoworder
 	# will therefor never change. We'll make sure here that
 	# the window is drawn.

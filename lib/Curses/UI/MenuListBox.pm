@@ -20,7 +20,7 @@ use Curses::UI::ListBox;
 use Curses::UI::Widget;
 
 use vars qw($VERSION @ISA);
-$VERSION = '1.0.0';
+$VERSION = '1.00';
 @ISA = qw(Curses::UI::ListBox Curses::UI::Common Curses::UI::Window);
 
 sub new()
@@ -127,7 +127,7 @@ sub cursor_right()
 
 		# Create the submenu.
 		my ($return, $key) = $this->root->add(
-			"_submenu_$this", 'Curses::UI::MenuListBox',
+			"_submenu_$this", 'MenuListBox',
 			-x      => $x,
 			-y      => $y,
 			-menu   => $this->{-menu}->[$this->{-ypos}]->{-submenu},

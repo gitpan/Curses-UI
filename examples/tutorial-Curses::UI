@@ -1,0 +1,108 @@
+#!/usr/bin/perl -w
+
+open STDERR, ">/tmp/errors";
+
+use strict;
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+
+my $cui = new Curses::UI;
+
+my $win1 = $cui->add(
+        'win1', 'Window',
+        -border => 1,
+        -title => 'My first Curses::UI window!',
+        -pad => 2,
+);
+
+my $win2 = $cui->add(
+        'win2', 'Window',
+        -border => 1,
+        -title => 'My second Curses::UI window!',
+        -pad => 6,
+);
+
+my $popup = $win1->add(
+        'popup', 'PopupBox',
+        -x => 2,
+        -y => 2,
+        -sbborder => 1, 
+        -values => [ 1, 2, 3, 4, 5 ],
+        -labels => {
+            1 => 'One',
+            2 => 'Two', 
+            3 => 'Three',
+            4 => 'Four',
+            5 => 'Five',
+        },
+);
+
+my $but1 = $win1->add(
+        'buttons', 'Buttons',
+        -x => 2, 
+        -y => 4, 
+        -buttons => ['< goto window 2 >', '< Quit >'],
+);
+    
+   
+my $editor = $win2->add(
+        'editor', 'TextEditor',
+        -border => 1,
+        -vscrollbar => 1,
+        -wrapping => 1,
+        -x => 2,
+        -y => 2,
+        -padright => 2,
+        -padbottom => 3,
+);
+
+my $but2 = $win2->add(
+        'buttons', 'Buttons',
+        -x => 2,
+        -y => -2,
+        -buttons => ['< goto window 1 >', '< Quit >'],
+);
+
+
+$win1->returnkeys("\cN", "\cQ");
+$win2->returnkeys("\cN", "\cQ");
+
+MAINLOOP: for(;;) {
+     WINDOW: foreach my $win_id ('win1','win2') {
+            # Bring the current window on top
+            $cui->ontop($win_id);
+
+            # Get the window object.
+            my $win = $cui->getobj($win_id);
+
+            # Bring the focus to this window. Focus routines
+            # will return a returnvalue (which is always
+            # "LEAVE_CONTAINER" for a Container object) and
+            # the last key that was pressed.
+            my ($returnvalue, $lastkey) = $win->focus;
+            
+            # First check if the $lastkey is one of the
+            # shortcut keys we created using returnkeys().
+            if ($lastkey eq "\cN") {
+                next WINDOW;
+            } elsif ($lastkey eq "\cQ") {
+                last MAINLOOP;
+            }
+
+            # Nope. Then we can assume that a button
+            # was pressed. Check which button it was.
+
+            # First get the button object of the focused window.
+            my $btn = $win->getobj('buttons');
+
+            # Get the index of the pressed button.
+            my $button_id = $btn->get;
+
+            # If the $button_id == 1, the Quit button was clicked.
+            last MAINLOOP if $button_id == 1;
+     }
+}
+
+$cui->dialog("Bye bye!");
+

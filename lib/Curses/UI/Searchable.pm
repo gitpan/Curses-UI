@@ -25,7 +25,7 @@ use vars qw($VERSION @ISA @EXPORT);
 	search
 	search_next
 );
-$VERSION = '1.0.0';
+$VERSION = '1.01';
 
 sub search_forward()
 {

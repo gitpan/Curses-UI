@@ -15,7 +15,7 @@ use Curses;
 use Curses::UI::Widget; # For height_by_windowscrheight()
 use Curses::UI::Container;
 use vars qw($VERSION @ISA);
-$VERSION = "1.0.0";
+$VERSION = "1.02";
 @ISA = qw(Curses::UI::Container);
 
 sub new()
@@ -36,14 +36,14 @@ sub new()
 
 	my $this = $class->SUPER::new(%args);
 
-	$this->add('prompt', 'Curses::UI::Label',
+	$this->add('prompt', 'Label',
 		-x => 0, -y => 0, 
 		-height => 1, -width => 2,
 		-border => 0,
 		-text => $this->{-prompt},
 	);
 
-	$this->add('entry', 'Curses::UI::TextEntry',
+	$this->add('entry', 'TextEntry',
 		-x => 1, -y => 0, 
 		-height => 1, 
 		-border => 0,

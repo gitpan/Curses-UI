@@ -23,8 +23,8 @@ open STDERR, ">/dev/null";
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 
-use Curses::UI::RootWindow;
-my $root = new Curses::UI::RootWindow;
+use Curses::UI;
+my $cui = new Curses::UI;
 
 # ----------------------------------------------------------------------
 # Menu definition.
@@ -60,23 +60,23 @@ my @menu = (
 
 sub menu_openfile()
 {
-	my $file = $root->filebrowser( -editfilename => 0 );
+	my $file = $cui->filebrowser( -editfilename => 0 );
 	if (defined $file) {
-		$root->dialog( -message => "You selected $file for open" );
+		$cui->dialog( -message => "You selected $file for open" );
 	}
 }
 
 sub menu_savefile()
 {
-	my $file = $root->filebrowser( -editfilename => 1 );
+	my $file = $cui->filebrowser( -editfilename => 1 );
 	if (defined $file) {
-		$root->dialog( -message => "You selected $file for save" );
+		$cui->dialog( -message => "You selected $file for save" );
 	}
 }
 		
 sub exit_dialog()
 {
-	my $return = $root->dialog(
+	my $return = $cui->dialog(
 			-title     => "Are you sure???", 
 			-buttons   => ['< Yes >' , '< No >'],
 			-values    => [1         , 0       ],
@@ -99,21 +99,25 @@ sub exit_dialog()
 # Create widgets
 # ----------------------------------------------------------------------
 
-$root->add('menu','Curses::UI::MenuBar', 
+$cui->add(
+	'menu','MenuBar', 
 	-menu => \@menu,
 );
 
-my $page1 = $root->add('page1', 'Curses::UI::Window',
+my $page1 = $cui->add(
+	'page1', 'Window',
 	-border		=> 1,
 	-ipad		=> 1,
 );
 
-$page1->add('label', 'Curses::UI::Label',
+$page1->add(
+	'label', 'Label',
 	-text => 'Press CTRL+X for the menu...'
 );
 
 
-$page1->add('checkbox2', 'Curses::UI::CheckBox',
+$page1->add(
+	'checkbox2', 'CheckBox',
 	-y => -1,
 	-x => -1,
 	-label => 'Another checkbox',
@@ -125,10 +129,10 @@ $page1->returnkeys("\cX", KEY_F(10));
 # The main loop
 # ----------------------------------------------------------------------
 
-$root->draw;
+$cui->draw;
 
 for (;;)
 {
-	$root->getobj('page1')->focus;
-	$root->getobj('menu')->focus;
+	$cui->getobj('page1')->focus;
+	$cui->getobj('menu')->focus;
 }

@@ -38,8 +38,8 @@ if (defined $currentfile and -f $currentfile)
 #
 # Hint: If you need STDERR, write it out to a file and put 
 # a tail on that file to see the STDERR output. Example:
-open STDERR, ">>/tmp/editor_errors.$$";
-#open STDERR, ">/dev/null" or die "Can't redirect STDERR to /dev/null";
+#open STDERR, ">>/tmp/editor_errors.$$";
+open STDERR, ">/dev/null" or die "Can't redirect STDERR to /dev/null";
 
 # ----------------------------------------------------------------------
 # Menu definition
@@ -65,27 +65,26 @@ my @menu = (
 # Create widgets
 # ----------------------------------------------------------------------
 
-# Create the RootWindow. Everything else will be built
-# up from here.
-use Curses::UI::RootWindow;
-my $root = new Curses::UI::RootWindow;
+# Create the root. Everything else will be built up from here.
+use Curses::UI;
+my $cui = new Curses::UI;
 
-# Add the menu to the RootWindow.
-my $menu = $root->add(
-	'menu','Curses::UI::MenuBar', 
+# Add the menu to the root.
+my $menu = $cui->add(
+	'menu','MenuBar', 
 	-menu => \@menu,
 );
 
 # First we create the screen for the editor.
-my $screen = $root->add(
-	'screen', 'Curses::UI::Window',
+my $screen = $cui->add(
+	'screen', 'Window',
 	-border		 => 0,
 	-ipad		 => 0,
 );
 
 # We add the editor widget to this screen.
 my $editor = $screen->add(
-	'editor', 'Curses::UI::TextEditor',
+	'editor', 'TextEditor',
 	-border 	 => 1,
 	-padtop		 => 0,	
 	-padbottom 	 => 3,
@@ -105,7 +104,7 @@ $editor->clear_binding('return');
 
 # Help information for the user. 
 $screen->add(
-	'help_1', 'Curses::UI::Label',
+	'help_1', 'Label',
 	-y 	 	 => -2,
 	-width		 => -1,
 	-reverse 	 => 1,
@@ -114,7 +113,7 @@ $screen->add(
 		  	  . " ^W toggle wrapping",
 );
 $screen->add(
-	'help_2', 'Curses::UI::Label',
+	'help_2', 'Label',
 	-y 	 	 => -1,
 	-reverse 	 => 1,
 	-width		 => -1,
@@ -153,7 +152,7 @@ sub split_currentfile()
 sub open_dialog()
 {
 	my ($c_path, $c_file) = split_currentfile();
-	my $file = $root->filebrowser( 
+	my $file = $cui->filebrowser( 
 		-editfilename => 0,
 		-path	      => $c_path,
 		-file         => $c_file,
@@ -168,7 +167,7 @@ sub open_dialog()
 		    $editor->cursor_to_home;
 	 	    $currentfile = $file;
 		} else { 
-		    $root->error(-message => "Can't read file \"$file\":\n$!");
+		    $cui->error(-message => "Can't read file \"$file\":\n$!");
 		}
 	}
 }
@@ -178,7 +177,7 @@ sub save_dialog()
 
 	my ($c_path, $c_file) = split_currentfile();
 	
-	my $file = $root->filebrowser(
+	my $file = $cui->filebrowser(
 		-editfilename => 1,
 		-path	      => $c_path,
 		-file         => $c_file,
@@ -189,7 +188,7 @@ sub save_dialog()
 		# Overwrite existing file?
 	    	if (-e $file) 
 		{
-	            my $overwrite = $root->dialog(
+	            my $overwrite = $cui->dialog(
 			-title     => "Confirm",
 			-buttons   => ['< Yes >' , '< No >'],
 			-values    => [1         , 0       ],
@@ -203,20 +202,20 @@ sub save_dialog()
 		if (open F, ">$file") {
 		    print F $editor->text;
 		    if (close F) {
-		        $root->dialog(-message => "File \"$file\"\nsuccessfully saved");
+		        $cui->dialog(-message => "File \"$file\"\nsuccessfully saved");
 			$currentfile = $file;
 		    } else {
-		        $root->error(-message => "Error on closing file \"$file\":\n$!");
+		        $cui->error(-message => "Error on closing file \"$file\":\n$!");
 		    }
 		} else {
-		    $root->error(-message => "Can't write to $file:\n$!");
+		    $cui->error(-message => "Can't write to $file:\n$!");
 		}
 	}
 }
 
 sub about_dialog()
 {
-	$root->dialog(
+	$cui->dialog(
 		-title => 'About editor',
 		-message => "Program : Curses::UI Editor\n"
 	 		  . "Author  : Maurice Makaay\n"
@@ -229,7 +228,7 @@ sub about_dialog()
 		
 sub exit_dialog()
 {
-	my $return = $root->dialog(
+	my $return = $cui->dialog(
 			-title     => "Are you sure???", 
 			-buttons   => ['< Yes >' , '< No >'],
 			-values    => [1         , 0       ],
@@ -251,7 +250,7 @@ sub exit_dialog()
 # ----------------------------------------------------------------------
 
 # Draw the screen.
-$root->draw;
+$cui->draw;
 
 for (;;)
 {
@@ -267,8 +266,8 @@ for (;;)
 	} elsif ($key eq "\cO") {
 		open_dialog();
 	} elsif ($key eq "\cL") {
-                $root->layout_from_scratch;
-                $root->rebuild_from_scratch;
+                $cui->layout_from_scratch;
+                $cui->rebuild_from_scratch;
 	} else {
 		$menu->focus;
 	}

@@ -19,7 +19,7 @@ use Curses::UI::Common;
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Window Curses::UI::Common);
-$VERSION = '1.0.0';
+$VERSION = '1.06';
 
 sub new ()
 {
@@ -47,18 +47,17 @@ sub new ()
 	# if the -path is not defined.
 	$this->goto_homedirectory unless defined $this->{-path};
 
-	my $buttons = $this->add('buttons', 'Curses::UI::Buttons',
+	my $buttons = $this->add('buttons', 'Buttons',
 		-y 		 => -1,
 		-x		 => 0,
 		-width 		 => undef, 
 		-buttonalignment => 'right',
-		-mayloosefocus 	 => 1,
 		-buttons 	 => ['< OK >', '< Cancel >'],
 		-values 	 => [1, 0],
 	);
 	$buttons->set_routine('return', \&return);
 
-	my $dirbrowser = $this->add('dirbrowser', 'Curses::UI::ListBox',
+	my $dirbrowser = $this->add('dirbrowser', 'ListBox',
 		-y 		 => 0,
 		-border 	 => 1,
 		-width 		 => int(($this->screenwidth - 3)/2),
@@ -71,7 +70,7 @@ sub new ()
 	$dirbrowser->set_routine('goto-homedirectory',\&select_homedirectory);
 	$dirbrowser->set_binding('goto-homedirectory', '~');
 	
-	my $filebrowser = $this->add('filebrowser', 'Curses::UI::ListBox',
+	my $filebrowser = $this->add('filebrowser', 'ListBox',
 		-y 		 => 0,
 		-x 		 => $this->getobj('dirbrowser')->width + 1,
 		-border 	 => 1,
@@ -86,19 +85,19 @@ sub new ()
 	my $labeloffset = 1;
 	my $textoffset = 7;
 
-	$this->add('pathlabel', 'Curses::UI::Label',
+	$this->add('pathlabel', 'Label',
 		-x 		 => $labeloffset, 
 		-y 		 => $this->screenheight - 5, 
 		-text		 => 'Path:',
 	);
-	$this->add('pathvalue', 'Curses::UI::Label',
+	$this->add('pathvalue', 'Label',
 		-x 		 => $textoffset,
 		-y 		 => $this->screenheight - 5, 
 		-width		 => $this->screenwidth - 6,
 		-text		 => $this->{-path},
 	);
 
-	$this->add('filelabel', 'Curses::UI::Label',
+	$this->add('filelabel', 'Label',
 		-x 		 => $labeloffset, 
 		-y 		 => $this->screenheight - 4, 
 		-text		 => 'File:',
@@ -106,7 +105,7 @@ sub new ()
 	
 	if ($this->{-editfilename})
 	{
-		$this->add('filevalue', 'Curses::UI::TextEntry',
+		$this->add('filevalue', 'TextEntry',
 			-x		 => $textoffset,
 			-y 		 => $this->screenheight - 4, 
 			-text		 => $this->{-file},
@@ -117,7 +116,7 @@ sub new ()
 			-regexp		 => '/^[^\/]*$/',
 		);
 	} else {
-		$this->add('filevalue', 'Curses::UI::Label',
+		$this->add('filevalue', 'Label',
 			-x 		 => $textoffset, 
 			-y 		 => $this->screenheight - 4, 
 			-text		 => $this->{-file},
@@ -127,12 +126,12 @@ sub new ()
 
 	if (defined $this->{-mask_values}) 
 	{
-		$this->add('masklabel', 'Curses::UI::Label',
+		$this->add('masklabel', 'Label',
 			-x 	 => $labeloffset,
 			-y 	 => $this->screenheight - 2,
 			-text 	 => 'Mask:',
 		);
-		my $maskbox = $this->add('maskbox', 'Curses::UI::PopupBox',
+		my $maskbox = $this->add('maskbox', 'PopupBox',
 			-x 	 => $textoffset,
 			-y 	 => $this->screenheight - 2,
 			-values  => $this->{-mask_values},

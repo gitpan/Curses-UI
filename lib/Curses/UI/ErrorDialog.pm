@@ -20,7 +20,7 @@ use Curses::UI::Dialog;
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Dialog Curses::UI::Common);
-$VERSION = '1.0.0';
+$VERSION = '1.01';
 
 sub new ()
 {

@@ -18,7 +18,7 @@ use Curses::UI::Common;
 use Curses::UI::Widget;
 
 use vars qw($VERSION @ISA);
-$VERSION = '1.0.0';
+$VERSION = '1.00';
 @ISA = qw(Curses::UI::Widget Curses::UI::Common);
 
 my %routines = (

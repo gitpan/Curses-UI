@@ -20,7 +20,7 @@ use Curses::UI::Searchable;
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Widget Curses::UI::Common Curses::UI::Searchable);
-$VERSION = '1.0.0';
+$VERSION = '1.12';
 	
 # Configuration: routine name to subroutine mapping.
 my %routines = (

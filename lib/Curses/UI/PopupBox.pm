@@ -19,7 +19,7 @@ use Curses::UI::ListBox;
 use Curses::UI::Label;
 
 use vars qw($VERSION @ISA);
-$VERSION = '1.0.0';
+$VERSION = '1.05';
 @ISA = qw(Curses::UI::Widget Curses::UI::Common);
 
 my %routines = (
@@ -71,7 +71,7 @@ sub new ()
 	# No width given? Then make the width large
 	# enough to contain the longest label.
 	$args{-width} = width_by_windowscrwidth(
-		maxlabelwidth(%args), 
+		maxlabelwidth(%args) + 1, 
 		-border => 1) unless defined $args{-width};
 
 	my $this = $class->SUPER::new( %args );

@@ -1,3 +1,31 @@
+Changelog for the Curses::UI distribution:
+
+
+Version 0.55
+============
+
+2002-01-06:     - Instead of: 
+                    $thingy->add('id', 'Curses::UI::WidgetType', %args)
+                  You may now also write:
+                    $thingy->add('id', 'WidgetType', %args)
+                  If there are no double colons in the class name,
+                  the sofware assumes the class is in Curses::UI.
+
+                - Made documentation for Curses::UI.
+
+                - Fixed some small bugs and did some code cleanup.
+
+
+2002-01-05:     - Included basic_test in test.pl, so a real use of the
+                  package is tested.
+
+                - The Curses::UI::RootWindow does not exist anymore.
+                  Now the rootlevel for Curses::UI is created using
+                  "my $cui = new Curses::UI".
+
+                - Finished first version of documentation for 
+                  Curses::UI::Widget.
+
 Version 0.54
 ============
 

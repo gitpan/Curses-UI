@@ -17,11 +17,10 @@ use Curses;
 use Curses::UI::Common;
 use Curses::UI::Window;
 use Curses::UI::Buttons; # for compute_buttonwidth()
-use Curses::UI::Widget;  # for process_padding()
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Window Curses::UI::Common);
-$VERSION = '1.0.0';
+$VERSION = '1.04';
 
 sub new ()
 {
@@ -36,7 +35,7 @@ sub new ()
 	
 	my $this = $class->SUPER::new(%args);
 	
-	$this->add('message', 'Curses::UI::TextViewer',
+	$this->add('message', 'TextViewer',
 		-border 	=> 1,
 		-vscrollbar 	=> 1,
 		-wrapping 	=> 1,
@@ -54,12 +53,10 @@ sub new ()
 		$buttonargs{$arg} = $this->{$arg} 
 			if exists $this->{$arg}; 
 	}
-	my $b = $this->add('buttons', 'Curses::UI::Buttons',
+	my $b = $this->add('buttons', 'Buttons',
 		-y    => -1,
-		-mayloosefocus => 1,
 		%buttonargs
 	);
-	$b->set_routine('return', 'LEAVE_CONTAINER');
 	
 	$this->layout;
 	return bless $this, $class;

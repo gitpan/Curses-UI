@@ -17,7 +17,7 @@ use Curses::UI::TextEditor;
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::TextEditor);
-$VERSION = '1.0.0';
+$VERSION = '1.00';
 	
 sub new ()
 {

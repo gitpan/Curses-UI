@@ -1,7 +1,8 @@
 use Test;
 
-BEGIN { plan tests => 1 };
+BEGIN { plan tests => 2 };
 
+use Curses::UI;
 use Curses::UI::Buttons;
 use Curses::UI::CheckBox;
 use Curses::UI::Common;
@@ -16,7 +17,6 @@ use Curses::UI::MenuListBox;
 use Curses::UI::PopupBox;
 use Curses::UI::ProgressBar;
 use Curses::UI::RadioButtonBox;
-use Curses::UI::RootWindow;
 use Curses::UI::SearchEntry;
 use Curses::UI::Searchable;
 use Curses::UI::TextEditor;
@@ -26,3 +26,7 @@ use Curses::UI::Widget;
 use Curses::UI::Window;
 
 ok(1);
+
+system "examples/basic_test";
+ok($? == 0)
+

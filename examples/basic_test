@@ -1,0 +1,42 @@
+#!/usr/bin/perl -w
+use strict;
+use Curses;
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+
+open STDERR, ">/tmp/stderr.$$";
+
+use Curses::UI;
+my $cui = new Curses::UI;
+
+my $win = $cui->add( 'window1', 'Window' );
+
+$win->add('label1', 'Label', -x => 1, -y => 1,
+	-text => "This is a basic test to see if Curses::UI works like ");
+
+$win->add('label2', 'Label', -x => 1, -y => 2,
+	-text => "it should do. It will exit in a few seconds...");
+
+$cui->draw;
+sleep 2;
+endwin();
+
+my $exit = 0;
+close STDERR;
+if (-s "/tmp/stderr.$$")
+{
+	if (open E, "/tmp/stderr.$$") {
+		while (<E>){
+			chomp;
+			print $_ . "\n";
+		}
+		print "\n";
+		close E;
+		$exit = 1;
+	}	
+}
+unlink "/tmp/stderr.$$";
+
+print "\n";
+exit($exit);

@@ -25,7 +25,7 @@ require Exporter;
 	Curses::UI::Widget Curses::UI::Common 
 	Curses::UI::Searchable Exporter
 );
-$VERSION = '1.0.0';
+$VERSION = '1.00';
 @EXPORT = qw(
 	maxlabelwidth
 );

@@ -8,6 +8,10 @@ Changes
 examples/cascaded_menu
 examples/editor
 examples/widgets
+examples/basic_test
+examples/hello_world
+examples/tutorial-Curses::UI
+lib/Curses/UI.pm
 lib/Curses/UI/Buttons.pm
 lib/Curses/UI/CheckBox.pm
 lib/Curses/UI/Common.pm
@@ -23,7 +27,6 @@ lib/Curses/UI/MenuListBox.pm
 lib/Curses/UI/PopupBox.pm
 lib/Curses/UI/ProgressBar.pm
 lib/Curses/UI/RadioButtonBox.pm
-lib/Curses/UI/RootWindow.pm
 lib/Curses/UI/SearchEntry.pm
 lib/Curses/UI/Searchable.pm
 lib/Curses/UI/TextEditor.pm

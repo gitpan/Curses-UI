@@ -25,7 +25,7 @@ use vars qw($VERSION @ISA @EXPORT);
 	width_by_windowscrwidth
 	process_padding
 );
-$VERSION = '1.0.0';
+$VERSION = '1.18';
 
 sub new ()
 {
@@ -378,7 +378,11 @@ sub windowparameters
 
 # Must be overridden in child class, to make
 # the widget focusable.
-sub focus { shift()->show; return ('RETURN',''); }
+sub focus 
+{ 
+	shift()->show;
+	return ('RETURN',''); 
+}
 
 sub draw(;$)
 {
@@ -584,6 +588,7 @@ __END__
 Curses::UI::Widget - The base class for all widgets
 
 
+
 =head1 SYNOPSIS
 
 This class is not used directly by somebody who is building an application
@@ -677,7 +682,8 @@ Here's an example of how to start out creating a new widget:
     # $no_update part is used to disable screen flickering
     # if a lot of widgets have to be drawn at once (for
     # example on resizing or redrawing). The curses window
-    # which you can use for drawing is $this->{-windowscr}.
+    # which you can use for drawing the widget's contents
+    # is $this->{-windowscr}.
     #
     sub draw(;$) {
         my $this = shift;
@@ -685,6 +691,8 @@ Here's an example of how to start out creating a new widget:
         return $this if $this->hidden;
         $this->SUPER::draw(1);
 
+        ....your own draw stuff....
+        $this->{-windowscr}->addstr(0, 0, "Fixed string");
         ....your own draw stuff....
 
         $this->{-windowscr}->noutrefresh;
@@ -700,7 +708,7 @@ Here's an example of how to start out creating a new widget:
     sub focus()
     {
         my $this = shift;
-        $this->show;
+        $this->show; # makes the widget visible if it was invisible
         return $this->generic_focus(
             undef,             # delaytime, default = 2 (1/10 second).
             NO_CONTROLKEYS,    # disable controlkeys like CTRL+C. To enable
@@ -715,65 +723,293 @@ Here's an example of how to start out creating a new widget:
     ....your own widget handling routines....
 
 
+
 =head1 STANDARD OPTIONS
 
 The standard options for (most) widgets are the options that are enabled
 by this class. So this class doesn't really have standard options.
 
 
+
+
+
 =head1 WIDGET-SPECIFIC OPTIONS
 
-GENERAL:
+=head2 GENERAL:
 
--parent         The parent of the object 
--border         0 = no border, 1 = show border
--sbborder       Square bracket border (using [ and ] symbols)
-                instead of normal border (especially useful for
-                single line widgets)
+=over 4
 
-POSITIONING:
+=item B<-parent> <parent object>
 
--x              The x-position of the widget, relative to the parent
--y              The y-position of the widget, relative to the parent
+This option specifies parent of the object. This parent is 
+the object (Curses::UI, Window, Widget(descendant), etc.) 
+in which the widget is drawn.  
 
--width          The width of the widget. Undef or -1 mean "full width"
--height         The height of the widget. Undef or -1 mean "full height"
+=item B<-border> <0 or 1>
 
--pad            Overall padding outside the widget
--padtop         Specific padding for each side of the widget. If 
--padbottom      one of these four is defined, it will override the
--padleft        basic -pad setting.
--padright
+Each widget can be drawn with or without a border. To enable
+the border use a true value (1) and to disable it use a 
+false value (0). The default is not to use a border.
 
--ipad           Overall padding inside the widget
--ipadtop        See -padtop, -padbottom, -padleft, -padright
--ipadbottom
--ipadleft
--ipadright
+=item B<-sbborder> <0 or 1>
 
-TITLE:
+If no border is used, a square bracket border may be used.
+This is a border which is constructed from '[' and ']' 
+characters. This type of border is especially useful for 
+single line widgets (like text entries and popup boxes).
+A square bracket border can only be enabled if -border 
+is false. The default is not to use a square bracket border.
 
-(titles will only be visible if border = 1)
+=back
 
--title          The text for the title
--titlereverse   0 = normal title, 1 = title in reverse font
--titlefullwidth 0 = titlewidth is textwidth, 1 = title is full width
 
-SCROLLBARS:
 
--vscrollbar     0 = no vertical scrollbar
-                1 = show vertical scrollbar (on the right side)
-                'right' = show scrollbar on the right side of the widget
-                'left'  = show scrollbar on the right side of the widget
--hscrollbar     0 = no horizontal scrollbar
-                1 = show horizontal scrollbar (at the bottom)
-                'top' = show scrollbar at the top of the widget
-                'bottom' = show scrollbar at the bottom of the widget
+=head2 POSITIONING:
+ 
+ +---------------------------------------------------+
+ | parent                     ^                      |
+ |                            |                      |
+ |                            y                      |
+ |                            |                      |
+ |                            v                      |
+ |                            ^                      |
+ |                            |                      |
+ |                          padtop                   |
+ |                            |                      |
+ |                            v                      |
+ |                    +- TITLE -------+              |
+ |                    | widget   ^    |              |
+ |                    |          |    |              |
+ |                    |          |    |              |
+ |<--x--><--padleft-->|<----width---->|<--padright-->|
+ |                    |          |    |              |
+ |                    |          |    |              |
+ |                    |        height |              |
+ |                    |          v    |              |
+ |                    +---------------+              |
+ |                               ^                   |
+ |                               |                   |
+ |                           padbottom               |
+ |                               |                   |
+ |                               v                   |
+ +---------------------------------------------------+
+
+
+=over 4
+
+=item B<-x> <value>             
+
+The x-position of the widget, relative to the parent. The default
+is 0.
+
+=item B<-y> <value>
+
+The y-position of the widget, relative to the parent. The default
+is 0.
+
+=item B<-width> <value>
+
+The width of the widget. If the width is undefined or -1,
+the maximum available width will be used. By default the widget
+will use the maximum available width.
+
+=item B<-height> <value>
+
+The height of the widget. If the height is undefined or -1,
+the maximum available height will be used. By default the widget
+will use the maximum available height.
+
+=back
+
+
+
+=head2 PADDING:
+ 
+=over 4
+
+=item B<-pad> <value>
+
+=item B<-padtop> <value>
+
+=item B<-padbottom> <value>
+
+=item B<-padleft> <value>
+
+=item B<-padright> <value>
+
+With -pad you can specify the default padding outside the widget
+(the default value for -pad is 0). Using one of the -pad... options
+that have a direction in them, you can override the default
+padding.
+ 
+=item B<-ipad> <value>
+
+=item B<-ipadtop> <value>
+
+=item B<-ipadbottom> <value>
+
+=item B<-ipadleft> <value>
+
+=item B<-ipadright> <value>
+
+These are almost the same as the -pad... options, except these options
+specify the padding _inside_ the widget. Normally the available 
+effective drawing area for a widget will be the complete area
+if no border is used or else the area within the border. 
+
+=back
+
+
+
+=head2 TITLE:
+
+Remark:
+
+A title is drawn in the border of a widget. So a title will only
+be available if -border is true.
+
+=over 4
+ 
+=item B<-title> <text>
+
+The text to use for the title. If the text is longer then the 
+available width, it will be clipped.
+
+=item B<-titlereverse> <0 or 1>
+
+The title can be drawn in normal or in reverse type. If -titlereverse
+is true, the text will be drawn in reverse type. The default is to
+use reverse type.
+
+=item B<-titlefullwidth> <0 or 1>
+
+If -titlereverse is true, the title can be stretched to fill the
+complete width of the widget by giving -titlefullwidth a true value.
+By default this option is disabled.
+
+=back
+
+ 
+
+=head2 SCROLLBARS:
+
+Remark: 
+
+Since the user of a Curses::UI program has no real control over
+the so called "scrollbars", they aren't really scrollbars. A 
+better name would be something like "document loction indicators".
+But since they look so much like scrollbars I decided I could get
+away with this naming convention.
+ 
+=over 4
+
+=item B<-vscrollbar> <0, 1, 'left' or 'right'>
+
+If -vscrollbar has a true value, a vertical scrollbar will
+be drawn by the widget. If this true value happens to be "left",
+the scrollbar will be drawn on the left side of the widget. In 
+all other cases it will be drawn on the right side. The default
+is not to draw a vertical scrollbar.
+
+For widget programmers: To control the scrollbar, the widget
+data -vscrolllen (the total length of the content of the widget)
+and -vscrollpos (the current position in the document) should 
+be set. If Curses::UI::Widget::draw is called, the scrollbar
+will be drawn.
+
+=item B<-hscrollbar> <0, 1, 'top' or 'bottom'>
+
+If -hscrollbar has a true value, a horizontal scrollbar will
+be drawn by the widget. If this true value happens to be "top",
+the scrollbar will be drawn at the top of the widget. In 
+all other cases it will be drawn at the bottom. The default
+is not to draw a horizontal scrollbar.
+
+For widget programmers: To control the scrollbar, the widget
+data -hscrolllen (the maximum width of the content of the widget)
+and -hscrollpos (the current horizontal position in the document) 
+should be set. If Curses::UI::Widget::draw is called, 
+the scrollbar will be drawn.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item B<new> (<list of options>)
+
+Create a new Curses::UI::Widget instance. 
+
+=item B<layout> ()
+
+Layout the widget. Compute the size the widget needs and see
+if it fits. Create the curses windows that are needed for
+the widget (the border and the effective drawing area).
+
+=item B<draw> (<0 or 1>)
+
+Draw the Curses::UI::Widget. If the argument to draw is true,
+the screen will not update after drawing.
+
+=item B<title> (<text>)
+
+Change the title that is shown in the border of the widget
+to <text>.
+
+=item B<width> ()
+
+=item B<height> ()
+
+These methods return the total width and height of the widget.
+This is the space that the widget itself uses plus the space that 
+is used by the outside padding.
+
+=item B<borderwidth> ()
+
+=item B<borderheight> ()
+
+These methods return the width and the height of the border of the
+widget.
+
+=item B<screenwidth> ()
+
+=item B<screenheight> ()
+
+These methods return the with and the height of the effective
+drawing area of the widget. This is the area where the 
+draw() method of a widget may draw the contents of the widget
+(BTW: the curses window that is associated to this drawing
+area is $this->{-windowscr}).
+
+=item B<width_by_windowscrwidth> (<needed width>, <%arguments>)
+
+=item B<height_by_windowscrheight> (<needed height>, <%arguments>)
+
+These methods are exported by this module. These can be used
+in child classes to easily compute the total width/height the widget
+needs in relation to the needed width/height of the effective drawing
+area ($this->{-windowscr}). The %arguments are the arguments that
+will be used to create the widget. So if we want a widget that
+has a drawing area height of 1 and that has a border, the -height
+option can be computed using something like:
+
+  my $height = height_by_windowscrheight(1, -border => 1); 
+
+=back
+
 
 
 =head1 SEE ALSO
 
-L<Curses|Curses>
+L<Curses::UI|Curses::UI>, L<Curses|Curses>
+
+
+
+
 
 
 =head1 AUTHOR
@@ -781,13 +1017,6 @@ L<Curses|Curses>
 Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
 
 This package is free software and is provided "as is" without express
-or implied warranty.  It may be used, redistributed and/or modified
-under the terms of the Perl Artistic License (see
-http://www.perl.com/perl/misc/Artistic.html)
-
-=end
-
-
-
-
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
 

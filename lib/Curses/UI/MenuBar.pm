@@ -18,7 +18,7 @@ use Curses::UI::Container;
 use Curses::UI::Window;
 
 use vars qw($VERSION @ISA);
-$VERSION = '1.0.0';
+$VERSION = '1.01';
 @ISA = qw(Curses::UI::Window Curses::UI::Common);
 
 my %routines = (
@@ -161,7 +161,7 @@ sub pulldown()
 
 	my $id = "_submenu_$this";
 	my ($return,$key) = $this->root->add(
-		$id, 'Curses::UI::MenuListBox',
+		$id, 'MenuListBox',
 		-x		=> $x,
 		-y		=> 1,
 		-is_topmenu	=> 1,

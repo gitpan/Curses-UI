@@ -18,7 +18,7 @@ use Curses::UI::Widget;
 use Curses::UI::Common;
 
 use vars qw($VERSION @ISA @EXPORT);
-$VERSION = '1.0.1';
+$VERSION = '1.01';
 
 require Exporter;
 @ISA = qw(Curses::UI::Widget Exporter Curses::UI::Common);
@@ -27,8 +27,8 @@ require Exporter;
 my $default_btn = [ '< OK >' ];
 
 my %routines = (
-	'return' 	=> 'RETURN',
-	'loose-focus'	=> 'LOOSE-FOCUS',
+	'return' 	=> 'LEAVE_CONTAINER',
+	'loose-focus'	=> 'LOOSE_FOCUS',
 	'next'		=> \&next_button,
 	'previous'	=> \&previous_button,
 	'shortcut'	=> \&shortcut,  
@@ -61,7 +61,7 @@ sub new ()
 		-x		 => 0,		  # the horizontal position rel. to parent
 		-y		 => 0,		  # the vertical position rel. to parent
 
-		-mayloosefocus	 => 0,		  # Enable TAB to loose focus?
+		-mayloosefocus	 => 1,		  # Enable TAB to loose focus?
 		-routines	 => {%routines},
 		-bindings	 => {%bindings},
 

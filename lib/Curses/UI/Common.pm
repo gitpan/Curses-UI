@@ -24,7 +24,7 @@ use vars qw(
 	$DEBUG
 ); 
 
-$VERSION = '1.0.4';
+$VERSION = '1.04';
 $DEBUG = 0;
 
 require Exporter;
