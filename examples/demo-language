@@ -21,7 +21,7 @@ my $cui = new Curses::UI (
     -debug         => $debug,
 );
 
-$cui->dialog( "This demo will present all languages of Curses::UI to you.");
+
 
 my $filename;
 foreach my $mod (keys %INC) {
@@ -32,11 +32,13 @@ $filename =~ s/\.pm//gi;
 $filename = File::Spec->catfile($filename, "Language");
 
 opendir DIR, "$filename" or die "Couldn't open language dir $filename: $!\n";
-my @entries = sort readdir(DIR);
+my @entries = grep /\.pm$/, sort readdir(DIR);
+map s/\.pm$//, @entries;
+
+$cui->dialog( "This demo will present all languages of Curses::UI to you\n" .
+	      join "\n", @entries);
 
 foreach my $entry (@entries) {
-    if ($entry =~ /\.pm/) {
-	$entry =~s/\.pm//;
 	my $lang = new Curses::UI::Language("$entry");
 
 	$cui->lang($lang);
@@ -44,5 +46,4 @@ foreach my $entry (@entries) {
 	$cui->dialog("\u$entry");
 
 	$cui->savefilebrowser();
-    }
 }

@@ -304,6 +304,12 @@ sub get_active_value($;)
     return $value;
 }
 
+sub get_active_id($;)
+{
+    my $this = shift;
+    return $this->{-ypos};;
+}
+
 sub draw(;$)
 {
     my $this = shift;
@@ -541,6 +547,7 @@ sub option_select()
     {
         $this->{-selected}->{$this->{-ypos}} = 
            !$this->{-selected}->{$this->{-ypos}};
+        $this->run_event('-onselchange');
         $this->run_event('-onchange');
         $this->schedule_draw(1);
         return $this;
@@ -548,6 +555,7 @@ sub option_select()
         my $changed = (not defined $this->{-selected} or
                        ($this->{-selected} != $this->{-ypos}));
         $this->{-selected} = $this->{-ypos};
+        $this->run_event('-onselchange')if $changed; 
         $this->run_event('-onchange') if $changed;
         $this->schedule_draw(1);
         return ($this->{-radio} ? $this : 'LOOSE_FOCUS');
@@ -637,6 +645,22 @@ sub get()
         return @values;
     } else {
         return $this->{-values}->[$this->{-selected}];
+    }
+}
+
+sub id()
+{
+    my $this = shift;
+    return unless defined $this->{-selected};
+    if ($this->{-multi}) {
+        my @values = ();
+        while (my ($id, $val) = each %{$this->{-selected}}) {
+            next unless $id;
+            push @values, $id;
+        }
+        return @values;
+    } else {
+        return $this->{-selected};
     }
 }
 
@@ -881,9 +905,20 @@ This method will return the values of the currently selected items
 in the list. If the listbox is not a multi-select listbox only one
 value will be returned of course.
 
+=item * B<id> ( )
+
+This method will return the index of the currently selected items
+in the list. If the listboy is not a multi-select listbox it will
+only return one value.
+
 =item * B<get_active_value> ( )
 
 This method will return the value of the currently active (i.e 
+highlighted line).
+
+=item * B<get_active_id> ( )
+
+This method will return the index of the currently active (i.e 
 highlighted line).
 
 =item * B<set_selection> ( LIST )
@@ -902,7 +937,7 @@ listbox.
 
 This method sets the values to use. 
 
-=item * B<-insert_at> < POS, ARRAYREF|SCALAR >
+=item * B<insert_at> < POS, ARRAYREF|SCALAR >
 
 This method adds ARRAYREF or SCALAR into the list of values at
 pos.

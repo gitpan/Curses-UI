@@ -1,6 +1,6 @@
 # -*- perl -*-
 use strict;
-use Test::Simple tests => 9;
+use Test::Simple tests => 12;
 use File::Spec;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";

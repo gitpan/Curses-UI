@@ -98,7 +98,7 @@ sub new ()
         -intellidraw    => 0,
         -bg             => $this->{-bg},
         -fg             => $this->{-fg},
-    );
+    ) if $this->{-label};
 
     $this->layout;
 

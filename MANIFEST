@@ -37,6 +37,9 @@ lib/Curses/UI/Language.pm
 lib/Curses/UI/Language/polish.pm
 lib/Curses/UI/Language/portuguese.pm
 lib/Curses/UI/Language/russian.pm
+lib/Curses/UI/Language/turkish.pm
+lib/Curses/UI/Language/spanish.pm
+lib/Curses/UI/Language/chinese.pm
 lib/Curses/UI/Listbox.pm
 lib/Curses/UI/Menubar.pm
 lib/Curses/UI/PasswordEntry.pm

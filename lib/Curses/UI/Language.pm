@@ -40,6 +40,12 @@ my %lang_alias = (
 
     'no'        => 'norwegian',
 
+    'es'        => 'spanish',
+
+    'tr'        => 'tukish',
+
+    'cn'        => 'chinese',
+
 );
 
 sub new()

@@ -30,7 +30,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.92";
+$VERSION = "0.93";
 
 @EXPORT = qw(
     MainLoop
@@ -150,11 +150,8 @@ DESTROY
 
     if ($this->{-clear_on_exit})
     {
-	## Todo: Win32
-        my $save_path = $ENV{PATH};
-        $ENV{PATH} = "/bin:/usr/bin";
-        system "clear";
-        $ENV{PATH} = $save_path;
+	Curses::erase();
+	Curses::clear();
     }
 }
 
@@ -374,7 +371,12 @@ sub do_one_event(;$)
     }
 
     # Execute added code
-    foreach my $code (keys %{$this->{-added_code}}) {
+    foreach my $key (keys %{$this->{-added_code}}) {
+	my $code = $this->{-added_code}->{$key};
+	if (ref $code ne 'CODE') {
+	    $this->fatalerror(
+		      "The method $key does not refer to a code reference");
+	}
 	$code->($this);
     }
 

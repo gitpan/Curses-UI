@@ -1,5 +1,16 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.93
+============
+		- New languages: Turkish, Spanish, Chinese
+		- Doc changes to the tutorial (after a nice 
+		  review by JC)
+		- Fixed the clear routine to use the build ins
+		  (maybe a security issue, because it called
+		   the system owns "clear" command)
+		- Added some methods to the Listbox widget
+		- Performance patch by Joe Oppegaard
+
 Version 0.92
 ============
 		- Ok, blame me, I'll never ever release some
