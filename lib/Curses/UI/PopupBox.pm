@@ -30,14 +30,11 @@ my %routines = (
 );
 
 my %bindings = (
-	KEY_STAB()	=> 'return',
-	KEY_BTAB()	=> 'return',
-	"\t"		=> 'return',
+	KEY_TAB()	=> 'return',
         KEY_ENTER()     => 'open-popup',
-        "\n"            => 'open-popup',
 	KEY_RIGHT()	=> 'open-popup',
 	"l"		=> 'open-popup',
-	" "		=> 'open-popup',
+	KEY_SPACE()	=> 'open-popup',
 	KEY_DOWN()	=> 'select-next',
 	"j"		=> 'select-next',
 	KEY_UP()	=> 'select-prev',

@@ -48,13 +48,11 @@ my %routines = (
 my %bindings = (
         KEY_LEFT()      	=> 'return',
         "h"             	=> 'return',
-        "\t"            	=> 'return',
-        KEY_STAB()      	=> 'return',
-        KEY_BTAB()      	=> 'return',
+        KEY_TAB()            	=> 'return',
 	KEY_ENTER()		=> 'option-select',
         KEY_RIGHT()     	=> 'option-select',
         "l"             	=> 'option-select',
-        " "             	=> 'option-select',
+        KEY_SPACE()            	=> 'option-select',
         "1"             	=> 'option-check',
         "y"             	=> 'option-check',
         "0"             	=> 'option-uncheck',
@@ -225,6 +223,9 @@ sub draw(;$)
 		{
 			# The label to print.
 			my $label = $this->getlabel($i);
+
+			# Clear up label.
+			$label =~ s/\n|\r//g;
 
 			# Needed space for prefix.
 			my $prefix_len = 

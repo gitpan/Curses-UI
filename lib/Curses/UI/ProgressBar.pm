@@ -25,11 +25,11 @@ sub new ()
 	my $class = shift;
 
 	my %args = ( 
-		-min        => 0,	# minimal value	
-		-max        => 100,	# maximum value	
-		-pos	    => 0,	# the current position
-		-showpercentage => 1,	# show the percentage or not?
-		-showcenterline => 1,	# show the center line or not?
+		-min        => 0,	  # minimal value	
+		-max        => 100,	  # maximum value	
+		-pos	    => 0,	  # the current position
+		-showpercentage => 1,     # show the percentage or not?
+		-showcenterline => 1,     # show the center line or not?
 		-border	    => 1,
 		@_
 	);
@@ -119,7 +119,7 @@ sub draw(;$)
 		$this->{-windowscr}->attroff(A_REVERSE);
 		$this->{-windowscr}->addstr(0, $xpos+$revlen, $norev);
 	}
-
+	
 	$this->{-windowscr}->noutrefresh();
 	doupdate() unless $no_doupdate;
 

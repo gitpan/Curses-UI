@@ -13,7 +13,7 @@
 
 use strict;
 
-# Safe path (for cat /etc/passwd and "clear").
+# Safe path (for cat /etc/passwd).
 $ENV{PATH} = "/bin:/usr/bin";
 
 # Deny STDERR
@@ -365,7 +365,6 @@ FOCUS_CHANGE: for (;;)
 	}
 }
 
-system "clear";
 
 
 

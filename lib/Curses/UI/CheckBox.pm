@@ -30,11 +30,8 @@ my %routines = (
 
 my %bindings = (
         KEY_ENTER()     => 'return',
-        "\n"            => 'return',
-	KEY_STAB()	=> 'return',
-	KEY_BTAB()	=> 'return',
-	"\t"		=> 'return',
-        ' '             => 'toggle',
+	KEY_TAB()	=> 'return',
+        KEY_SPACE()     => 'toggle',
         '0'             => 'uncheck',
         'n'             => 'uncheck',
         '1'             => 'check',

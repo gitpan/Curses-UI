@@ -15,8 +15,6 @@ use strict;
 use Curses;
 use Cwd;
 
-$ENV{PATH} = "/bin:/usr/bin"; # for "clear" command.
-
 # Use the libraries from the distribution, instead of 
 # system wide libraries.
 use FindBin;
@@ -134,29 +132,12 @@ $screen->returnkeys(
 # Callback routines
 # ----------------------------------------------------------------------
 	
-sub split_currentfile()
-{
-	my $c_file = "";
-	my $c_path = cwd;
-	if (defined $currentfile)
-	{
-		my @path = split /\//, $currentfile;
-		$c_file = pop @path;
-		if (@path) {
-			$c_path = join "/", @path;
-		}
-	}
-	return ($c_path, $c_file);
-}
-
 sub open_dialog()
 {
-	my ($c_path, $c_file) = split_currentfile();
-	my $file = $cui->filebrowser( 
-		-editfilename => 0,
-		-path	      => $c_path,
-		-file         => $c_file,
+	my $file = $cui->loadfilebrowser( 
+		-file         => $currentfile,
 	);
+
 	if (defined $file) 
 	{
 		if (open F, "<$file") {
@@ -175,41 +156,21 @@ sub open_dialog()
 sub save_dialog()
 {
 
-	my ($c_path, $c_file) = split_currentfile();
-	
-	my $file = $cui->filebrowser(
-		-editfilename => 1,
-		-path	      => $c_path,
-		-file         => $c_file,
+	my $file = $cui->savefilebrowser(
+		-file         => $currentfile,
 	);
+	return unless defined $file;
 
-	if (defined $file) 
-	{
-		# Overwrite existing file?
-	    	if (-e $file) 
-		{
-	            my $overwrite = $cui->dialog(
-			-title     => "Confirm",
-			-buttons   => ['< Yes >' , '< No >'],
-			-values    => [1         , 0       ],
-			-shortcuts => ['y'       , 'n'     ],
-			-message => "Do you really want to overwrite\n"
-				  . "the file \"$file\"?"
-	            );
-		    return unless $overwrite;
-	    	}
-		
-		if (open F, ">$file") {
-		    print F $editor->text;
-		    if (close F) {
-		        $cui->dialog(-message => "File \"$file\"\nsuccessfully saved");
-			$currentfile = $file;
-		    } else {
-		        $cui->error(-message => "Error on closing file \"$file\":\n$!");
-		    }
-		} else {
-		    $cui->error(-message => "Can't write to $file:\n$!");
-		}
+	if (open F, ">$file") {
+	    print F $editor->text;
+	    if (close F) {
+		$cui->dialog(-message => "File \"$file\"\nsuccessfully saved");
+		$currentfile = $file;
+	    } else {
+		$cui->error(-message => "Error on closing file \"$file\":\n$!");
+	    }
+	} else {
+	    $cui->error(-message => "Can't write to $file:\n$!");
 	}
 }
 
@@ -236,12 +197,7 @@ sub exit_dialog()
 			-message => "Do you really want to quit?"
 	);
 
-	if ($return)
-	{
-		endwin();
-		system "clear";
-		exit(0);
-	}
+	exit(0) if $return;
 }
 
 

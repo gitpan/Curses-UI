@@ -33,7 +33,7 @@ require Exporter;
 	mws_wrap
 	scrlength
 	split_to_lines
-	KEY_ESCAPE
+	KEY_ESCAPE	KEY_SPACE	KEY_TAB
 	WORDWRAP	NO_WORDWRAP
 	CONTROLKEYS	NO_CONTROLKEYS
 	CURSOR_INVISIBLE CURSOR_VISIBLE
@@ -128,7 +128,11 @@ sub CONTROLKEYS() { return 1 }
 sub CURSOR_INVISIBLE() { return 0 }
 sub CURSOR_VISIBLE() { return 1 }
 
+# Keys that are not defined in curses.h, but which might
+# come in handy.
 sub KEY_ESCAPE() { return "\x1b" }
+sub KEY_TAB()    { return "\t" }
+sub KEY_SPACE()  { return " " }
 
 # ----------------------------------------------------------------------
 # Text processing
@@ -404,157 +408,5 @@ sub get_key(;$$)
 
         return $key;
 }
-
-# ----------------------------------------------------------------------
-# Bindings
-# ----------------------------------------------------------------------
-
-sub clear_binding($;)
-{
-        my $this = shift;
-        my $binding = shift;
-        my @delete = ();
-        while (my ($k,$v) = each %{$this->{-bindings}}) {
-                push @delete, $k if $v eq $binding;
-        }
-        foreach (@delete) {
-                delete $this->{-bindings}->{$_};
-        }
-        return $this;
-}
-
-sub set_routine($$;)
-{
-	my $this = shift;
-	my $binding = shift;
-	my $routine = shift;
-	$this->{-routines}->{$binding} = $routine;
-	return $this;
-}
-
-sub set_binding($@;)
-{
-        my $this = shift;
-        my $routine = shift;
-        my @keys = @_;
-
-	confess "$routine: no such routine"
-		unless defined $this->{-routines}->{$routine};
-        foreach my $key (@keys) {
-                $this->{-bindings}->{$key} = $routine;
-        }
-
-        return $this;
-}
-
-sub process_bindings($;)
-{
-	my $this = shift;
-	my $key = shift;
-	
-	# Find the binding to use.
-	my $binding = $this->{-bindings}->{$key};
-	if (not defined $binding) {
-		# Check for default routine.
-		$binding = $this->{-bindings}->{''}; 
-	}
-	
-	if (defined $binding)
-	{
-		# Find the routine to call.
-		my $routine = $this->{-routines}->{$binding};
-		if (defined $routine) 
-		{
-			if (ref $routine eq 'CODE')
-			{
-				my $return = $routine->($this, $key);
-				return $return;
-			} else {
-				return $routine;
-			}
-		} else {
-			confess "No routine defined for "
-			  . "keybinding \"$binding\"!";
-		}
-
-	# No binding?
-	} else {
-		return $this;
-	}
-}
-
-# ----------------------------------------------------------------------
-# Generic focus and draw
-# ----------------------------------------------------------------------
-
-sub generic_focus($$;)
-{
-	my $this 	 	= shift;
-	my $callback_time	= shift;
-	my $control_keys 	= shift;
-	my $cursor_visible 	= shift;
-	my $pre_key_callback	= shift;
-
-	$this->show;
-	$callback_time = 5 
-		unless defined $callback_time;
-
-	# The callback routine to call before a key
-	# is grabbed (e.g. for layouting the screen).
-	$pre_key_callback = sub {} 
-		unless defined $pre_key_callback
-		   and ref $pre_key_callback eq 'CODE';
-
-	my $do_key;
-        for (;;)
-        {
-		$pre_key_callback->($this);
-
-                $this->{-focus} = 1;
-                $this->draw();
-
-                # Grab a key or use the predefined key.
-                my $key = defined $do_key 
-		        ? $do_key
-			: $this->get_key(
-				$callback_time,
-				$control_keys,
-				$cursor_visible
-			  );
-		undef $do_key;
-
-		# Do callback if wanted.
-                $this->process_callback;
-
-		# No key pressed? Then retry grabbing one.
-                next if $key eq '-1';
-
-		# Process keybinding.
-                my $return = $this->process_bindings($key);
-
-		# If $return is something like DO_KEY:<...>, then
-		# execute this key as if it was read from the
-		# keyboard.
-		if (defined $return and $return =~ /^DO_KEY\:(.*)$/)
-		{
-			$do_key = $1; 
-			next;
-		}
-	
-		# Return if keybinding returned a non-reference
-		# value or a CODE reference. Else the next
-		# key will be grabbed.
-                elsif (not ref $return or ref $return eq 'CODE') 
-		{
-                        $this->{-focus} = 0;
-                        $this->draw;
-                        return (wantarray ? ($return, $key) : $return);
-                } 
-        }
-}
-
-sub hidden() { shift()->{-hidden} }
-sub hide()   { shift()->{-hidden} = 1 }
-sub show()   { shift()->{-hidden} = 0 }
 
 1;

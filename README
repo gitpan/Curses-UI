@@ -21,13 +21,18 @@ several widgets which can be used to build a user interface:
 - Progressbar
 - Buttons 
 - Checkbox
-- Dialog window
-- Error dialog window
-- Filebrowser window
 - MenuBar (uses MenuListbox)
 - Texteditor (has features like word wrapping and undo)
 - Textviewer
 - Textentry
+
+There are also a couple of dialog windows available:
+
+- Standard dialog window (message + buttons)
+- Filebrowser 
+- Error dialog window
+- Status window (no interaction so actually not a dialog)
+- Progress window (no interaction so actually not a dialog)
 
 
 Some random features:

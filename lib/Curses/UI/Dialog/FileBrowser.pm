@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::FileBrowser
+# Curses::UI::Dialog::FileBrowser
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,13 +9,14 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::FileBrowser;
+package Curses::UI::Dialog::FileBrowser;
 
 use strict;
 use Carp qw(confess);
 use Curses;
 use Curses::UI::Window;
 use Curses::UI::Common;
+use Cwd;
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Window Curses::UI::Common);
@@ -25,20 +26,43 @@ sub new ()
 {
 	my $class = shift;
 	my %args = ( 
-		-title 		=> 'Select file',
-		-path		=> undef,	
-		-file		=> '', 
-		-show_hidden    => 0,
-		-mask_values 	=> undef,
-		-mask_labels 	=> undef,
-		-mask_selected 	=> 0,
-		-edit_filename 	=> 0,
+		-title 		 => 'Select file',
+		-path		 => undef,	
+		-file		 => '', 
+		-show_hidden     => 0,
+		-mask_values 	 => undef,
+		-mask_labels 	 => undef,
+		-mask_selected 	 => 0,
+		-edit_filename 	 => 0,
 		@_,
 		-border 	 => 1,
+		-centered        => 1,
 		-titleinverse 	 => 0,
 		-ipad		 => 1,
 		-selected_cache  => {},
 	);
+
+	# Does -file contain a path? Then do some splitting.
+	if ($args{-file} =~ m|/|) 
+	{
+		my $file = "";
+		my $path = "";
+
+		my @path = split /\//, $args{-file};
+		$file = pop @path;
+		if (@path) {
+			$path = join "/", @path;
+		}
+		$args{-path} = $path;
+		$args{-file} = $file;
+	}
+
+	# Does -path not contain a path? Then use the 
+	# current working directory.
+	if (not defined $args{-path} or $args{-path} =~ /^\s*$/)
+	{
+		$args{-path} = cwd;
+	}
 
 	my $this = $class->SUPER::new(%args);
 	$this->layout();
@@ -158,17 +182,9 @@ sub layout()
 	my $w = 60;
 	my $h = 18;
 	$h += 2 if defined $this->{-mask_values};
-
-	# Compute the coordinates for the widget.
-	my $x = int(($ENV{COLS} - $w) / 2);
-	my $y = int(($ENV{LINES} - $h) / 2);
-	$x = 0 if $x < 0;
-	$y = 0 if $y < 0;
-
-	$this->{-x} = $x;
-	$this->{-y} = $y;
 	$this->{-width} = $w,
 	$this->{-height} = $h,
+
 	$this->SUPER::layout();
 
 	return $this;
@@ -279,11 +295,17 @@ sub dirselect()
 	my $fv = $this->getobj('filevalue');
 	my $pv = $this->getobj('pathvalue');
 
+	# Find the new path.
 	my $add = $db->{-values}->[$db->{-ypos}];
 	my $savepath = $pv->text;
 	$this->{-selected_cache}->{$savepath} = $db->{-ypos};
 	$pv->text("/$savepath/$add");
-	$fv->text('');
+
+	# Clear the filename field if the filename
+	# may not be edited.
+	$fv->text('') unless $this->{-editfilename};
+
+	# Get the selected directory.
 	unless ($this->get_dir) {
 		$pv->text($savepath);
 	}

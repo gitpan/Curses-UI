@@ -29,6 +29,7 @@ sub new ()
 		-width => undef,
 		-height => undef,
 		-x => 0, -y => 0,
+		-centered => 0,
 		%args,
 		-assubwin => 1,
 	);
@@ -36,5 +37,106 @@ sub new ()
 	return bless $this, $class;
 }
 
+sub layout ()
+{
+	my $this = shift;
+
+	# Compute the coordinates of the Window if
+	# it has to be centered.
+	if ($this->{-centered})
+	{
+		# The maximum available space on the screen.
+		my $avail_width = $ENV{COLS};
+		my $avail_height = $ENV{LINES};
+
+		# Compute the coordinates for the widget.
+		my $x = int(($avail_width - $this->{-width}) / 2);
+		my $y = int(($avail_height - $this->{-height}) / 2);
+		$x = 0 if $x < 0;
+		$y = 0 if $y < 0;
+		$this->{-x} = $x; 
+		$this->{-y} = $y; 
+	}
+
+        $this->SUPER::layout;
+
+	return $this;
+}
+
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Window - Create and manipulate Window widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add(
+        'window_id', 'Window',
+        %options,
+    );
+
+
+=head1 DESCRIPTION
+
+Curses::UI::Window is a window widget. It can be added to
+a Curses::UI instance. After that the window can be filled
+with other widgets to create an application window. For
+information on how to fill the window with widgets, see
+L<Curses::UI::Container>.
+
+
+
+=head1 STANDARD OPTIONS
+
+B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
+B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
+B<-title>, B<-titlefullwidth>, B<-titlereverse>
+
+For an explanation of these standard options, see L<Curses::UI::Widget>.
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item B<-centered> <0 or 1>
+
+A window can automatically be drawn in the center of the screen.
+To enable this option use a true value (1) and to disable it use a
+false value (0). The default is not to center a window. Example:
+
+    $cui->add('mywindow', 'Window', -centered => 1);
+ 
+
+=back
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI>, L<Curses::UI::Container>, L<Curses::UI::Widget>
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+
+
+
 

@@ -30,13 +30,10 @@ my %routines = (
 );
 
 my %bindings = (
-	KEY_STAB()	=> 'return',
-	KEY_BTAB()	=> 'return',
-	"\t"		=> 'return',
+	KEY_TAB()	=> 'return',
 	KEY_DOWN()	=> 'pulldown',
 	'j'		=> 'pulldown',
 	KEY_ENTER()	=> 'pulldown',
-	"\n"		=> 'pulldown',
         KEY_LEFT()      => 'left',
         'h'             => 'left',
         KEY_RIGHT()     => 'right',

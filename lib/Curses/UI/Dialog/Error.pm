@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::ErrorDialog
+# Curses::UI::Dialog::Error
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,17 +9,17 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::ErrorDialog;
+package Curses::UI::Dialog::Error;
 
 use strict;
 use Carp qw(confess);
 use Curses;
 use Curses::UI::Buttons;
 use Curses::UI::Common;
-use Curses::UI::Dialog;
+use Curses::UI::Dialog::Basic;
 
 use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Dialog Curses::UI::Common);
+@ISA = qw(Curses::UI::Dialog::Basic Curses::UI::Common);
 $VERSION = '1.01';
 
 sub new ()
@@ -29,6 +29,7 @@ sub new ()
 		-message 	 => '',		# The message to show
 		@_,
 		-ipadleft	 => 10,		# Space for sign
+		-centered        => 1,
 	);
 	$args{-title} = 'error message' unless defined $args{-title};
 

@@ -72,7 +72,9 @@ sub add($@;)
 
 	# Make it possible to specify WidgetType instead of
 	# Curses::UI::WidgetType.
-	$class = "Curses::UI::$class" if $class !~ /\:\:/;
+        $class = "Curses::UI::$class" 
+                if $class !~ /\:\:/ 
+                or $class =~ /^Dialog\:\:[^\:]+$/;
 
 	# Create a new object of the wanted class.
 	$this->usemodule($class);

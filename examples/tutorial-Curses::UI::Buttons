@@ -1,0 +1,25 @@
+#!/usr/bin/perl -w
+use strict;
+
+open STDERR, ">/tmp/r";
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI;
+
+my $win = $cui->add('window_id', 'Window');
+
+$win->add(
+        'mybuttons', 'Buttons',
+        -buttons   => ['< Button 1 >', '< Button 2>'],
+        -values    => [1,2],
+        -shortcuts => ['1','2'],
+	-border    => 1,
+        -buttonalignment => 'right',
+);
+
+$win->focus;
+
+my $value = $win->getobj('mybuttons')->get;
+$cui->dialog("Your choice: button number $value");
+

@@ -14,9 +14,6 @@
 use strict;
 use Curses;
 
-# Safe path (for "clear").
-$ENV{PATH} = "/bin:/usr/bin";
-
 # Deny STDERR output.
 open STDERR, ">/dev/null";
 
@@ -87,12 +84,7 @@ sub exit_dialog()
 				  . "features?"
 	);
 
-	if ($return)
-	{
-		endwin();
-		system "clear";
-		exit(0);
-	}
+	exit(0) if $return;
 }
 
 # ----------------------------------------------------------------------

@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+use strict;
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI;
+
+$cui->progress(
+        -max => 10,
+        -message => "Counting 10 seconds...",
+);
+
+for my $second (0..10) {
+        $cui->setprogress($second);
+        sleep 1;
+}
+
+$cui->noprogress;
+

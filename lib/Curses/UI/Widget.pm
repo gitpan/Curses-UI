@@ -295,6 +295,7 @@ sub process_padding($;)
 sub width_by_windowscrwidth($@;)
 {
         my $width = shift || 0;
+	$width = shift if ref $width; # make $this->width... possible.
 	my %args = @_;
 	
 	$width += 2 if $args{-border};  # border
@@ -319,6 +320,7 @@ sub width_by_windowscrwidth($@;)
 sub height_by_windowscrheight($@;)
 {
         my $height = shift || 0;
+	$height = shift if ref $height; # make $this->height... possible.
 	my %args = @_;
 	
 	$height += 2 if $args{-border};  # border
@@ -575,6 +577,158 @@ sub draw_scrollbars()
 	}
 	
 	return $this;
+}
+
+sub hidden() { shift()->{-hidden} }
+sub hide()   { shift()->{-hidden} = 1 }
+sub show()   { shift()->{-hidden} = 0 }
+
+# ----------------------------------------------------------------------
+# Bindings
+# ----------------------------------------------------------------------
+
+sub clear_binding($;)
+{
+        my $this = shift;
+        my $binding = shift;
+        my @delete = ();
+        while (my ($k,$v) = each %{$this->{-bindings}}) {
+                push @delete, $k if $v eq $binding;
+        }
+        foreach (@delete) {
+                delete $this->{-bindings}->{$_};
+        }
+        return $this;
+}
+
+sub set_routine($$;)
+{
+	my $this = shift;
+	my $binding = shift;
+	my $routine = shift;
+	$this->{-routines}->{$binding} = $routine;
+	return $this;
+}
+
+sub set_binding($@;)
+{
+        my $this = shift;
+        my $routine = shift;
+        my @keys = @_;
+
+	confess "$routine: no such routine"
+		unless defined $this->{-routines}->{$routine};
+        foreach my $key (@keys) {
+                $this->{-bindings}->{$key} = $routine;
+        }
+
+        return $this;
+}
+
+sub process_bindings($;)
+{
+	my $this = shift;
+	my $key = shift;
+	
+	# Find the binding to use.
+	my $binding = $this->{-bindings}->{$key};
+	if (not defined $binding) {
+		# Check for default routine.
+		$binding = $this->{-bindings}->{''}; 
+	}
+	
+	if (defined $binding)
+	{
+		# Find the routine to call.
+		my $routine = $this->{-routines}->{$binding};
+		if (defined $routine) 
+		{
+			if (ref $routine eq 'CODE')
+			{
+				my $return = $routine->($this, $key);
+				return $return;
+			} else {
+				return $routine;
+			}
+		} else {
+			confess "No routine defined for "
+			  . "keybinding \"$binding\"!";
+		}
+
+	# No binding?
+	} else {
+		return $this;
+	}
+}
+
+# ----------------------------------------------------------------------
+# Generic focus 
+# ----------------------------------------------------------------------
+
+sub generic_focus($$;)
+{
+	my $this 	 	= shift;
+	my $callback_time	= shift;
+	my $control_keys 	= shift;
+	my $cursor_visible 	= shift;
+	my $pre_key_callback	= shift;
+
+	$this->show;
+	$callback_time = 2 
+		unless defined $callback_time;
+
+	# The callback routine to call before a key
+	# is grabbed (e.g. for layouting the screen).
+	$pre_key_callback = sub {} 
+		unless defined $pre_key_callback
+		   and ref $pre_key_callback eq 'CODE';
+
+	my $do_key;
+        for (;;)
+        {
+		$pre_key_callback->($this);
+
+                $this->{-focus} = 1;
+                $this->draw();
+
+                # Grab a key or use the predefined key.
+                my $key = defined $do_key 
+		        ? $do_key
+			: $this->get_key(
+				$callback_time,
+				$control_keys,
+				$cursor_visible
+			  );
+		undef $do_key;
+
+		# Do callback if wanted.
+                $this->process_callback;
+
+		# No key pressed? Then retry grabbing one.
+                next if $key eq '-1';
+
+		# Process keybinding.
+                my $return = $this->process_bindings($key);
+
+		# If $return is something like DO_KEY:<...>, then
+		# execute this key as if it was read from the
+		# keyboard.
+		if (defined $return and $return =~ /^DO_KEY\:(.*)$/)
+		{
+			$do_key = $1; 
+			next;
+		}
+	
+		# Return if keybinding returned a non-reference
+		# value or a CODE reference. Else the next
+		# key will be grabbed.
+                elsif (not ref $return or ref $return eq 'CODE') 
+		{
+                        $this->{-focus} = 0;
+                        $this->draw;
+                        return (wantarray ? ($return, $key) : $return);
+                } 
+        }
 }
 
 1;
@@ -940,44 +1094,51 @@ the scrollbar will be drawn.
 
 =over 4
 
-=item B<new> (<list of options>)
+=item B<new> ( OPTIONS )
 
 Create a new Curses::UI::Widget instance. 
 
-=item B<layout> ()
+=item B<layout> ( )
 
 Layout the widget. Compute the size the widget needs and see
 if it fits. Create the curses windows that are needed for
 the widget (the border and the effective drawing area).
 
-=item B<draw> (<0 or 1>)
+=item B<draw> ( NODOUPDATE )
 
-Draw the Curses::UI::Widget. If the argument to draw is true,
-the screen will not update after drawing.
+Draw the Curses::UI::Widget. If the argument NODOUPDATE is true,
+the screen will not update after drawing. By default this 
+argument is false.
 
-=item B<title> (<text>)
+=item B<focus> ( )
+
+Give focus to the widget. In Curses::UI::Widget, this method
+immediately returns, so the widget will not get focused. 
+A derived class that needs focus, must override this method.
+
+=item B<title> ( TITLE )
 
 Change the title that is shown in the border of the widget
-to <text>.
+to TITLE.
 
-=item B<width> ()
+=item B<width> ( )
 
-=item B<height> ()
+=item B<height> ( )
 
 These methods return the total width and height of the widget.
 This is the space that the widget itself uses plus the space that 
 is used by the outside padding.
 
-=item B<borderwidth> ()
+=item B<borderwidth> ( )
 
-=item B<borderheight> ()
+=item B<borderheight> ( )
 
 These methods return the width and the height of the border of the
 widget.
 
-=item B<screenwidth> ()
+=item B<screenwidth> ( )
 
-=item B<screenheight> ()
+=item B<screenheight> ( )
 
 These methods return the with and the height of the effective
 drawing area of the widget. This is the area where the 
@@ -985,19 +1146,57 @@ draw() method of a widget may draw the contents of the widget
 (BTW: the curses window that is associated to this drawing
 area is $this->{-windowscr}).
 
-=item B<width_by_windowscrwidth> (<needed width>, <%arguments>)
+=item B<width_by_windowscrwidth> ( NEEDWIDTH, OPTIONS )
 
-=item B<height_by_windowscrheight> (<needed height>, <%arguments>)
+=item B<height_by_windowscrheight> ( NEEDHEIGHT, OPTIONS )
 
 These methods are exported by this module. These can be used
 in child classes to easily compute the total width/height the widget
 needs in relation to the needed width/height of the effective drawing
-area ($this->{-windowscr}). The %arguments are the arguments that
+area ($this->{-windowscr}). The OPTIONS are the arguments that
 will be used to create the widget. So if we want a widget that
 has a drawing area height of 1 and that has a border, the -height
 option can be computed using something like:
 
   my $height = height_by_windowscrheight(1, -border => 1); 
+
+=item B<generic_focus>
+
+TODO
+
+=item B<process_bindings> ( KEY )
+
+KEY -> maps via binding to -> ROUTINE -> maps to -> VALUE
+
+This method will try to find out if there is a binding defined
+for the KEY. If no binding is found, the method will return
+the widget object itself.
+If a binding is found, the method will check if there is
+an corresponding ROUTINE. If the ROUTINE can be found it
+will check if it's VALUE is a code reference. If it is, the
+code will be executed and the returnvalue of this code will
+be returned. Else the VALUE will directly be returned.
+
+=item B<clear_binding> ( ROUTINE )
+
+Clear all keybindings for routine ROUTINE. 
+
+=item B<set_routine> ( ROUTINE, VALUE )
+
+Set the routine ROUTINE to the VALUE. The VALUE may either be a 
+scalar value or a code reference. If B<process_bindings> (see above)
+sees a scalar value, it will return this value. If it sees a
+coderef, it will execute the code and return the returnvalue of
+this code. 
+
+=item B<set_binding> ( ROUTINE, KEYLIST )
+
+Bind the keys in the list KEYLIST to the ROUTINE. If you use an
+empty string for a key, then this routine will become the default
+routine (in case no other keybinding could be found). This 
+is for example used in the TextEditor widget.
+
+
 
 =back
 
@@ -1005,7 +1204,7 @@ option can be computed using something like:
 
 =head1 SEE ALSO
 
-L<Curses::UI|Curses::UI>, L<Curses|Curses>
+L<Curses::UI|Curses::UI>
 
 
 

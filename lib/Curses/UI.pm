@@ -20,7 +20,7 @@ use Curses::UI::Container;
 use Term::ReadKey;
 
 use vars qw($VERSION @ISA);
-$VERSION = "0.55";
+$VERSION = "0.56";
 @ISA = qw(Curses::UI::Container);
 
 $::mws_resizing = 0; 
@@ -51,6 +51,7 @@ sub layout()
 		delwin($this->{-windowscr});
 		delete $this->{-windowscr};
 		delete $this->{-scr};
+
 		endwin();
 	}
 
@@ -81,7 +82,9 @@ sub add()
 	
         # Make it possible to specify WidgetType instead of
         # Curses::UI::WidgetType.
-        $class = "Curses::UI::$class" if $class !~ /\:\:/;
+        $class = "Curses::UI::$class" 
+		if $class !~ /\:\:/ 
+		or $class =~ /^Dialog\:\:[^\:]+$/;
 
 	$this->SUPER::usemodule($class);
 
@@ -119,7 +122,7 @@ sub error()
 
 	$this->tempscreen(
 		'_error',
-		'Curses::UI::ErrorDialog',
+		'Dialog::Error',
 		%args
         );
 }
@@ -134,7 +137,7 @@ sub dialog()
 
 	$this->tempscreen(
 		'_dialog',
-		'Curses::UI::Dialog',
+		'Dialog::Basic',
 		%args
         );
 }
@@ -145,17 +148,124 @@ sub filebrowser()
 	my %args = @_;
 	$this->tempscreen(
 		'_filebrowser',
-		'Curses::UI::FileBrowser',
+		'Dialog::FileBrowser',
 		%args
         );
+}
+
+sub savefilebrowser()
+{
+	my $this = shift;
+	my %args = @_;
+
+	# Select a file to save to.
+	my $file = $this->filebrowser(
+		-editfilename 	=> 1,
+		%args,
+	);
+
+	return unless defined $file;
+	
+	# Check if the file exists. Ask for overwrite
+	# permission if it does.
+	if (-e $file)
+	{
+		my $overwrite = $this->dialog(
+			-title     => "Confirm overwrite",
+			-buttons   => ['< Yes >', '< No >'],
+			-values    => [1        , 0       ],
+			-shortcuts => ['y'      , 'n'     ],
+			-message   => "Do you really want to overwrite\n"
+                                    . "the file \"$file\"?"
+		);
+		return unless $overwrite;
+	}
+	
+	return $file;
+}
+
+sub loadfilebrowser()
+{
+	my $this = shift;
+	my %args = @_;
+
+	# Select a file to load from.
+	my $file = $this->filebrowser(
+		-editfilename 	=> 0,
+		%args,
+	);
+}
+
+sub status($;)
+{
+	my $this = shift;
+
+	# make ->error("message") possible.
+	if (@_ == 1) { @_ = (-message => $_[0]) } 
+	my %args = @_;
+
+	$this->delete('_status');
+	$this->add(
+		'_status', 'Dialog::Status',
+		%args,
+	);
+
+	$this->draw;
+	return $this;	
+}
+
+sub nostatus()
+{
+	my $this = shift;
+	$this->delete('_status');
+	$this->draw;
+	return $this;
+}
+
+sub progress()
+{
+	my $this = shift;
+	my %args = @_;
+
+	$this->add(
+		'_progress', 'Dialog::Progress',
+		%args,
+	);
+	$this->draw;
+
+	return $this;
+}
+
+sub setprogress($;$)
+{
+	my $this = shift;
+	my $pos  = shift;
+	my $message = shift;
+
+	my $p = $this->getobj('_progress');
+	return unless defined $p;
+	$p->setpos($pos) if defined $pos;
+	$p->message($message) if defined $message;
+	$p->draw;	
+
+	return $this;
+}
+
+sub noprogress()
+{
+	my $this = shift;
+	$this->delete('_progress');
+	$this->draw;
+	return $this;
 }
 
 DESTROY 
 { 
 	endwin();
-
+		
 	my $save_path = $ENV{PATH};
 	$ENV{PATH} = "/bin:/usr/bin";
+	system "clear";
 	$ENV{PATH} = $save_path;
 }
 
@@ -206,9 +316,10 @@ Widgets
 
 Dialogs
 
-  Curses::UI::Dialog
-  Curses::UI::ErrorDialog
-  Curses::UI::FileBrowser
+  Curses::UI::Dialog::Basic
+  Curses::UI::Dialog::Error
+  Curses::UI::Dialog::FileBrowser
+  Curses::UI::Dialog::Status
 
 Support classes
 
@@ -234,7 +345,7 @@ be created. From now on, this instance will be called
     use Curses::UI;
     my $cui = new Curses::UI;
 
-=head1 Creating windows
+=head1 Create windows
 
 After the initialization has been done, windows can be
 added to the UI. You will always have to do this. It is not
@@ -261,7 +372,7 @@ the previous one.
         -pad => 6,
     );
 
-=head1 Adding some widgets
+=head1 Add some widgets
 
 Now that we have a couple of windows, we can add widgets
 to them. We'll add a popupbox and some buttons to 
@@ -318,13 +429,13 @@ screen and the widgets will follow!
 =head1 Specify when the windows will loose their focus
 
 We have a couple of Buttons on each window. As soon as a 
-button is pressed, it will have the window loose it's
+button is pressed, it will have the window loose its
 focus (Buttons will have any kind of Container object
-loose it's focus). You will only have to do something
+loose its focus). You will only have to do something
 if this is not the desired behaviour. 
 
 If you want the buttons themselves to loose focus if 
-pressed, then change it's routine for the "return" 
+pressed, then change its routine for the "return" 
 binding from "LEAVE_CONTAINER" to "RETURN". Example:
 
     $but1->set_routine('return', 'RETURN');
@@ -337,7 +448,7 @@ shortcut keys to the appliction:
 
 This can be done by assigning "returnkeys" to a window.
 Each widget in the window will get extra keybindings to
-have the window loose it's focus if one of the returnkeys
+have the window loose its focus if one of the returnkeys
 is pressed. For our application we can set the desired
 shortcut keys like this:
 
@@ -414,29 +525,29 @@ for Curses::UI.
 
 =over 4
 
-=item B<new>()
+=item B<new> ( OPTIONS )
 
 Create a new Curses::UI instance.
 
-=item B<add>()
+=item B<add> ( ID, CLASS, OPTIONS )
 
-The B<add>() method of Curses::UI is almost the same as the B<add>()
+The B<add> method of Curses::UI is almost the same as the B<add>
 method of Curses::UI::Container. The difference is that Curses::UI
 will only accept classes that are (descendants) of the
 Curses::UI::Window class. For the rest of the information
 see L<Curses::UI::Container>.
 
-=item B<layout>()
+=item B<layout> ( )
 
 The layout method of Curses::UI will try to find out the size of the
-screen. After that it will call the B<layout>() routine of every 
-contained object. So running B<layout>() on a Curses::UI object will
+screen. After that it will call the B<layout> routine of every 
+contained object. So running B<layout> on a Curses::UI object will
 effectively layout the complete application. Normally you will not 
 have to call this method directly.
 
-=item B<dialog>()
+=item B<dialog> ( MESSAGE or OPTIONS )
 
-Use the B<dialog>() method to show a dialog window. If you only
+Use the B<dialog> method to show a dialog window. If you only
 provide a single argument, this argument will be used as the 
 message to show. Example:
 
@@ -444,7 +555,7 @@ message to show. Example:
 
 If you want to have some more control over the dialog window, you
 will have to provide more arguments (for an explanation of the 
-arguments that can be used, see L<Curses::UI::Dialog>. 
+arguments that can be used, see L<Curses::UI::Dialog::Basic>. 
 Example:
 
     my $yes = $cui->dialog(
@@ -459,19 +570,19 @@ Example:
     }
        
 
-=item B<error>()
+=item B<error> ( MESSAGE or OPTIONS )
 
-The B<error>() method will create an error dialog. This is 
-basically a Curses::UI::Dialog, but it has an ASCII-art
+The B<error> method will create an error dialog. This is 
+basically a Curses::UI::Dialog::Basic, but it has an ASCII-art
 exclamation sign drawn left to the message. For the rest 
-it's just like B<dialog>(). Example:
+it's just like B<dialog>. Example:
 
     $cui->error("It's the end of the\n"
                ."world as we know it!");
 
-=item B<filebrowser>()
+=item B<filebrowser> ( OPTIONS )
 
-The B<filebrowser>() method will create a file browser
+The B<filebrowser> method will create a file browser
 dialog. For an explanation of the arguments that can be 
 used, see L<Curses::UI::FileBrowser>.
 Example:
@@ -493,12 +604,83 @@ Example:
 	}
     } 
 
+=item B<loadfilebrowser>( OPTIONS )
+
+=item B<savefilebrowser>( OPTIONS )
+
+These two methods will create file browser dialogs as well.
+The difference is that these will have the dialogs set up
+correctly for loading and saving files. Moreover, the save
+dialog will check if the selected file exists or not. If it
+does exist, it will show an overwrite confirmation to check
+if the user really wants to overwrite the selected file.
+
+=item B<status> ( MESSAGE )
+
+=item B<nostatus> ( )
+
+Using these methods it's easy to provide status information for
+the user of your program. The status dialog is a dialog with 
+only a label on it. The status dialog doesn't really get the
+focus. It's only used to display some information. If you need
+more than one status, you can call B<status> subsequently.
+Any existing status dialog will be cleaned up and a new one
+will be created.
+
+If you are finished, you can delete the status dialog by calling
+the B<nostatus> method. Example:
+
+    $cui->status("Saying hello to the world...");
+    # code for saying "Hello, world!"
+
+    $cui->status("Saying goodbye to the world...");
+    # code for saying "Goodbye, world!"
+
+    $cui->nostatus;
+
+=item B<progress> ( OPTIONS )
+
+=item B<setprogress> ( POSITION, MESSAGE )
+
+=item B<noprogress> ( )
+
+Using these methods it's easy to provide progress information
+to the user. The progress dialog is a dialog with an optional
+label on it and a progress bar. Similar to the status dialog,
+this dialog does not get the focus. 
+
+Using the B<progress> method, a new progress dialog can be 
+created (see also L<Curses::IU::Dialog::Progress>). This method 
+takes the same arguments as the Curses::IU::Dialog::Progress class.
+
+After that the progress can be set using B<setprogress>. This 
+method takes one or two arguments. The first argument is the current
+position of the progressbar. The second argument is the message
+to show in the label. If one of these arguments is undefined,
+the current value will be kept. 
+
+If you are finished, you can delete the progress dialog by calling
+the B<noprogress> method. 
+
+Example:
+
+    $cui->progress(
+        -max => 10,
+	-message => "Counting 10 seconds...",
+    );
+
+    for my $second (0..10) {
+	$cui->setprogress($second)
+	sleep 1;
+    }
+
+    $cui->noprogress;
+
 =back
 
 =head1 SEE ALSO
 
 L<Curses::UI::Container>, L<Curses>
-
 
 
 

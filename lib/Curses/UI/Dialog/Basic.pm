@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::Dialog
+# Curses::UI::Dialog::Basic
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,7 +9,7 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::Dialog;
+package Curses::UI::Dialog::Basic;
 
 use strict;
 use Carp qw(confess);
@@ -31,6 +31,7 @@ sub new ()
 		-ipad		=> 1, 
 		@_,
 		-titleinverse	=> 1,
+		-centered	=> 1,
 	);
 	
 	my $this = $class->SUPER::new(%args);
@@ -120,18 +121,9 @@ sub layout()
 	$h += 2 if $this->{-border};
 	$h += $this->{-ipadtop} + $this->{-ipadbottom}; 
 
-	# Compute the coordinates for the widget.
-
-	my $x = int(($avail_width - $w) / 2);
-	my $y = int(($avail_height - $h) / 2);
-	$x = 0 if $x < 0;
-	$y = 0 if $y < 0;
-
-	$this->{-x} = $x;
-	$this->{-y} = $y;
 	$this->{-width} = $w;
 	$this->{-height} = $h;
-	
+
 	$this->SUPER::layout;
 	
 	return $this;

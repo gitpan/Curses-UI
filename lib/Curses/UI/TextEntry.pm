@@ -44,7 +44,7 @@ sub new ()
 
 	# Setup bindings.
         $this->clear_binding('return');
-        $this->set_binding('return', KEY_ENTER(), "\n", "\t" );
+        $this->set_binding('return', KEY_ENTER(), "\t" );
 
 	return bless $this, $class;
 }

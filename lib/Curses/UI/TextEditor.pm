@@ -54,9 +54,7 @@ my %routines = (
 # Configuration: binding to routine name mapping.
 
 my %basebindings = (
-	"\t"				=> 'return',
-	KEY_STAB()			=> 'return',
-	KEY_BTAB()			=> 'return',
+	KEY_TAB()			=> 'return',
         KEY_LEFT()                      => 'cursor-left',
         "\cB"                           => 'cursor-left',
         KEY_RIGHT()                     => 'cursor-right',
@@ -79,6 +77,10 @@ my %basebindings = (
 my %viewbindings = (
         "/"                     	=> 'search-forward',
         "?"                     	=> 'search-backward',
+        KEY_SPACE()                     => 'cursor-pagedown',
+        "-"                             => 'cursor-pageup',
+        "]"                             => 'cursor-pagedown',
+        "["                             => 'cursor-pageup',
 );
 
 my %editbindings = (

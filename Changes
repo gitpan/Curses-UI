@@ -1,5 +1,57 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.56
+============
+
+2001-01-07:     - Added new example applications: 
+                  - hello_world
+                  - tutorial-Curses::UI::Buttons
+                  - tutorial-Curses::UI::Dialog::Progress
+                  - pop3_reader: a simple POP3 mail reader
+
+		- Made documentation for Curses::UI::Buttons
+
+		- New constants in Common.pm: KEY_TAB, KEY_SPACE
+
+                - Moved the following methods from Common.pm to
+                  Widget.pm:
+                  - clear_binding()
+                  - set_routine()
+                  - set_binding()
+                  - process_bindings()
+                  - generic_focus()
+
+2002-01-07:     - Dialogs are moved to their own namespace:
+                  Curses::UI::Dialog.
+
+                - Curses::UI has two new filebrowser dialog methods:
+                  loadfilebrowser() and savefilebrowser(). These 
+                  are filebrowser dialogs which are setup correctly
+                  for loading and saving files. The savefilebrowser()
+                  will also check if the file to save to does exist.
+                  If it does it will show a confirmation dialog to
+                  have the user confirm that the file may be 
+                  overwritten.
+
+                - The code for centering a Window is now in the
+                  Curses::UI::Window class. If the option -centered
+                  is set, the layout() method will center the 
+                  Window.
+
+                - The add() routines of the classes Curses::UI and 
+                  Curses::UI::Container will not also accept
+                  "Dialog::*" as a shortcut for "Curses::UI::Dialog::*".
+
+                - Added a new dialog: Curses::UI::Dialog::Status and
+                  added documentation and and example to Curses::UI.
+
+                - Added a new dialog: Curses::UI::Dialog::Progress and
+                  added documentation and and example to Curses::UI.
+
+                - Curses::UI applications will now automatically 
+                  clear the screen on exit (by calling the 'clear'
+                  program using a safe $PATH).
+
 
 Version 0.55
 ============

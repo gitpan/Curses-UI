@@ -36,8 +36,7 @@ my %routines = (
 
 my %bindings = (
 	KEY_ENTER()	=> 'return',
-	"\n"		=> 'return',
-	' '		=> 'return',
+	KEY_SPACE()	=> 'return',
 	KEY_LEFT()	=> 'previous',
 	'h'		=> 'previous',
 	KEY_RIGHT()	=> 'next',
@@ -111,7 +110,7 @@ sub layout()
 	$this->{-max_selected} = @{$this->{-buttons}} - 1;
 
 	# May loose focus? Create bindings.
-	$this->set_binding('loose-focus', KEY_STAB(), KEY_BTAB(), "\t")
+	$this->set_binding('loose-focus', "\t")
 		if $this->{-mayloosefocus};
 
 	# Make shortcuts all upper-case.	
@@ -271,4 +270,185 @@ sub shortcut()
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Buttons - Create and manipulate button widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    $win->add(
+        'mybuttons', 'Buttons',
+        -x         => 1,
+        -y         => 1,
+        -buttons   => ['< Button 1 >', '< Button 2>']
+        -values    => [1,2] 
+        -shortcuts => ['1','2'],
+    );
+
+
+
+
+=head1 DESCRIPTION
+
+Curses::UI::Buttons is a widget that can be used to create an
+array of buttons. 
+
+
+
+=head1 STANDARD OPTIONS
+
+B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
+B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
+B<-title>, B<-titlefullwidth>, B<-titlereverse>
+
+For an explanation of these standard options, see L<Curses::UI::Widget>.
+
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item B<-buttons> <arrayref>
+
+This option takes a reference to a list of buttonlabels
+as its argument. 
+
+=item B<-values> <arrayref>
+
+This option takes a reference to a list of values as its
+argument. The order of the values in the list corresponds
+to the order of the buttons.
+
+=item B<-shortcuts> <arrayref>
+
+This option takes a reference to a list of shortcut
+keys as its argument. The order of the keys in the list 
+corresponds to the order of the buttons.
+
+=item B<-selected> <button index>
+
+By default the first button (index = 0) is active. If you
+want another button to be active at creation time, 
+add this option. The value is the index of the button you
+want to make active.
+
+=item B<-buttonalignment> <'left', 'middle' or 'right'> 
+
+You can specify how the buttons should be aligned in the 
+widget. Available values for this option are 'left', 'middle' 
+and 'right'.
+
+=item B<-mayloosefocus> <0 or 1>
+
+By default a buttons widget may loose it's focus using the
+<tab> key. By setting this option to a false value (0),
+this binding can be disabled.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item B<new> ( OPTIONS )
+
+=item B<layout> ( )
+
+=item B<draw> ( NODOUPDATE )
+
+=item B<focus> ( )
+
+These are standard methods. See L<Curses::UI::Widget> for
+an explanation of these.
+
+=item B<get> ( )
+
+This method will return the index of the currently active
+button. If a value is given for that index (using the
+B<-values> option, see above), that value will be returned.
+
+=back
+
+
+
+
+=head1 DEFAULT BINDINGS
+
+=over 4
+
+=item <B<tab>>
+
+Call the 'loose-focus' routine. This will have the widget 
+loose its focus. If you do not want the widget to loose 
+its focus, you can disable this binding by using the
+B<-mayloosefocus> option (see below).
+
+=item <B<enter>>, <B<space>> 
+
+Call the 'return' routine. By default this routine will have the
+container in which the widget is loose its focus. If you do
+not like this behaviour, then you can have it loose focus itself
+by calling:
+
+    $buttonswidget->set_routine('return', 'RETURN');
+
+For an explanation of this, see L<Curses::UI::Common>.
+
+=item <B<cursor left>>, <B<h>>
+
+Call the 'previous' routine. This will make the previous
+button the active button. If the active button already is
+the first button, nothing will be done.
+
+=item <B<cursor right>>, <B<l>
+
+Call the 'next' routine. This will make the next button the
+active button. If the next button already is the last button,
+nothing will be done.
+
+=item <B<any other key>>
+
+This will call the 'shortcut' routine. This routine will 
+handle the shortcuts that are set by the B<-shortcuts> option.
+
+=back 
+
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI>, L<Curses::UI::Widget>, L<Curses::UI::Common>
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+
+
+
 
