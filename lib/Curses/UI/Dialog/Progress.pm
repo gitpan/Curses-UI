@@ -23,6 +23,10 @@ $VERSION = '1.01';
 sub new ()
 {
 	my $class = shift;
+
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-nomessage 	 => 0,     # Do we want a message or not?
 		-message 	 => '',    # The message to show
@@ -35,7 +39,9 @@ sub new ()
 		-border 	 => 1,     
 		-width           => 60,    
 		-height          => undef, 
-		@_,
+
+		%userargs,
+
 		-centered        => 1,
 	);
 
@@ -47,6 +53,7 @@ sub new ()
 			'label', 'Label',
 			-width => -1,
 			-text  => $this->{-message},
+			-intellidraw => 0,
 		);
 	}
 
@@ -60,10 +67,11 @@ sub new ()
 	}
 
 	$this->add(
-		'progressbar', 'ProgressBar',
+		'progressbar', 'Progressbar',
 		-y => -1,
 		-width => -1,
 		%pb_args,
+		-intellidraw => 0,
 	);
 
 	$this->layout();
@@ -80,7 +88,6 @@ sub layout()
 	{
 		# Space between progressbar and message.
 		my $need = ($this->{-nomessage} ? 0 : 1);
-			print STDERR "Start with $need\n";
 
 		# The height for the message.
 		if (defined $this->getobj('label')) {
@@ -134,6 +141,18 @@ sub focus()
 =head1 NAME
 
 Curses::UI::Dialog::Progress - Create and manipulate progress dialogs 
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+            |
+            +----Curses::UI::Window
+                    |
+                    +----Curses::UI::Dialog::Progress
+
 
 =head1 SYNOPSIS
 
@@ -211,7 +230,7 @@ a message label. By default B<-nomessage> has a false value.
 =item * B<-nocenterline> < BOOLEAN >
 
 These options control the progressbar of the dialog. For an explanation
-of these options, see L<Curses::UI::ProgressBar|Curses::UI::ProgressBar>.
+of these options, see L<Curses::UI::Progressbar|Curses::UI::Progressbar>.
 
 =back
 
@@ -234,14 +253,12 @@ for an explanation of these.
 =item * B<pos> ( VALUE )
 
 This method will update the position of the progressbar
-to SCALAR. For this update to show, you will have to call the
-B<draw> method of the progress dialog.
+to SCALAR. You will have to call the B<draw> method to see the changes.
 
 =item * B<message> ( TEXT )
 
 This method will update the message of the progress dialog 
-to TEXT. For this update to show, you will have to call the
-B<draw> method of the progress dialog.
+to TEXT. You will have to call the B<draw> method to see the changes.
 
 =back
 
@@ -252,7 +269,7 @@ B<draw> method of the progress dialog.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Container|Curses::UI::Container>, 
-L<Curses::UI::ProgressBar|Curses::UI::ProgressBar>
+L<Curses::UI::Progressbar|Curses::UI::Progressbar>
 
 
 

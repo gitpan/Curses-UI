@@ -36,11 +36,24 @@ $win->add(
 );
 
 $win->add(
-        'popupbox1', 'PopupBox',
+        'popupbox1', 'Popupmenu',
 	-y          => 2,
 	-x          => 19,
         -values     => $values,
 	-labels     => $labels,
+	-onchange   => sub {
+		my $pb = shift;
+		my $this = $pb->parent();
+		$this->getobj('status1')->text("--> current value: " . $pb->get);
+	},
+);
+
+$win->add(
+	'status1', 'Label',
+	-y 	    => 2,
+	-x	    => 30,
+	-width	    => -1,
+	-text	    => '',
 );
 
 $win->add(
@@ -52,7 +65,7 @@ $win->add(
 );
 
 $win->add(
-        'popupbox2', 'PopupBox',
+        'popupbox2', 'Popupmenu',
 	-y          => 4,
 	-x          => 19,
         -values     => $values,
@@ -69,7 +82,7 @@ $win->add(
 );
 
 $win->add(
-        'popupbox3', 'PopupBox',
+        'popupbox3', 'Popupmenu',
 	-y          => 6,
 	-x          => 19,
         -values     => $values,

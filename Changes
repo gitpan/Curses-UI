@@ -1,5 +1,95 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.63
+============
+
+2001-01-16:     - Added a CLASS HIERARCHY section to the 
+                  documentation of each Curses::UI class.
+
+                - All focusable objects now have the following 
+                  event callbacks:
+                  -onfocus / onFocus()
+                  -onblur  / onBlur()
+
+                - The Curses::UI::Calendar widget now fully
+                  supports the years 0 - 9999, including the
+                  transition from the Julian to the Gregorian
+                  calendar (september 1752). This beats the
+                  use of timelocal/localtime (which would 
+                  currently only support 1900 - 2038 IIRC).
+
+                - Added intellidraw() method to Curses::UI::Widget.
+                  If this method is called, the widget is redrawn, but
+                  only if it's visible (not hidden and in topwindow)
+                  and if intellidraw is enabled (-intellidraw data 
+                  member has a true value).
+
+                  This routine can be used to be able to redraw 
+                  widgets on a status change, without having to figure
+                  out yourself if this wouldn't clutter up the screen.
+                  The -intellidraw option is meant for widget
+                  builders (see for example the Checkbox code).
+
+                - Incorporated intellidraw() method in:
+                  - Curses::UI::Window
+                  - Curses::UI::Label
+                  - Curses::UI::Calendar
+                  - Curses::UI::Buttonbox
+                  - Curses::UI::Listbox (+ descendants)
+                  - Curses::UI::Checkbox
+                  - Curses::UI::Popupbox
+                  - Curses::UI::Progressbar
+                  - Curses::UI::TextEditor (+ descendants)
+                  - Curses::UI::SearchEntry
+
+                - Added a little example application to demonstrate
+                  the new intellidraw feature: examples/demo-intellidraw 
+
+2001-01-15:     - Changed the displaying of the calendar widget
+                  a little. The topbar showing a date is only 
+                  highlighted if the cursor is on the selected date.
+	
+                - Renamed some widgets (now we still can). I think
+                  there are too many capitals in them...
+                  - Curses::UI::ListBox renamed to
+                    Curses::UI::Listbox
+                  - Curses::UI::CheckBox renamed to
+                    Curses::UI::Checkbox
+                  - Curses::UI::MenuBar renamed to
+                    Curses::UI::Menubar
+                  - Curses::UI::MenuListBox renamed to
+                    Curses::UI::MenuListbox
+                  - Curses::UI::PopupBox renamed to
+                    Curses::UI::Popupmenu
+                  - Curses::UI::ProgressBar renamed to
+                    Curses::UI::Progressbar
+                  - Curses::UI::ButtonBox renamed to
+                    Curses::UI::Buttonbox
+                  - Curses::UI::RadioButtonBox renamed to
+                    Curses::UI::Radiobuttonbox
+                  - Curses::UI::Dialog::FileBrowser renamed to
+                    Curses::UI::Dialog::Filebrowser
+
+                - Added event callbacks to:
+                  - Curses::UI::Calendar      (-onchange / onChange())
+                  - Curses::UI::Listbox       (-onchange / onChange())
+                  - Curses::UI::Checkbox      (-onchange / onChange())
+                  - Curses::UI::TextEditor    (-onchange / onChange())
+                  - Curses::UI::TextEntry     (-onchange / onChange())
+                  - Curses::UI::PasswordEntry (-onchange / onChange())
+                  - Curses::UI::Popupmenu     (-onchange / onChange())
+
+
+                - The options that can be passed to the new()
+                  methods, are case insensitive now. So it is
+                  perfectly okay to write:
+  
+                  $win->add(
+                      'cb', 'Checkbox',
+                      -Label => 'Demonstration widget',
+                      -onChange => sub { exit() } 
+                  );
+
 
 Version 0.62
 ============
@@ -20,13 +110,13 @@ Version 0.62
                   -x and -y offsets).
 
                 - Renamed Curses::UI::Buttons to 
-                  Curses::UI::ButtonBox, which is more like
+                  Curses::UI::Buttonbox, which is more like
                   the naming of the rest of the widget set.
                   Updated all examples and wigets for this
                   change.
 
                 - Fixed some undefined value warnings in
-                  Curses::UI::Dialog::FileBrowser.
+                  Curses::UI::Dialog::Filebrowser.
 
                 - Incorporated multi-line label support in
                   the checkbox widget.
@@ -45,8 +135,8 @@ Version 0.62
                   The documentation for Curses::UI::Buttons
                   is updated.
 
-                - Buttons can now have a -command assigned
-                  to them. This command will execute after
+                - Buttons can now have a -onpress event assigned
+                  to them. This callback will execute after
                   the button is pressed and before the focus
                   is lost.
 
@@ -64,10 +154,10 @@ Version 0.61
 2001-01-13:     - Extended the examples/basic_test file
                   to test the functionality of the basic 
                   widgets (for now: Label, Buttons, 
-                  CheckBox, ListBox, PopupBox, 
-                  ProgressBar and TextEditor). Directly
+                  Checkbox, Listbox, Popupbox, 
+                  Progressbar and TextEditor). Directly
                   derived widgets are not tested (like
-                  RadioButtonBox and TextEntry) because
+                  Radiobuttonbox and TextEntry) because
                   these will most probably work like
                   they should if the base class is okay.
 
@@ -94,12 +184,12 @@ Version 0.61
                 - Wrote documentation for:
                   - Curses::UI::Dialog::Basic
                   - Curses::UI::Dialog::Error
-                  - Curses::UI::Dialog::FileBrowser
+                  - Curses::UI::Dialog::Filebrowser
                   - Curses::UI::Dialog::Progress
                   - Curses::UI::Dialog::Status
 
                 - Added new example applications:
-                  - demo-Curses::UI::Dialog::FileBrowser
+                  - demo-Curses::UI::Dialog::Filebrowser
                   - demo-Curses::UI::Dialog::Status
 
                 - Added the -clear_on_exit option
@@ -112,11 +202,11 @@ Version 0.60
 ============
 
 2001-01-11:     - Wrote documentation for:
-                  - Curses::UI::MenuListBox 
-                  - Curses::UI::MenuBar 
+                  - Curses::UI::MenuListbox 
+                  - Curses::UI::Menubar 
 
                 - Added new example application:
-                  - demo-Curses::UI::MenuBar
+                  - demo-Curses::UI::Menubar
 
 2001-01-10:     - Wrote documentation for:
                   - Curses::UI::TextEditor 
@@ -148,31 +238,31 @@ Version 0.60
                 - Changed the -viewmode of Curses::UI::TextEditor
                   to -readonly.
 
-                - The setpos() method of Curses::UI::ProgressBar
+                - The setpos() method of Curses::UI::Progressbar
                   has been renamed to pos(). The options 
                   -showpercentage and -showcenterline have been
                   changed to -nopercentage and -nocenterline.
 
                 - Wrote documentation for:
-                  - Curses::UI::PopupBox
-                  - Curses::UI::ProgressBar
+                  - Curses::UI::Popupbox
+                  - Curses::UI::Progressbar
                   - Curses::UI::SearchEntry 
                   - Curses::UI::Searchable 
                 
                 - Added new example applications:
-                  - demo-Curses::UI::PopupBox
-                  - demo-Curses::UI::ProgressBar
+                  - demo-Curses::UI::Popupbox
+                  - demo-Curses::UI::Progressbar
 
 2001-01-08:     - Deleted last references to the old mws (Maurice's
                   Widget Set) namespace from the modules.
 
                 - Wrote documentation for:
-                  - Curses::UI::CheckBox
+                  - Curses::UI::Checkbox
                   - Curses::UI::Label
-                  - Curses::UI::ListBox
+                  - Curses::UI::Listbox
 
                 - Added new example applications:
-                  - demo-Curses::UI::CheckBox
+                  - demo-Curses::UI::Checkbox
                   - demo-Curses::UI::Label
                   - demo-Curses::UI::Listbox
 
@@ -261,14 +351,14 @@ Version 0.54
 2002-01-04:	- Some small changes in the examples and a new example
                   (basic_test) added.
 
-		- Added -show_hidden option to the FileBrowser.
+		- Added -show_hidden option to the Filebrowser.
 
-		- Added ~ keybinding to the FileBrowser. If ~ is pressed in the
-		  directory- or filebrowser, the FileBrowser will go to the 
+		- Added ~ keybinding to the Filebrowser. If ~ is pressed in the
+		  directory- or filebrowser, the Filebrowser will go to the 
 		  homedirectory of the current user.
 
-		- If at creation time of the FileBrowser, the -path is 
-                  not defined, the FileBrowser will start at the 
+		- If at creation time of the Filebrowser, the -path is 
+                  not defined, the Filebrowser will start at the 
                   homedirectory of the user.
 
                 - The Curses::UI::Frame class is now called Curses::UI::Widget.

@@ -22,6 +22,10 @@ $VERSION = '1.00';
 sub new ()
 {
 	my $class = shift;
+
+	my %userargs = @_;
+	keys_to_lowercase(\%userargs);
+
 	my %args = (
 		-parent		 => undef,	# the parent window
 		-width		 => undef,	# the width of the label
@@ -38,7 +42,8 @@ sub new ()
 		-dim	         => 0,
 		-blink	         => 0,
                 -paddingspaces   => 0,          # Pad text with spaces?
-		@_,
+		
+		%userargs,
 	);
 
 	# Get the text dimension if -width or -height is undefined.
@@ -83,11 +88,11 @@ sub layout()
 }
 
 
-sub bold ($;) { shift()->set_attribute('-bold', shift()) }
-sub reverse ($;) { shift()->set_attribute('-reverse', shift()) }
-sub underline ($;) { shift()->set_attribute('-underline', shift()) }
-sub dim ($;) { shift()->set_attribute('-dim', shift()) }
-sub blink ($;) { shift()->set_attribute('-blink', shift()) }
+sub bold ($;$) { shift()->set_attribute('-bold', shift()) }
+sub reverse ($;$) { shift()->set_attribute('-reverse', shift()) }
+sub underline ($;$) { shift()->set_attribute('-underline', shift()) }
+sub dim ($;$) { shift()->set_attribute('-dim', shift()) }
+sub blink ($;$) { shift()->set_attribute('-blink', shift()) }
 sub set_attribute($$;)
 {
 	my $this = shift;
@@ -95,20 +100,20 @@ sub set_attribute($$;)
 	my $value = shift || 0;
 
 	$this->{$attribute} = $value;
-	$this->draw(1);
+	$this->intellidraw;
 
 	return $this;
 }
 
-sub text($;)
+sub text($;$)
 {
 	my $this = shift;
-
 	my $text = shift;
+
 	if (defined $text) 
 	{
 		$this->{-text} = $text;
-		$this->draw(1);
+		$this->intellidraw;
 		return $this;
 	} else {
 		return $this->{-text};
@@ -122,7 +127,7 @@ sub textalignment($;)
 	my $this = shift;
 	my $value = shift;
 	$this->{-textalignment} = $value;
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -205,6 +210,15 @@ sub draw(;$)
 
 Curses::UI::Label - Create and manipulate label widgets
 
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Label
+
+
+
 =head1 SYNOPSIS
 
     use Curses::UI;
@@ -237,7 +251,8 @@ for a short demo.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -324,7 +339,13 @@ drawn in a blinking font.
 
 =item * B<draw> ( BOOLEAN )
 
+=item * B<intellidraw> ( )
+
 =item * B<focus> ( )
+
+=item * B<onFocus> ( CODEREF )
+
+=item * B<onBlur> ( CODEREF )
 
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
 for an explanation of these.
@@ -346,15 +367,13 @@ will be turned on for a true value of BOOLEAN.
 =item * B<textalignment> ( VALUE )
 
 Set the textalignment. VALUE can be 'left',
-'middle' or 'right'. You will have to call the B<draw> 
-method of the widget to see the change.
+'middle' or 'right'. 
 
 =item * B<text> ( [TEXT] )
 
 Without the TEXT argument, this method will return the current 
 text of the widget. With a TEXT argument, the text on the widget
-will be set to TEXT. You will have to call the B<draw> method of
-the widget to see the change.
+will be set to TEXT. 
 
 =item * B<get> ( )
 

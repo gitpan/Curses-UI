@@ -12,19 +12,19 @@ my $cui = new Curses::UI ( -clear_on_exit => 1 );
 my $win = $cui->add('window_id', 'Window');
 
 $win->add(
-        'mybuttons', 'ButtonBox',
+        'mybuttons', 'Buttonbox',
         -buttons   => [
 	    { -label => '< Button 1 >',
 	      -value => 1,
 	      -shortcut => '1',
-              -command  => sub {
-		shift()->root->dialog("This is -command for button 1") }
+              -onPress  => sub {
+		shift()->root->dialog("This is -onpress for button 1") }
  	    },{ 
 	      -label => '< Button 2 >',
               -value => 2,
 	      -shortcut => '2',
-              -command  => sub {
-		shift()->root->dialog("This is -command for button 2") }
+              -onPress  => sub {
+		shift()->root->dialog("This is -onpress for button 2") }
             },
 	],
 	-border    => 1,

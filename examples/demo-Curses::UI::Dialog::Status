@@ -2,7 +2,6 @@
 
 # Deny STDERR
 open STDERR, ">/dev/null";
-open STDERR, ">/tmp/r";
 
 use FindBin;
 use lib "$FindBin::RealBin/../lib";

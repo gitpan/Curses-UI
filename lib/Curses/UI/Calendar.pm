@@ -61,8 +61,8 @@ my %bindings = (
 	"J",			=> 'date-nextmonth',
         KEY_PPAGE()     	=> 'date-prevmonth',
 	"K",			=> 'date-prevmonth',
-	"n",			=> 'date-nextyear',
-	"p",			=> 'date-prevyear',
+	"L",			=> 'date-nextyear',
+	"H",			=> 'date-prevyear',
         KEY_HOME()      	=> 'date-selected',
         "\cA"           	=> 'date-selected',
         "c" 	          	=> 'date-selected',
@@ -75,11 +75,15 @@ sub new ()
 {
 	my $class = shift;
 
+	my %userargs = @_;
+	keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-date	    => undef,   # The date to start width
 		-width      => 0,
 		-height     => 0,
-		@_,
+		-onchange   => undef,	# Event handler	
+		%userargs,
 		-ipadleft   => 1,
 		-ipadright  => 1,
 		-ipadbottom => 0,
@@ -101,7 +105,7 @@ sub new ()
 	my $this = $class->SUPER::new( %args );	
 
 	# Split up and fix the date.
-	$this->setdate($this->{-date});
+	$this->setdate($this->{-date}, 1);
 
 	# Set cursor to current date.
 	$this->{-cyear} = $this->{-year};
@@ -110,6 +114,8 @@ sub new ()
 
 	bless $this, $class;
 }
+
+sub onChange(;$) { shift()->set_event('-onchange', shift())}
 
 sub layout()
 {
@@ -121,11 +127,12 @@ sub layout()
 	return $this;
 }
 
-sub setdate($;)
+sub setdate($;$)
 {
 	my $this = shift;
 	my $date = shift;
-	
+	my $nodraw = shift || 0;
+
 	if (not defined $date)
 	{
 		$this->{-year}  = undef;
@@ -152,6 +159,7 @@ sub setdate($;)
 	}
 
 	$this->make_sane_date;
+	$this->intellidraw unless $nodraw;
 
 	return $this;
 }
@@ -174,7 +182,7 @@ sub make_sane_date()
 		unless defined $this->{"-${c}year"};
 
 
-	if ($this->{"-${c}year"} < 1)    { $this->{"-${c}year"}  = 1    }
+	if ($this->{"-${c}year"} < 0)    { $this->{"-${c}year"}  = 0    }
 	if ($this->{"-${c}year"} > 9999) { $this->{"-${c}year"}  = 9999 }
 	if ($this->{"-${c}month"} < 1)   { $this->{"-${c}month"} = 1    }
 	if ($this->{"-${c}month"} > 12)  { $this->{"-${c}month"} = 12   }
@@ -207,8 +215,13 @@ sub draw(;$)
 	$this->make_sane_date;
 	$this->make_sane_date(1);
 
-	# Bold font on if the widget has focus.
-	$this->{-windowscr}->attron(A_BOLD) if $this->{-focus};
+	# Bold font on if the widget has focus and the selected
+	# date is the active date.
+	$this->{-windowscr}->attron(A_BOLD) 
+		if $this->{-focus} and
+		   $this->{-cyear} == $this->{-year} and
+		   $this->{-cmonth} == $this->{-month} and
+		   $this->{-cday} == $this->{-day};
 
 	# Draw day, month and year. If the widget has focus,
 	# show the cursor position. Else show the selected position.
@@ -218,6 +231,7 @@ sub draw(;$)
 					. " " . $this->{"-${c}day"});
 	$this->{-windowscr}->addstr(0,$this->screenwidth-4,$this->{"-${c}year"});
 	# Draw daynames
+	$this->{-windowscr}->attron(A_BOLD) if $this->{-focus};
 	$this->{-windowscr}->addstr(2,0,join " ", @days);
 
 	# Reset bold font attribute.
@@ -280,7 +294,7 @@ sub date_selected()
 	$this->{-cyear} = $this->{-year};
 	$this->{-cmonth} = $this->{-month};
 	$this->{-cday} = $this->{-day};
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -290,7 +304,7 @@ sub date_today()
 	$this->{-cmonth} = undef;
 	$this->{-cday}   = undef;
 	$this->{-cyear}  = undef;
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -299,7 +313,7 @@ sub date_prevyear()
 	my $this = shift;
 	$this->{-cyear}--;
 	$this->{-cyear} = 0 if $this->{-cyear} < 0;
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -308,7 +322,7 @@ sub date_nextyear()
 	my $this = shift;
 	$this->{-cyear}++;
 	$this->{-cyear} = 9999 if $this->{-cyear} > 9999;
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -320,7 +334,7 @@ sub date_prevmonth()
 		$this->{-cmonth} = 12;
 		$this->{-cyear}--;
 	}
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -332,7 +346,7 @@ sub date_nextmonth()
 		$this->{-cmonth} = 1;
 		$this->{-cyear}++;
 	}
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -346,7 +360,7 @@ sub date_delta_days($;)
 		my $startday = $this->{-cday};
 		$this->{-cday} += $delta;
 		if ($this->{-cday} < 1 and 
-		    $this->{-cmonth} >= 1 and 
+		    $this->{-cmonth} >= 2 and 
 		    $this->{-cyear} >= 0) 
 		{
 			$this->date_prevmonth();
@@ -377,7 +391,7 @@ sub date_prevweek()
 {
 	my $this = shift;
 	$this->date_delta_days(-7);
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -385,7 +399,7 @@ sub date_nextweek()
 {
 	my $this = shift;
 	$this->date_delta_days(+7);
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -393,7 +407,7 @@ sub date_prevday()
 {
 	my $this = shift;
 	$this->date_delta_days(-1);
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -401,7 +415,7 @@ sub date_nextday()
 {
 	my $this = shift;
 	$this->date_delta_days(+1);
-	$this->draw(1);
+	$this->intellidraw;
 	return $this;
 }
 
@@ -411,7 +425,8 @@ sub date_select()
 	$this->{-day}   = $this->{-cday};
 	$this->{-month} = $this->{-cmonth};
 	$this->{-year}  = $this->{-cyear};
-	$this->draw(1);
+	$this->intellidraw;
+	$this->run_event('-onchange');
 	return $this;
 }
 
@@ -430,9 +445,6 @@ sub get()
 sub focus()
 {
 	my $this = shift;
-
-	$this->show;
-	
 	return $this->generic_focus(
 		undef,
 		NO_CONTROLKEYS,
@@ -548,6 +560,15 @@ sub build_month ($$;)
 
 Curses::UI::Calendar - Create and manipulate calendar widgets
 
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Calendar
+
+
 =head1 SYNOPSIS
 
     use Curses::UI;
@@ -591,7 +612,8 @@ for a short demo.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -625,6 +647,11 @@ you can use for this date is one of:
 
 * B<D/M/YYYY> (e.g. 10/1/2002 or 10/01/2002)
 
+=item * B<-onchange> < CODEREF >
+
+This sets the onChange event handler for the calendar widget.
+If a new date is selected, the code in CODEREF will be executed.
+It will get the widget reference as its argument.
 
 =back
 
@@ -643,6 +670,12 @@ you can use for this date is one of:
 
 =item * B<focus> ( )
 
+=item * B<onFocus> ( CODEREF )
+
+=item * B<onBlur> ( CODEREF )
+
+=item * B<intellidraw> ( )
+
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
 for an explanation of these.
 
@@ -651,11 +684,16 @@ for an explanation of these.
 This method will return the currently selected date in the
 format 'YYYY-MM-DD'.
 
-=item * B<setdate> ( DATE )
+=item * B<setdate> ( DATE, [BOOLEAN] )
 
 Set the selected date of the widget to DATE. See B<-date> above for
-the possible formats. You will have to call the B<draw> method to
-see the change.
+the possible formats. The widget will redraw itself, unless BOOLEAN
+has a true value.
+
+=item * B<onChange> ( CODEREF )
+
+This method can be used to set the B<-onchange> event handler
+(see above) after initialization of the calendar. 
 
 =back
 
@@ -672,7 +710,7 @@ Call the 'return' routine. This will have the menubar
 loose its focus and return the value 'RETURN' to
 the calling routine.
 
-=item * <B<enter>>
+=item * <B<enter>>, <B<space>>
 
 Call the 'date-select' routine. This will select the date on
 which the cursor is.
@@ -697,22 +735,22 @@ date cursor go forward one week.
 Call the 'date-prevweek' routine. This will have the 
 date cursor go back one week.
 
-=item * <B<page-up>>, <B<K>>
+=item * <B<page-up>>, <B<SHIFT+K>>
 
 Call the 'date-prevmonth' routine. This will have the 
 date cursor go back one month.
 
-=item * <B<page-down>>, <B<J>>
+=item * <B<page-down>>, <B<SHIFT+J>>
 
 Call the 'date-nextmonth' routine. This will have the 
 date cursor go forward one month.
 
-=item * <B<p>>
+=item * <B<p>>, <B<SHIFT+H>>
 
 Call the 'date-prevyear' routine. This will have the 
 date cursor go back one year.
 
-=item * <B<n>>
+=item * <B<n>>, <B<SHIFT+L>>
 
 Call the 'date-nextyear' routine. This will have the 
 date cursor go forward one year.

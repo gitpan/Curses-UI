@@ -13,6 +13,7 @@ package Curses::UI::TextViewer;
 
 use strict;
 use Curses;
+use Curses::UI::Common;
 use Curses::UI::TextEditor;
 
 use vars qw($VERSION @ISA);
@@ -23,8 +24,11 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
-		@_,
+		%userargs,
 		-readonly	 => 1,
 	);
 	return $class->SUPER::new( %args);
@@ -38,6 +42,17 @@ sub new ()
 =head1 NAME
 
 Curses::UI::TextViewer - Create and manipulate textviewer widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+ Curses::UI::Searchable
+    |
+    +----Curses::UI::TextEditor
+            |
+            +----Curses::UI::TextViewer
+
 
 =head1 SYNOPSIS
 

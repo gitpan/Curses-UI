@@ -29,7 +29,9 @@ sub new()
 {
 	my $class = shift;
 
-	my $this = $class->SUPER::new(@_);
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+	my $this = $class->SUPER::new(%userargs);
 
 	# Setup internal data storage.
 	$this->{-use}         	= {};	   # which modules are "use"d
@@ -259,6 +261,22 @@ sub ontop($;$)
 	# the window is drawn.
 	$force = 1 if @{$this->{-windoworder}} == 1;
 
+	# Id is a reference? Then a window object is passed.
+	# Try to find the id for this window object.
+	if (ref $id)
+	{
+		my $realid;
+		WINDOW: foreach my $win_id (@{$this->{-windoworder}})
+		{
+			my $obj = $this->getobj($win_id);
+			if ($id eq $obj)
+			{
+				$id = $win_id;
+				last WINDOW;
+			}
+		}
+	}
+
 	# No id given? Then take the current frontwindow.
 	$id = $this->{-windoworder}->[-1]
 		unless defined $id;
@@ -295,15 +313,34 @@ sub ontop($;$)
 	return $this;	
 }
 
+sub window_is_ontop($;)
+{
+	my $this = shift;
+	my $win = shift;
+
+	# If we have a stack of no windows, return immediately.
+	return undef if @{$this->{-windoworder}} == 0;
+
+	my $topwin = $this->{-windoworder}->[-1];
+	if (ref $win) { $topwin = $this->getobj($topwin) }
+
+	return $topwin eq $win;
+}
+
 sub focus()
 {
 	my $this = shift;
-	$this->show;
+
 	$this->draw;
+	$this->run_event('-onfocus');
 	
 	# If the container contains no objects, then return
 	# without focusing.
-	return ('LEAVE_CONTAINER', undef) unless $this->{-container};
+	unless ($this->{-container})
+	{
+		$this->run_event('-onblur');
+		return ('LEAVE_CONTAINER', undef) 
+	}
 	
 	for (;;)
 	{
@@ -314,7 +351,11 @@ sub focus()
 		# Leave focus for the container in place if 
 		# the subobject returned 'LEAVE_CONTAINER'. Also return 
 		# the last key that was pressed.
-		return ($ret,$key) if $ret eq 'LEAVE_CONTAINER';
+		if ($ret eq 'LEAVE_CONTAINER')
+		{
+			$this->run_event('-onblur');
+			return ($ret,$key) 
+		}
 
 		# Set the focus to the next subobject of the container,
 		# unless the subobject told the container not to do so.
@@ -441,6 +482,14 @@ sub focus_to_prev() { shift()->focus_shift(-1) }
 
 Curses::UI::Container - Create and manipulate container widgets
 
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+
+
 =head1 SYNOPSIS
 
     use Curses::UI;
@@ -475,7 +524,8 @@ containers.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -556,6 +606,11 @@ Draw the Container and all its contained widgets.
 drawing. By default this argument is false, so the 
 screen will update after drawing the container.
 
+=item * B<intellidraw> ( )
+
+See L<Curses::UI::Widget|Curses::UI::Widget> for an
+explanation of this method.
+
 =item * B<focus> ( )
 
 If the container contains no widgets, this routine will
@@ -623,19 +678,25 @@ This will find the topmost container and call its
 B<rebuild> method. This will recursively rebuild all
 nested containers.
 
-=item * B<ontop> ( ID, BOOLEAN )
+=item * B<ontop> ( WINDOW, BOOLEAN )
 
 If a container contains a number of Curses::UI::Window
 widgets (or descendants), the window stack order is 
 remembered. Using the B<ontop> method, the window with 
-the given ID can be brought on top of the stack. If
-ID is undefined, the id of the window that is currently
-on top will be used.
+the given WINDOW (its id or object reference)  can be brought 
+on top of the stack. If WINDOW is undefined, the 
+window that is currently on top will be used.
 
 If BOOLEAN is true the screen will always be redrawn.
 If BOOLEAN is false, the screen will only be redrawn if
-the ID differs from the id of the window that is currently
+the WINDOW differs from the window that is currently
 on top.
+
+=item * B<window_is_ontop> ( WINDOW )
+
+This checks if the window that is specified by WINDOW (its
+id or object reference) is currently on top. Returns a 
+true value if this is the case.
 
 =item * B<returnkeys> ( KEYLIST )
 
@@ -650,6 +711,17 @@ also L<Curses::UI|Curses::UI>).
 
 This will load the module for the CLASS. If loading
 fails, the program will die. 
+
+=item * B<onFocus> ( CODEREF )
+
+This method can be used to set the B<-onfocus> event handler
+(see above) after initialization of the widget.
+
+=item * B<onBlur> ( CODEREF )
+
+This method can be used to set the B<-onblur> event handler
+(see above) after initialization of the widget.
+
 
 =back
 

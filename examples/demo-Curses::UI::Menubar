@@ -80,7 +80,7 @@ my @menu = (
 # Callback routines
 # ----------------------------------------------------------------------
 
-my $menu = $cui->add( 'menu', 'MenuBar', -menu => \@menu );
+my $menu = $cui->add( 'menu', 'Menubar', -menu => \@menu );
 $menu->returnkeys("\cQ");
 
 # ----------------------------------------------------------------------

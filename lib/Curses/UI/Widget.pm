@@ -31,6 +31,9 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-parent		=> undef, 	# the parent object
 		-assubwin	=> 1,		# 0 = no, 1 = yes, create as subwindow? 
@@ -68,7 +71,11 @@ sub new ()
 		-hscrolllen     => 0,		# total number of columns
 		-hscrollpos     => 0,		# current column position 
 
-		@_,
+		-onfocus	=> undef,	# onFocus event handler
+		-onblur		=> undef,	# onBlur event handler
+		-intellidraw    => 1,   	# Support intellidraw()?
+
+		%userargs,
 	
 		-scr		=> undef,	# generic window handler
 		-focus		=> 0,	  	# has the widget focus?	
@@ -122,7 +129,7 @@ sub layout()
 	# -------------------------------------------------------
 
 	if ($this->{-assubwin} and defined $this->{-parent}
-	    and not $this->isa('Curses::UI::MenuBar')) 
+	    and not $this->isa('Curses::UI::Menubar')) 
 	{
 		$this->{-parentdata} = $this->{-parent}->windowparameters;
 	} else {
@@ -275,6 +282,10 @@ sub layout()
 	return $this;
 }
 
+sub onFocus($;$) { shift()->set_event('-focus', shift()) }
+sub onBlur($;$)  { shift()->set_event('-blur',  shift()) }
+
+
 sub process_padding($;)
 {
 	my $this = shift;
@@ -356,9 +367,10 @@ sub title ($;)
 { 
 	my $this = shift;
 	$this->{-title} = shift;
+	$this->intellidraw;
 }
 
-sub windowparameters		
+sub windowparameters()
 { 
 	my $this = shift;
 	my $s = $this->{-windowscr};
@@ -370,7 +382,7 @@ sub windowparameters
 	my $cor_h = 0;
 	my $cor_y = 0;
 	if ($this->isa('Curses::UI::Container') and
-	    $this->hasa('Curses::UI::MenuBar')) {
+	    $this->hasa('Curses::UI::Menubar')) {
 		$cor_h -= 1;
 		$cor_y += 1;
 	}
@@ -385,9 +397,10 @@ sub windowparameters
 
 # Must be overridden in child class, to make
 # the widget focusable.
-sub focus 
+sub focus()
 { 
-	shift()->show;
+	my $this = shift;
+	$this->show;
 	return ('RETURN',''); 
 }
 
@@ -600,12 +613,46 @@ sub draw_scrollbars()
 	return $this;
 }
 
+sub intellidraw(;$)
+{
+	my $this = shift;
+
+	if ($this->{-intellidraw} and
+            not $this->hidden and 
+            $this->in_topwindow)
+	{
+		$this->draw(1);
+		doupdate();
+	}
+	return $this;
+}
+
 sub hidden() { shift()->{-hidden} }
 sub hide()   { shift()->{-hidden} = 1 }
 sub show()   { shift()->{-hidden} = 0 }
 
+sub parentwindow()
+{
+	my $object = shift;
+
+	until (not defined $object or 
+               $object->isa('Curses::UI::Window')) {
+		$object = $object->parent;
+	}
+
+	return $object;
+}
+
+sub in_topwindow()
+{
+	my $this = shift;
+	my $win = $this->parentwindow();
+	return unless defined $win;
+	$win->is_ontop;
+}
+
 # ----------------------------------------------------------------------
-# Bindings
+# Binding 
 # ----------------------------------------------------------------------
 
 sub clear_binding($;)
@@ -701,6 +748,8 @@ sub generic_focus($$;)
 	my $pre_key_callback	= shift;
 
 	$this->show;
+	$this->run_event('-onfocus');
+
 	$callback_time = 2 
 		unless defined $callback_time;
 
@@ -764,10 +813,60 @@ sub generic_focus($$;)
 		{
                         $this->{-focus} = 0;
                         $this->draw;
+			$this->run_event('-onblur');
                         return (wantarray ? ($return, $key) : $return);
                 } 
         }
 }
+
+# ----------------------------------------------------------------------
+# Event handling
+# ----------------------------------------------------------------------
+
+sub clear_event($;)
+{
+	my $this = shift;
+	my $event = shift;
+	$this->set_event($event, undef);
+	return $this;
+}
+
+sub set_event($;$)
+{
+	my $this      = shift;
+	my $event     = shift;
+	my $callback  = shift;
+
+	if (defined $callback) 
+	{
+		if (ref $callback eq 'CODE') {
+			$this->{$event} = $callback;
+                } else {
+                        confess "$event callback for $this "
+                              . "($callback) is no CODE reference";
+                }
+	} else {
+		$this->{$event} = undef;
+	}
+	return $this;
+}
+
+sub run_event($;)
+{
+	my $this = shift;
+	my $event = shift;
+	
+	my $callback = $this->{$event};
+	if (defined $callback) {
+		if (ref $callback eq 'CODE') {
+			return $callback->($this);
+		} else {
+			confess "$event callback for $this "
+			      . "($callback) is no CODE reference";
+		}
+	}
+	return;
+} 
 
 1;
 
@@ -777,6 +876,11 @@ sub generic_focus($$;)
 =head1 NAME
 
 Curses::UI::Widget - The base class for all widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget - base class
 
 
 
@@ -816,6 +920,12 @@ by this class. So this class doesn't really have standard options.
 This option specifies parent of the object. This parent is 
 the object (Curses::UI, Window, Widget(descendant), etc.) 
 in which the widget is drawn.
+
+=item * B<-intellidraw> < BOOLEAN >
+
+If BOOLEAN has a true value (which is the default), the
+B<intellidraw> method (see below) will be suported. This
+option is mainly used in widget building.
 
 =item * B<-border> < BOOLEAN >
 
@@ -1011,6 +1121,27 @@ the scrollbar will be drawn.
 
 
 
+=head2 EVENTS
+
+=over 4
+
+=item * B<-onfocus> < CODEREF >
+
+This sets the onFocus event handler for the widget.
+If the widget gets the focus, the code in CODEREF will 
+be executed. It will get the widget reference as its 
+argument.
+
+=item * B<-onblur> < CODEREF >
+
+This sets the onBlur event handler for the widget.
+If the widget looses the focus, the code in CODEREF will 
+be executed. It will get the widget reference as its 
+argument.
+
+
+=back
+
 
 =head1 METHODS
 
@@ -1031,6 +1162,21 @@ the widget (the border and the effective drawing area).
 Draw the Curses::UI::Widget. If BOOLEAN is true, the screen 
 will not update after drawing. By default this argument is 
 false, so the screen will update after drawing the widget.
+
+=item * B<intellidraw> ( )
+
+If the widget is visible (it is not hidden and it is in the
+window that is currently on top) and if intellidraw is not
+disabled for it (B<-intellidraw> has a true value) it is drawn 
+and the curses routine doupdate() will be called to update 
+the screen. 
+
+This is useful if you change something in a widget and want 
+it to update its state. If you simply call draw() and 
+doupdate() yourself, then the widget will also be drawn if 
+it is on a window that is currently not on top. This would 
+result in the widget being drawn right through the contents 
+of the window that is currently on top.
 
 =item * B<focus> ( )
 
@@ -1170,6 +1316,42 @@ Bind the keys in the list KEYLIST to the ROUTINE. If you use an
 empty string for a key, then this routine will become the default
 routine (in case no other keybinding could be found). This 
 is for example used in the TextEditor widget.
+
+=item * B<set_event> ( EVENT, [CODEREF] )
+
+This routine will set the callback for event EVENT to
+CODEREF. If CODEREF is omitted or undefined, the event will 
+be cleared.
+
+=item * B<clear_event> ( EVENT )
+
+This will clear the callback for event EVENT.
+
+=item * B<run_event> ( EVENT )
+
+This routine will check if a callback for the event EVENT
+is set and if is a code reference. If this is the case, 
+it will run the code and return its return value. 
+
+=item * B<onFocus> ( CODEREF )
+
+This method can be used to set the B<-onfocus> event handler
+(see above) after initialization of the widget. 
+
+=item * B<onBlur> ( CODEREF )
+
+This method can be used to set the B<-onblur> event handler
+(see above) after initialization of the widget. 
+
+=item * B<parentwindow> ( )
+
+Returns this parent window for the widget or undef if
+no parent window can be found (this should not happen).
+
+=item * B<in_topwindow> ( )
+
+Returns true if the widget is in the window that is 
+currently on top.
 
 =back
 

@@ -29,6 +29,7 @@ $DEBUG = 0;
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(
+	keys_to_lowercase
 	text_wrap
 	scrlength
 	split_to_lines
@@ -128,6 +129,16 @@ sub accessor($;$)
         return $this->{$key};
 }
 
+sub keys_to_lowercase($;)
+{
+	my $hash = shift;
+
+	my $copy = {%$hash};
+	while (my ($k,$v) = each %$copy) {
+		$hash->{lc $k} = $v;
+	}
+	return $hash;
+}
 
 # ----------------------------------------------------------------------
 # Text processing
@@ -435,6 +446,12 @@ sub get_key(;$$)
 
 Curses::UI::Common - Common methods for Curses::UI
 
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Common - base class
+
+
 =head1 SYNOPSIS
 
     package MyPackage;
@@ -460,7 +477,7 @@ shared between Curses::UI classes.
 
 =item * B<parent> ( )
 
-Returns the B<-parent> data member.
+Returns the data member $this->{B<-parent>}.
 
 =item * B<root> ( )
 
@@ -468,8 +485,8 @@ Returns the topmost B<-parent> (the Curses::UI instance).
 
 =item * B<rootscr> ( )
 
-Returns the topmost curses window (the B<-scr> data member
-of the Curses::UI instance). 
+Returns the topmost curses window (the data member
+$this->{B<-scr>} of the Curses::UI instance). 
 
 =item * B<delallwin> ( )
 
@@ -479,9 +496,14 @@ descendant will be removed.
 
 =item * B<accessor> ( NAME, [VALUE] )
 
-If VALUE is set, the value for the data member NAME will be 
-changed. The method will return the current value for
-data member NAME.
+If VALUE is set, the value for the data member $this->{NAME} 
+will be changed. The method will return the current value for
+data member $this->{NAME}.
+
+=item * B<keys_to_lowercase> ( HASHREF )
+
+All keys in the hash referred to by HASHREF will be 
+converted to lower case.
 
 =back
 
@@ -602,18 +624,18 @@ Example:
 
 =item B<beep_on> ( )
 
-This sets the B<-nobeep> data member of the class instance
+This sets the data member $this->{B<-nobeep>} of the class instance
 to a false value.
 
 =item B<beep_off> ( )
 
-This sets the B<-nobeep> data member of the class instance
+This sets the data member $this->{B<-nobeep>} of the class instance
 to a true value.
 
 =item B<dobeep> ( )
 
-This will call the curses beep() routine, but only if
-B<-nobeep> is false.
+This will call the curses beep() routine, but only if B<-nobeep> 
+is false.
 
 =back
 

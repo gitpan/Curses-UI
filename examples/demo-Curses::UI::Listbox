@@ -34,8 +34,12 @@ $win->add(
 );
 
 $win->add(
-        'listbox1', 'ListBox',
+        'listbox1', 'Listbox',
 	-y         => 3,
+	-onchange  => sub { 
+		my $t = shift;
+		$t->title("sel: " . $t->get);
+	},
 	-title     => 'values',
         -values    => $values,
 	-border    => 1,
@@ -44,9 +48,13 @@ $win->add(
 );
 
 $win->add(
-        'listbox2', 'ListBox',
+        'listbox2', 'Listbox',
 	-x         => 12,
 	-y         => 3,
+	-onchange  => sub { 
+		my $t = shift;
+		$t->title("sel: " . $t->get);
+	},
 	-title     => 'labels',
         -values    => $values,
         -labels    => $labels,
@@ -56,7 +64,7 @@ $win->add(
 );
 
 $win->add(
-        'listbox3', 'ListBox',
+        'listbox3', 'Listbox',
 	-title     => 'multi',
 	-x         => 24,
 	-y         => 3,
@@ -66,10 +74,15 @@ $win->add(
  	-width     => 14,
 	-height    => 9,
 	-multi     => 1,
+	-onchange  => sub {
+		my $lb = shift;
+		my @selected = $lb->get;
+		$lb->title("count: " . scalar(@selected));
+	},
 );
 
 $win->add(
-        'listbox4', 'ListBox',
+        'listbox4', 'Listbox',
 	-x         => 39,
 	-y         => 3,
 	-title     => 'radio',
@@ -82,7 +95,7 @@ $win->add(
 );
 
 $win->add(
-        'listbox5', 'ListBox',
+        'listbox5', 'Listbox',
 	-y         => 12,
 	-title     => 'scroll',
         -values    => [ @$values, @$values ],
@@ -94,7 +107,7 @@ $win->add(
 );
 
 $win->add(
-        'listbox6', 'ListBox',
+        'listbox6', 'Listbox',
 	-y         => 12,
         -x         => 12,
 	-title     => 'wraprnd',
@@ -107,7 +120,7 @@ $win->add(
 );
 
 $win->add(
-        'listbox7', 'ListBox',
+        'listbox7', 'Listbox',
 	-y         => 12,
         -x         => 24,
 	-radio	   => 1,

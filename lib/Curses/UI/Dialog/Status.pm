@@ -23,13 +23,19 @@ $VERSION = '1.02';
 sub new ()
 {
 	my $class = shift;
+
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-message 	 => undef,   # The message to show
 		-ipad            => 1,
 		-border 	 => 1,
 		-width           => undef,
 		-height          => undef,
-		@_,
+
+		%userargs,
+
 		-centered        => 1,
 	);
 
@@ -59,7 +65,7 @@ sub layout()
 		if (not defined $this->{-width})
 		{
 			$this->{-width} = $this->width_by_windowscrwidth(
-				$label->{-width}, 
+				$label->{-width} + 1, # +1 for visible cursor 
 				%$this
 			);
 		}
@@ -103,6 +109,18 @@ sub focus()
 =head1 NAME
 
 Curses::UI::Dialog::Status - Create and manipulate status dialogs 
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+            |
+            +----Curses::UI::Window
+                    |
+                    +----Curses::UI::Dialog::Status
+
 
 =head1 SYNOPSIS
 

@@ -42,11 +42,10 @@ $page1->add(
 );
 
 $page1->add(
-	'password_entry', 'TextEntry',
+	'password_entry', 'PasswordEntry',
 	-x=>15, -y=>1,
 	-width=>11,
 	-maxlength=>8,
-	-password=>'*',
 	-sbborder => 1,
 );
 
@@ -81,7 +80,7 @@ $page1->add(
 );
 
 $page1->add(
-	'pulldown1', 'PopupBox',
+	'pulldown1', 'Popupmenu',
 	-x => 15, -y => 4, -width=>11,
 	-sbborder=>1, -selected => undef,
 	-values => [1,2,3,4,5,6,7,8,9,10,11,12,
@@ -113,7 +112,7 @@ $page1->add(
 
 
 $page1->add(
-	'barbapapas', 'ListBox',
+	'barbapapas', 'Listbox',
 	-x => 1, -y => 7, -width => 18, -multi => 1,
 	-padbottom => 3, -border => 0, -vscrollbar=>'right',
 	-values => [
@@ -130,7 +129,7 @@ $page1->add(
 );
 
 $page1->add(
-	'listbox2', 'ListBox',
+	'listbox2', 'Listbox',
 	-x => 20, -y => 7, -width => 5,
 	-border => 1, -padbottom => 3, -vscrollbar => 'right',
 	-values => [
@@ -182,14 +181,14 @@ my $page2 = $cui->add(
 );
 
 $page2->add(
-	'checkbox', 'CheckBox',
+	'checkbox', 'Checkbox',
 	-x => 0, -y => 0,
 	-label => "This is just a very simple page\n"
                 . "Check the checkbox if you agree.",
 );
 
 $page2->add(
-	'radiobox', 'RadioButtonBox',
+	'radiobox', 'Radiobuttonbox',
 	-x => 0, -y => 3,
 	-selected => 0,
 	-values => ['first option','second option','third option'],
@@ -202,7 +201,7 @@ $page2->add(
 );
 
 $page2->add(
-	'pulldown', 'PopupBox',
+	'pulldown', 'Popupmenu',
 	-x => 30, -y => 3,
 	-width=>11,
 	-sbborder=>1,
@@ -247,7 +246,7 @@ my $page3 = $cui->add(
 );
 
 $page3->add(
-	'checkbox', 'CheckBox',
+	'checkbox', 'Checkbox',
 	-x => 0, -y => 0,
 	-callback => sub {
 		my $this = shift()->parent;
@@ -265,7 +264,7 @@ $page3->add(
 );
 
 $page3->add(
-	'progress1', 'ProgressBar',
+	'progress1', 'Progressbar',
 	-x => 0, -y => 2,
 	-min => 0,
 	-max => 100,
@@ -273,7 +272,7 @@ $page3->add(
 );
 
 $page3->add(
-	'progress2', 'ProgressBar',
+	'progress2', 'Progressbar',
 	-x => 0, -y => 5,
 	-min => 0,
 	-max => 100,
@@ -282,7 +281,7 @@ $page3->add(
 );
 
 $page3->add(
-	'progress3', 'ProgressBar',
+	'progress3', 'Progressbar',
 	-x => 0, -y => 8,
 	-min => 0,
 	-max => 100,
@@ -293,7 +292,7 @@ $page3->add(
 
 
 $page3->add(
-	'progress4', 'ProgressBar',
+	'progress4', 'Progressbar',
 	-x => 0, -y => 12,
 	-min => 10,
 	-max => 160,
@@ -308,8 +307,11 @@ $page3->returnkeys("\cQ", "\cN", "\cL","\cF");
 my $curpage = 'page1';
 FOCUS_CHANGE: for (;;)
 {
-	$cui->ontop($curpage);
-	my ($ret,$key) = $cui->getobj($curpage)->focus;
+	# This could also be done using: $cui->ontop($curpage);
+	my $win = $cui->getobj($curpage);
+	$win->ontop;
+
+	my ($ret,$key) = $win->focus;
 
 	# CTRL+X => exit
 	if ($key eq "\cQ")

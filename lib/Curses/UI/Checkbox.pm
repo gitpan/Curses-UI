@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::CheckBox
+# Curses::UI::Checkbox
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,7 +9,7 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::CheckBox;
+package Curses::UI::Checkbox;
 
 use strict;
 use Curses;
@@ -42,6 +42,9 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = (
 		-parent		 => undef,	# the parent window
 		-width		 => undef,	# the width of the checkbox
@@ -49,11 +52,12 @@ sub new ()
 		-y		 => 0,		# the vertical position rel. to parent
 		-checked	 => 0,		# checked or not?
 		-label		 => '',		# the label text
+		-onchange	 => undef,	# event handler
 
 		-bindings	 => {%bindings},
 		-routines	 => {%routines},
 
-		@_,
+		%userargs,
 	
 		-focus		 => 0,
 	);
@@ -71,15 +75,18 @@ sub new ()
 	# Create the label on the widget.
 	$this->add(
 		'label', 'Label',
-		-text     => $this->{-label},
-		-x        => 4,
-		-y        => 0
+		-text        => $this->{-label},
+		-x           => 4,
+		-y           => 0,
+		-intellidraw => 0,
 	);
 
 	$this->layout;
 
 	return bless $this, $class;
 }
+
+sub onChange(;$)  { shift()->set_event('-onchange',  shift()) }
 
 sub layout()
 {
@@ -135,22 +142,27 @@ sub focus()
 sub uncheck()
 {
 	my $this = shift;
+	my $changed = ($this->{-checked} ? 1 : 0);
 	$this->{-checked} = 0;
-	$this->draw;
+	$this->run_event('-onchange') if $changed;
+	$this->intellidraw;
 }
 
 sub check()
 {
 	my $this = shift;
+	my $changed = ($this->{-checked} ? 0 : 1);
 	$this->{-checked} = 1;
-	$this->draw;
+	$this->run_event('-onchange') if $changed;
+	$this->intellidraw;
 }
 
 sub toggle()
 {
 	my $this = shift;
 	$this->{-checked} = ! $this->{-checked};
-	$this->draw;
+	$this->run_event('-onchange');
+	$this->intellidraw;
 }
 
 sub get()
@@ -166,7 +178,18 @@ sub get()
 
 =head1 NAME
 
-Curses::UI::CheckBox - Create and manipulate checkbox widgets
+Curses::UI::Checkbox - Create and manipulate checkbox widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+            |
+            +----Curses::UI::Buttonbox
+
+
 
 =head1 SYNOPSIS
 
@@ -186,7 +209,7 @@ Curses::UI::CheckBox - Create and manipulate checkbox widgets
 
 =head1 DESCRIPTION
 
-Curses::UI::CheckBox is a widget that can be used to create 
+Curses::UI::Checkbox is a widget that can be used to create 
 a checkbox. A checkbox has a label which says what the 
 checkbox is about and in front of the label there is a
 box which can have an "X" in it. If the "X" is there, the
@@ -196,7 +219,7 @@ return a false value). A checkbox looks like this:
 
     [X] Say hello to the world
 
-See exampes/demo-Curses::UI::CheckBox in the distribution
+See exampes/demo-Curses::UI::Checkbox in the distribution
 for a short demo.
 
 
@@ -206,7 +229,8 @@ for a short demo.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -229,6 +253,12 @@ This option determines if at creation time the checkbox
 should be checked or not. By default this option is
 set to false, so the checkbox is not checked.
 
+=item * B<-onchange> < CODEREF >
+
+This sets the onChange event handler for the checkbox widget.
+If the checkbox is toggled, the code in CODEREF will be executed.
+It will get the widget reference as its argument.
+
 =back
 
 
@@ -244,7 +274,13 @@ set to false, so the checkbox is not checked.
 
 =item * B<draw> ( BOOLEAN )
 
+=item * B<intellidraw> ( )
+
 =item * B<focus> ( )
+
+=item * B<onFocus> ( CODEREF )
+
+=item * B<onBlur> ( CODEREF )
 
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
 for an explanation of these.
@@ -266,6 +302,11 @@ This method can be used to set the checkbox to its unchecked state.
 
 This method will set the checkbox in "the other state". This means
 that the checkbox will get checked if it is not and vice versa.
+
+=item * B<onChange> ( CODEREF )
+
+This method can be used to set the B<-onchange> event handler
+(see above) after initialization of the checkbox.
 
 
 =back

@@ -90,7 +90,7 @@ sub setup_connection()
 	);
 
 	my $buttons = $conwin->add(
-		'buttons', 'ButtonBox',
+		'buttons', 'Buttonbox',
 		-x => 14, -y => 8,
 		-buttons => [
 		    { -label => '< Connect >',
@@ -224,7 +224,7 @@ sub inbox()
 
 	my $listwin = $cui->add('list_window', 'Window');
 	my $ml = $listwin->add(
-		'message_list', 'ListBox',
+		'message_list', 'Listbox',
 		-values => \@values,
 		-labels => \%labels,
 		-vscrollbar => 1,

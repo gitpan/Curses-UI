@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::MenuListBox
+# Curses::UI::MenuListbox
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,28 +9,33 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::MenuListBox;
+package Curses::UI::MenuListbox;
 
 use strict;
 use Curses;
 use Curses::UI::Common;
 use Curses::UI::Container;
 use Curses::UI::Window;
-use Curses::UI::ListBox;
+use Curses::UI::Listbox;
 use Curses::UI::Widget;
 
 use vars qw($VERSION @ISA);
 $VERSION = '1.00';
-@ISA = qw(Curses::UI::ListBox Curses::UI::Common Curses::UI::Window);
+@ISA = qw(Curses::UI::Listbox Curses::UI::Common Curses::UI::Window);
 
 sub new()
 {
         my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = (
 		-menu 		=> {},		# The menu contents
 		-is_topmenu	=> 0,		# First pulldown or not?
-		@_,
+
+		%userargs,
+
 		-vscrollbar 	=> 1,
 		-assubwin 	=> 0,
 		-border 	=> 1,
@@ -42,7 +47,7 @@ sub new()
         foreach my $item (@{$args{-menu}})
         {
                 my $l = $item->{-label};
-                die "Missing argument: -label for the MenuListBox"
+                die "Missing argument: -label for the MenuListbox"
                         unless defined $l;
                 $longest = length($l) if length($l) > $longest;
         }
@@ -130,7 +135,7 @@ sub cursor_right()
 		# Create the submenu.
 		my $id = "_submenu_$this";
 		$this->root->add(
-			$id, 'MenuListBox',
+			$id, 'MenuListbox',
 			-x      => $x,
 			-y      => $y,
 			-menu   => $this->{-menu}->[$this->{-ypos}]->{-submenu},
@@ -190,7 +195,19 @@ sub option_select()
 
 =head1 NAME
 
-Curses::UI::MenuListBox - Create and manipulate menulistbox widgets
+Curses::UI::MenuListbox - Create and manipulate menulistbox widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+ Curses::UI::Searchable
+    |
+    +----Curses::UI::Listbox
+         Curses::UI::Window
+            |
+            +----Curses::UI::MenuListbox
+
 
 =head1 SYNOPSIS
 
@@ -198,7 +215,7 @@ Curses::UI::MenuListBox - Create and manipulate menulistbox widgets
     my $cui = new Curses::UI;
 
     my $menulistbox = $cui->add(
-        'mymenulistbox', 'MenuListBox',
+        'mymenulistbox', 'MenuListbox',
         -values    => [1, 2, 3],
         -labels    => { 1 => 'One', 
                         2 => 'Two', 
@@ -212,19 +229,19 @@ Curses::UI::MenuListBox - Create and manipulate menulistbox widgets
 
 This class is a descendant of both the 
 L<Curses::UI::Window|Curses::UI::Window> and the
-L<Curses::UI::ListBox|Curses::UI::ListBox> class. This means 
+L<Curses::UI::Listbox|Curses::UI::Listbox> class. This means 
 that it implements a listbox which can be added as a separate 
 window to the L<Curses::UI|Curses::UI> root window. It has
 special bindings for behaving nicely within a menu system.
 
 This class is internally used by the 
-L<Curses::UI::MenuBar|Curses::UI::MenuBar> class. Normally
+L<Curses::UI::Menubar|Curses::UI::Menubar> class. Normally
 you would not want to use this class directly.
 
 =head1 STANDARD OPTIONS
 
 B<-x> and B<-y>. These are the only standard options that 
-L<Curses::UI::MenuBar|Curses::UI::MenuBar> uses. 
+L<Curses::UI::MenuListbox|Curses::UI::MenuListbox> uses. 
 For an explanation of these standard options, see
 L<Curses::UI::Widget|Curses::UI::Widget>.
 
@@ -324,7 +341,7 @@ for an explanation of these.
 =head1 DEFAULT BINDINGS
 
 The bindings for for this class are the same as those for the
-L<Curses::UI::ListBox|Curses::UI::ListBox>, except for the 
+L<Curses::UI::Listbox|Curses::UI::Listbox>, except for the 
 following points:
 
 =over 4
@@ -360,7 +377,7 @@ widget is not a submenu (so B<-is_topmenu> is set
 to a true value), this widget will loose focus
 and return the value 'CURSOR_RIGHT' to the calling
 routine. This value can be caught by the 
-L<Curses::UI::MenuBar|Curses::UI::MenuBar> to select 
+L<Curses::UI::Menubar|Curses::UI::Menubar> to select 
 the next menu.
 
 The current menuitem has a submenu
@@ -411,8 +428,8 @@ to the calling routine.
 =head1 SEE ALSO
 
 L<Curses::UI|Curses::UI>, 
-L<Curses::UI::MenuBar|Curses::UI::MenuBar>, 
-L<Curses::UI::ListBox|Curses::UI:ListBox>
+L<Curses::UI::Menubar|Curses::UI::Menubar>, 
+L<Curses::UI::Listbox|Curses::UI:Listbox>
 
 
 

@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::ProgressBar
+# Curses::UI::Progressbar
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,7 +9,7 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::ProgressBar;
+package Curses::UI::Progressbar;
 
 use strict;
 use Curses;
@@ -24,6 +24,9 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-min          => 0,	# minimal value	
 		-max          => 100,	# maximum value	
@@ -31,7 +34,8 @@ sub new ()
 		-nopercentage => 0,     # show the percentage or not?
 		-nocenterline => 0,     # show the center line or not?
 		-border	      => 1,
-		@_
+
+		%userargs,	
 	);
 
 	# Check that the lowest value comes first.
@@ -59,6 +63,7 @@ sub pos(;$)
 	my $this = shift;
 	my $pos = shift || 0;
 	$this->{-pos} = $pos;	
+	$this->intellidraw;
 	return $this;
 }
 
@@ -135,7 +140,15 @@ sub draw(;$)
 
 =head1 NAME
 
-Curses::UI::ProgressBar - Create and manipulate progressbar widgets
+Curses::UI::Progressbar - Create and manipulate progressbar widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Progressbar
+
 
 =head1 SYNOPSIS
 
@@ -144,7 +157,7 @@ Curses::UI::ProgressBar - Create and manipulate progressbar widgets
     my $win = $cui->add('window_id', 'Window');
 
     my $progressbar = $win->add(
-        'myprogressbar', 'ProgressBar',
+        'myprogressbar', 'Progressbar',
         -max       => 250,
         -pos       => 42,
     );
@@ -154,7 +167,7 @@ Curses::UI::ProgressBar - Create and manipulate progressbar widgets
 
 =head1 DESCRIPTION
 
-Curses::UI::ProgressBar is a widget that can be used to 
+Curses::UI::Progressbar is a widget that can be used to 
 provide some sort of progress information to the user
 of your program. The progressbar looks like this:
 
@@ -162,7 +175,7 @@ of your program. The progressbar looks like this:
  |||||||||---------- 14% ------------------ |
  +------------------------------------------+
 
-See exampes/demo-Curses::UI::ProgressBar in the distribution
+See exampes/demo-Curses::UI::Progressbar in the distribution
 for a short demo.
 
 
@@ -225,6 +238,8 @@ value is false, so a horizontal line will be drawn.
 
 =item * B<draw> ( BOOLEAN )
 
+=item * B<intellidraw> ( )
+
 =item * B<focus> ( )
 
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
@@ -237,8 +252,6 @@ This method will return the current B<-pos> value of the widget.
 =item * B<pos> ( VALUE )
 
 This method will set the B<-pos> value of the widget to SCALAR.
-The widget will not be redrawn, so you will have to call
-the B<draw> method yourself to see the change.
 
 =back
 
@@ -247,7 +260,7 @@ the B<draw> method yourself to see the change.
 
 =head1 DEFAULT BINDINGS
 
-Since a ProgressBar is a non-interacting widget, it does not have
+Since a Progressbar is a non-interacting widget, it does not have
 any bindings.
 
 

@@ -25,7 +25,7 @@ my $win2 = $cui->add(
 );
 
 my $popup = $win1->add(
-        'popup', 'PopupBox',
+        'popup', 'Popupmenu',
         -x => 2,
         -y => 2,
         -sbborder => 1, 
@@ -40,7 +40,7 @@ my $popup = $win1->add(
 );
 
 my $but1 = $win1->add(
-        'buttons', 'ButtonBox',
+        'buttons', 'Buttonbox',
         -x => 2, 
         -y => 4, 
         -buttons => [
@@ -62,7 +62,7 @@ my $editor = $win2->add(
 );
 
 my $but2 = $win2->add(
-        'buttons', 'ButtonBox',
+        'buttons', 'Buttonbox',
         -x => 2,
         -y => -2,
         -buttons => [

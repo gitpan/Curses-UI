@@ -1,8 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
 
-open STDERR, ">/tmp/r";
-
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;

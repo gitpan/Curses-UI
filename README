@@ -4,11 +4,15 @@ E-mailaddress : maurice@gitaar.net
 Licence       : Curses::UI is free software and it is distributed 
                 under the same license as perl itself.
 Code maturity : The code is still in its alfa stage, so interfaces
-                might change during development.
+                might change during development. Though beta stage
+                is coming up soon!
                 
 
 Please do let me know if you find these modules useful and let me
-know if any appliction is built using them.
+know if any appliction is built using them. If you have a nice
+example application, I would be most willing to add it to the 
+distribution.
+
 
 What is Curses::UI?
 ===================
@@ -24,11 +28,11 @@ several widgets which can be used to build a user interface:
 - Listbox 
 - Radiobuttonbox
 - PasswordEntry
-- Popupbox (a.k.a. pulldown- or dropdown menu)
+- Popupmenu (a.k.a. pulldown- or dropdown menu)
 - Progressbar
 - Buttonbox 
 - Checkbox
-- MenuBar (uses MenuListbox)
+- Menubar (uses MenuListbox)
 - Texteditor (has features like word wrapping and undo)
 - Textviewer
 - Textentry
@@ -78,7 +82,7 @@ Some random features:
 - The Curses::UI::ListBox widget is searchable using a "less"-like
   system. So if a listbox widget has focus, pressing "/" or "?"
   will invoke a search on the contents of the listbox. Since the
-  listbox is also used for RadioButtons, PopupBoxes and MenuListboxes,
+  listbox is also used for radiobuttons, popupboxes and menulistboxes,
   all these are automatically searschable as well;
 
 - The texteditor supports word wrapping, but the word wrapping can

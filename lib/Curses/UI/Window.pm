@@ -14,6 +14,7 @@ package Curses::UI::Window;
 use strict;
 use Curses;
 use Curses::UI::Container;
+use Curses::UI::Common;
 
 use vars qw($VERSION @ISA);
 $VERSION = '1.00';
@@ -22,7 +23,9 @@ $VERSION = '1.00';
 sub new ()
 {
 	my $class = shift;
-	my %args  = @_;
+
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
 
 	# Create the window.
 	my $this = $class->SUPER::new( 
@@ -30,7 +33,9 @@ sub new ()
 		-height => undef,
 		-x => 0, -y => 0,
 		-centered => 0,
-		%args,
+
+		%userargs,
+
 		-assubwin => 1,
 	);
 
@@ -67,6 +72,19 @@ sub layout ()
 	return $this;
 }
 
+sub raise() { shift()->ontop() }
+sub ontop()
+{
+	my $this = shift;
+	$this->root->ontop($this, 1);
+}
+
+sub is_ontop()
+{
+	my $this = shift;
+	$this->root->window_is_ontop($this);
+}
+
 1;
 
 
@@ -75,6 +93,16 @@ sub layout ()
 =head1 NAME
 
 Curses::UI::Window - Create and manipulate Window widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container   
+            |
+            +----Curses::UI::Window
+
 
 =head1 SYNOPSIS
 
@@ -101,7 +129,8 @@ L<Curses::UI::Container|Curses::UI::Container>.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -123,6 +152,39 @@ false value. The default is not to center a window. Example:
 
 =back
 
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( OPTIONS )
+
+=item * B<layout> ( )
+
+=item * B<draw> ( BOOLEAN )
+
+=item * B<focus> ( )
+
+=item * B<onFocus> ( CODEREF )
+
+=item * B<onBlur> ( CODEREF )
+
+=item * B<intellidraw> ( )
+
+These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget>
+for an explanation of these.
+
+=item * B<ontop> ( ) / B<raise> ( )
+
+This method brings the window on top of the other 
+windows.
+
+=item * B<is_ontop> ( )
+
+This method will return a true value if the window is
+currently on top.
+
+=back
 
 
 =head1 SEE ALSO

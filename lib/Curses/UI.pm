@@ -21,7 +21,7 @@ use Curses::UI::Common;
 use Term::ReadKey;
 
 use vars qw($VERSION @ISA);
-$VERSION = "0.62";
+$VERSION = "0.63";
 @ISA = qw(Curses::UI::Container Curses::UI::Common);
 
 $Curses::UI::resizing = 0; 
@@ -226,7 +226,7 @@ sub filebrowser()
 	my %args = @_;
 	$this->tempscreen(
 		'_filebrowser',
-		'Dialog::FileBrowser',
+		'Dialog::Filebrowser',
 		%args
         );
 }
@@ -394,27 +394,27 @@ B<Widgets>
 
 =over 4
 
-=item * L<Curses::UI::ButtonBox|Curses::UI::ButtonBox>
+=item * L<Curses::UI::Buttonbox|Curses::UI::Buttonbox>
 
 =item * L<Curses::UI::Calendar|Curses::UI::Calendar>
 
-=item * L<Curses::UI::CheckBox|Curses::UI::CheckBox>
+=item * L<Curses::UI::Checkbox|Curses::UI::Checkbox>
 
 =item * L<Curses::UI::Label|Curses::UI::Label>
 
-=item * L<Curses::UI::ListBox|Curses::UI::ListBox>
+=item * L<Curses::UI::Listbox|Curses::UI::Listbox>
 
-=item * L<Curses::UI::MenuBar|Curses::UI::MenuBar>
+=item * L<Curses::UI::Menubar|Curses::UI::Menubar>
 
-=item * L<Curses::UI::MenuListBox|Curses::UI::MenuListBox> (used by Curses::UI::MenuBar)
+=item * L<Curses::UI::MenuListbox|Curses::UI::MenuListbox> (used by Curses::UI::Menubar)
 
 =item * L<Curses::UI::PasswordEntry|Curses::UI::PasswordEntry>
 
-=item * L<Curses::UI::PopupBox|Curses::UI::PopupBox>
+=item * L<Curses::UI::Popupmenu|Curses::UI::Popupmenu>
 
-=item * L<Curses::UI::ProgressBar|Curses::UI::ProgressBar>
+=item * L<Curses::UI::Progressbar|Curses::UI::Progressbar>
 
-=item * L<Curses::UI::RadioButtonBox|Curses::UI::RadioButtonBox>
+=item * L<Curses::UI::Radiobuttonbox|Curses::UI::Radiobuttonbox>
 
 =item * L<Curses::UI::SearchEntry|Curses::UI::SearchEntry> (used by Curses::UI::Searchable)
 
@@ -436,7 +436,7 @@ B<Dialogs>
 
 =item * L<Curses::UI::Dialog::Error|Curses::UI::Dialog::Error>
 
-=item * L<Curses::UI::Dialog::FileBrowser|Curses::UI::Dialog::FileBrowser>
+=item * L<Curses::UI::Dialog::Filebrowser|Curses::UI::Dialog::Filebrowser>
 
 =item * L<Curses::UI::Dialog::Status|Curses::UI::Dialog::Status>
 
@@ -557,7 +557,7 @@ it's just like B<dialog>. Example:
 
 The B<filebrowser> method will create a file browser
 dialog. For an explanation of the arguments that can be 
-used, see L<Curses::UI::Dialog::FileBrowser|Curses::UI::Dialog::FileBrowser>.
+used, see L<Curses::UI::Dialog::Filebrowser|Curses::UI::Dialog::Filebrowser>.
 Example:
 
     my $file = $cui->filebrowser(
@@ -711,11 +711,11 @@ the previous one.
 =head1 Add some widgets
 
 Now that we have a couple of windows, we can add widgets
-to them. We'll add a popupbox and some buttons to 
+to them. We'll add a popupmenu and some buttons to 
 the first window.
 
     my $popup = $win1->add(
-        'popup', 'PopupBox',
+        'popup', 'Popupmenu',
         -x => 2,
         -y => 2,
         -sbborder => 1, 
@@ -730,7 +730,7 @@ the first window.
     );
 
     my $but1 = $win1->add(
-        'buttons', 'ButtonBox',
+        'buttons', 'Buttonbox',
         -x => 2,
         -y => 4,
         -buttons => [
@@ -759,7 +759,7 @@ screen and the widgets will follow!
     );
 
     my $but2 = $win2->add(
-        'buttons', 'ButtonBox',
+        'buttons', 'Buttonbox',
         -x => 2,
         -y => -2,
         -buttons => [

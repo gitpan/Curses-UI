@@ -13,6 +13,7 @@ package Curses::UI::SearchEntry;
 
 use Curses;
 use Curses::UI::Widget; # For height_by_windowscrheight()
+use Curses::UI::Common;
 use Curses::UI::Container;
 use vars qw($VERSION @ISA);
 $VERSION = "1.02";
@@ -21,9 +22,15 @@ $VERSION = "1.02";
 sub new()
 {
 	my $class = shift;
+
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = (
 		-prompt 	=> '/',
-		@_,
+
+		%userargs,
+
 		-x 		=> 0, 
 		-y 		=> -1,
 		-width 		=> undef,
@@ -39,20 +46,25 @@ sub new()
 
 	$this->add(
 		'prompt', 'Label',
-		-x => 0, -y => 0, 
-		-height => 1, -width => 2,
-		-border => 0,
-		-text => $this->{-prompt},
+		-x           => 0, 
+		-y           => 0, 
+		-height      => 1, 
+		-width       => 2,
+		-border      => 0,
+		-text        => $this->{-prompt},
+		-intellidraw => 0,
 	);
 
 	$this->add(
 		'entry', 'TextEntry',
-		-x => 1, -y => 0, 
-		-height => 1, 
-		-border => 0,
-		-sbborder => 0,
-		-showlines => 0,
-		-width => undef,
+		-x           => 1,
+		-y           => 0, 
+		-height      => 1, 
+		-border      => 0,
+		-sbborder    => 0,
+		-showlines   => 0,
+		-width       => undef,
+		-intellidraw => 0,
 	)->set_routine('return','LEAVE_CONTAINER');
 
 	$this->layout;
@@ -81,7 +93,7 @@ sub prompt()
 		$prompt = substr($prompt, 0, 1);
 		$this->{-prompt} = $prompt;
 		$this->getobj('prompt')->text($prompt);
-		$this->getobj('prompt')->draw;
+		$this->intellidraw;
 		return $this;
 	} else {
 		return $this->{-prompt};
@@ -96,6 +108,17 @@ sub prompt()
 =head1 NAME
 
 Curses::UI::SearchEntry - Create and manipulate searchentry widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+            |
+            +----Curses::UI::SearchEntry
+
+
 
 =head1 DESCRIPTION
 
@@ -131,6 +154,8 @@ This option sets the initial prompt for the SearchEntry widget.
 =item * B<layout> ( )
 
 =item * B<draw> ( BOOLEAN )
+
+=item * B<intellidraw> ( )
 
 =item * B<focus> ( )
 

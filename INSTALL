@@ -1,17 +1,24 @@
 You will need to have the Curses and Term::ReadKey packages installed
-before installing Curses::UI.
-
-This package uses MakeMaker in a standard way to build its Makefile.
-In order to build it do the following:
+before installing Curses::UI. This package uses MakeMaker in a 
+standard way to build its Makefile. In order to build it do the 
+following:
 
 1. Unpack the source into a directory
-
 2. change the current directory to the source directory
-
 3. run "perl Makefile.PL"
-
 4. run "make"
+5. run "make test" 
+6. run "make install"
 
-5. run "make install" as someone who can write to your Perl library
-   directory.
+Example:
+
+$ gunzip Curses-UI-x.xx.tar.gz
+$ tar xf Curses-UI-x.xx.tar.gz
+$ cd Curses-UI-x.xx
+$ perl Makefile.PL
+$ make
+$ make test
+$ make install
+
+
 

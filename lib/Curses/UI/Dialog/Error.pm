@@ -23,9 +23,15 @@ $VERSION = '1.01';
 sub new ()
 {
 	my $class = shift;
+
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-message 	 => '',		# The message to show
-		@_,
+
+		%userargs,
+
 		-ipadleft	 => 10,		# Space for sign
 		-centered        => 1,
 	);
@@ -65,6 +71,20 @@ sub draw(;$)
 =head1 NAME
 
 Curses::UI::Dialog::Error - Create and manipulate error dialogs
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+            |
+            +----Curses::UI::Window
+                    |
+                    +----Curses::UI::Dialog::Basic
+                            |
+                            +----Curses::UI::Dialog::Error
+
 
 =head1 SYNOPSIS
 

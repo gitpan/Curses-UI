@@ -14,6 +14,7 @@ package Curses::UI::PasswordEntry;
 use strict;
 use Curses;
 use Curses::UI::TextEntry;
+use Curses::UI::Common;
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::TextEntry);
@@ -23,10 +24,15 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-undolevels	 => 20,	# number of undolevels. 0 = infinite
 		-homeonreturn    => 1,	# cursor to homepos on return?
-		@_,
+	
+		%userargs,
+
 		-password	 => '*',# force password token
 		-showhardreturns => 0,	
 	);
@@ -45,6 +51,19 @@ sub new ()
 =head1 NAME
 
 Curses::UI::PasswordEntry - Create and manipulate passwordentry widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+ Curses::UI::Searchable 
+    |
+    +----Curses::UI::TextEditor
+            |
+            +----Curses::UI::TextEntry
+                    |
+                    +----Curses::UI::PasswordEntry
+
 
 =head1 SYNOPSIS
 

@@ -9,9 +9,9 @@ use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
 my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
-my $win = $cui->add('window_id', 'Window');
+my $win1 = $cui->add('win1', 'Window');
 
-$win->add(
+$win1->add(
         'mylabel', 'Label',
         -text      => 'Hello, world!',
         -width     => -1,
@@ -19,7 +19,7 @@ $win->add(
         -textalignment => 'middle',
 );
 
-$win->add(
+$win1->add(
         'nopadspace', 'Label',
         -text      => 'Without -paddingspaces set',
         -width     => -1,
@@ -29,7 +29,7 @@ $win->add(
 	-paddingspaces => 0,
 );
 
-$win->add(
+$win1->add(
         'yespadspace', 'Label',
         -text      => 'With -paddingspaces set',
         -width     => -1,
@@ -40,14 +40,14 @@ $win->add(
 );
 
 
-my $l = $win->add(
+my $l = $win1->add(
         'mylabel2', 'Label',
 	-y         => 9,
         -width     => -1,
 	-border    => 1,
 );
 
-$win->draw;
+$win1->draw;
 
 my @allfonts = qw(-bold -dim -reverse -underline -blink);
 my @allalignments = qw(left middle right);
@@ -57,7 +57,6 @@ foreach my $font (@allfonts) {
     foreach my $align (@allalignments) {
 	$l->textalignment($align);
 	$l->text("Font: $font, Alignment: $align");
-	$l->draw;
 	sleep 1;
     }
     $l->set_attribute($font, 0);

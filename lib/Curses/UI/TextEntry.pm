@@ -13,6 +13,7 @@ package Curses::UI::TextEntry;
 
 use strict;
 use Curses;
+use Curses::UI::Common;
 use Curses::UI::TextEditor;
 
 use vars qw($VERSION @ISA);
@@ -23,10 +24,15 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-undolevels	 => 20,	# number of undolevels. 0 = infinite
 		-homeonreturn    => 1,	# cursor to homepos on return?
-		@_,
+
+		%userargs,
+
 		-singleline	 => 1,	# single line mode or not?
 		-showhardreturns => 0,	# show hard returns with diamond char?
 	);
@@ -57,6 +63,17 @@ sub new ()
 =head1 NAME
 
 Curses::UI::TextEntry - Create and manipulate textentry widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+ Curses::UI::Searchable
+    |
+    +----Curses::UI::TextEditor
+            |
+            +----Curses::UI::TextEntry
+
 
 =head1 SYNOPSIS
 

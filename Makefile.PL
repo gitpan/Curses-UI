@@ -8,10 +8,8 @@ WriteMakefile(
 		'Curses'        => 0,
 		'Term::ReadKey' => 0,
 	},
-        dist         => {
-		COMPRESS => 'gzip',
-		SUFFIX => 'gz',
-	},
+	clean        => { FILES => 'test.log' },
+        dist         => { COMPRESS => 'gzip', SUFFIX => 'gz' },
         test         => { TEST_TYPE => './test.pl' },
 );
 

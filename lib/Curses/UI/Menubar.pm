@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::MenuBar
+# Curses::UI::Menubar
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,7 +9,7 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::MenuBar;
+package Curses::UI::Menubar;
 
 use strict;
 use Curses;
@@ -46,12 +46,17 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = (
 		-parent		 => undef,	# the parent window
 		-bindings	 => {%bindings},
 		-routines	 => {%routines},
 		-menu		 => [],
-		@_,
+
+		%userargs,
+
 		-width		 => undef,
 		-height		 => 1,
 		-focus		 => 0,
@@ -123,6 +128,7 @@ sub draw()
 sub focus()
 {
 	my $this = shift;
+	
 	$this->{-focus} = 1;
 	$this->{-selected} = 0;
 	$this->draw;
@@ -165,7 +171,7 @@ sub pulldown()
 
 	my $id = "_submenu_$this";
 	$this->root->add(
-		$id, 'MenuListBox',
+		$id, 'MenuListbox',
 		-x		=> $x,
 		-y		=> 1,
 		-is_topmenu	=> 1,
@@ -231,7 +237,19 @@ sub cursor_right()
 
 =head1 NAME
 
-Curses::UI::MenuBar - Create and manipulate menubar widgets
+Curses::UI::Menubar - Create and manipulate menubar widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+            |
+            +----Curses::UI::Window
+                    |
+                    +----Curses::UI::Menubar
+
 
 =head1 SYNOPSIS
 
@@ -242,7 +260,7 @@ Curses::UI::MenuBar - Create and manipulate menubar widgets
     my $menu_data = [....]; 
 
     my $menu = $cui->add( 
-        'menu', 'MenuBar',
+        'menu', 'Menubar',
         -menu => $menu_data
     );
 
@@ -269,7 +287,7 @@ menubar can contain a complete submenu hierarchy. It looks
                       +--------------+
 
 
-See exampes/demo-Curses::UI::MenuBar in the distribution
+See exampes/demo-Curses::UI::Menubar in the distribution
 for a short demo.
 
 
@@ -285,7 +303,7 @@ are provided by L<Curses::UI::Widget>.
 There is only one option: B<-menu>. The value for this
 option is an ARRAYREF. This ARRAYREF behaves exactly
 like the one that is described in
-L<Curses::UI::MenuListBox|Curses::UI::MenuListBox>.
+L<Curses::UI::MenuListbox|Curses::UI::MenuListbox>.
 The difference is that for the top-level menu, you 
 will only use -submenu's. Example data structure:
 
@@ -419,8 +437,8 @@ the first menu will be selected.
 =head1 SEE ALSO
 
 L<Curses::UI|Curses::UI>, 
-L<Curses::UI::MenuBar|Curses::UI::MenuBar>, 
-L<Curses::UI::ListBox|Curses::UI:ListBox>
+L<Curses::UI::MenuListbox|Curses::UI::MenuListbox>, 
+L<Curses::UI::Listbox|Curses::UI:Listbox>
 
 
 

@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::Dialog::FileBrowser
+# Curses::UI::Dialog::Filebrowser
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,7 +9,7 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::Dialog::FileBrowser;
+package Curses::UI::Dialog::Filebrowser;
 
 use strict;
 use Curses;
@@ -24,6 +24,10 @@ $VERSION = '1.06';
 sub new ()
 {
 	my $class = shift;
+
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-title 		 => 'Select file',
 		-path		 => undef,	
@@ -32,7 +36,9 @@ sub new ()
 		-mask	     	 => undef,
 		-mask_selected 	 => 0,
 		-editfilename 	 => 0,
-		@_,
+
+		%userargs,
+
 		-border 	 => 1,
 		-centered        => 1,
 		-titleinverse 	 => 0,
@@ -69,7 +75,8 @@ sub new ()
 	# if the -path is not defined.
 	$this->goto_homedirectory unless defined $this->{-path};
 
-	my $buttons = $this->add('buttons', 'ButtonBox',
+	my $buttons = $this->add(
+		'buttons', 'Buttonbox',
 		-y 		 => -1,
 		-x		 => 0,
 		-width 		 => undef, 
@@ -78,7 +85,8 @@ sub new ()
 	);
 	$buttons->set_routine('return', \&return);
 
-	my $dirbrowser = $this->add('dirbrowser', 'ListBox',
+	my $dirbrowser = $this->add(
+		'dirbrowser', 'Listbox',
 		-y 		 => 0,
 		-border 	 => 1,
 		-width 		 => int(($this->screenwidth - 3)/2),
@@ -91,7 +99,8 @@ sub new ()
 	$dirbrowser->set_routine('goto-homedirectory',\&select_homedirectory);
 	$dirbrowser->set_binding('goto-homedirectory', '~');
 	
-	my $filebrowser = $this->add('filebrowser', 'ListBox',
+	my $filebrowser = $this->add(
+		'filebrowser', 'Listbox',
 		-y 		 => 0,
 		-x 		 => $this->getobj('dirbrowser')->width + 1,
 		-border 	 => 1,
@@ -106,19 +115,22 @@ sub new ()
 	my $labeloffset = 1;
 	my $textoffset = 7;
 
-	$this->add('pathlabel', 'Label',
+	$this->add(
+		'pathlabel', 'Label',
 		-x 		 => $labeloffset, 
 		-y 		 => $this->screenheight - 5, 
 		-text		 => 'Path:',
 	);
-	$this->add('pathvalue', 'Label',
+	$this->add(
+		'pathvalue', 'Label',
 		-x 		 => $textoffset,
 		-y 		 => $this->screenheight - 5, 
 		-width		 => $this->screenwidth - 6,
 		-text		 => $this->{-path},
 	);
 
-	$this->add('filelabel', 'Label',
+	$this->add(
+		'filelabel', 'Label',
 		-x 		 => $labeloffset, 
 		-y 		 => $this->screenheight - 4, 
 		-text		 => 'File:',
@@ -126,7 +138,8 @@ sub new ()
 	
 	if ($this->{-editfilename})
 	{
-		$this->add('filevalue', 'TextEntry',
+		$this->add(
+			'filevalue', 'TextEntry',
 			-x		 => $textoffset,
 			-y 		 => $this->screenheight - 4, 
 			-text		 => $this->{-file},
@@ -137,7 +150,8 @@ sub new ()
 			-regexp		 => '/^[^\/]*$/',
 		);
 	} else {
-		$this->add('filevalue', 'Label',
+		$this->add(
+			'filevalue', 'Label',
 			-x 		 => $textoffset, 
 			-y 		 => $this->screenheight - 4, 
 			-text		 => $this->{-file},
@@ -147,7 +161,8 @@ sub new ()
 
 	if (defined $this->{-mask} and ref $this->{-mask} eq 'ARRAY') 
 	{
-		$this->add('masklabel', 'Label',
+		$this->add(
+			'masklabel', 'Label',
 			-x 	 => $labeloffset,
 			-y 	 => $this->screenheight - 2,
 			-text 	 => 'Mask:',
@@ -163,7 +178,7 @@ sub new ()
 		}
 
 		my $maskbox = $this->add(
-			'maskbox', 'PopupBox',
+			'maskbox', 'Popupmenu',
 			-x 	 => $textoffset,
 			-y 	 => $this->screenheight - 2,
 			-values  => \@values,
@@ -339,7 +354,7 @@ sub maskbox_select()
 {
 	my $popup = shift;
 
-	# first parent is the PopupBox
+	# first parent is the Popupmenu
 	my $this = $popup->parent->parent; 
 
 	$popup->option_select;
@@ -440,7 +455,20 @@ sub return()
 
 =head1 NAME
 
-Curses::UI::Dialog::FileBrowser - Create and manipulate filebrowser dialogs
+Curses::UI::Dialog::Filebrowser - Create and manipulate filebrowser dialogs
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+            |
+            +----Curses::UI::Window
+                    |
+                    +----Curses::UI::Dialog::Filebrowser
+
+
 
 =head1 SYNOPSIS
 
@@ -451,7 +479,7 @@ Curses::UI::Dialog::FileBrowser - Create and manipulate filebrowser dialogs
     # The hard way.
     # -------------
     my $dialog = $win->add(
-        'mydialog', 'Dialog::FileBrowser'
+        'mydialog', 'Dialog::Filebrowser'
     );
     $dialog->focus;
     my $file = $dialog->get();
@@ -468,11 +496,11 @@ Curses::UI::Dialog::FileBrowser - Create and manipulate filebrowser dialogs
 
 =head1 DESCRIPTION
 
-Curses::UI::Dialog::FileBrowser is a filebrowser dialog. 
+Curses::UI::Dialog::Filebrowser is a filebrowser dialog. 
 This type of dialog can be used to select a file, anywhere
 on the filesystem.
 
-See exampes/demo-Curses::UI::Dialog::FileBrowser in the 
+See exampes/demo-Curses::UI::Dialog::Filebrowser in the 
 distribution for a short demo.
 
 
@@ -587,7 +615,7 @@ will chdir to the homedirectory of the current user.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Container|Curses::UI::Container>, 
-L<Curses::UI::ButtonBox|Curses::UI::ButtonBox>
+L<Curses::UI::Buttonbox|Curses::UI::Buttonbox>
 
 
 

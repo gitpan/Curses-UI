@@ -15,7 +15,7 @@ use strict;
 use Curses;
 use Curses::UI::Common;
 use Curses::UI::Window;
-use Curses::UI::ButtonBox; # for compute_buttonwidth()
+use Curses::UI::Buttonbox; # for compute_buttonwidth()
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Window Curses::UI::Common);
@@ -24,11 +24,17 @@ $VERSION = '1.04';
 sub new ()
 {
 	my $class = shift;
+
+	my %userargs = @_;
+	keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-border		=> 1,
 		-message	=> '',		# The message to show
 		-ipad		=> 1, 
-		@_,
+
+		%userargs,
+
 		-titleinverse	=> 1,
 		-centered	=> 1,
 	);
@@ -44,7 +50,7 @@ sub new ()
 	);	
 
 	# Create a hash with arguments that may be passed to 	
-	# the Buttons class.
+	# the Buttonbox class.
 	my %buttonargs = (
 		-buttonalignment => 'right',
 	);
@@ -52,7 +58,7 @@ sub new ()
 		$buttonargs{$arg} = $this->{$arg} 
 			if exists $this->{$arg}; 
 	}
-	my $b = $this->add('buttons', 'ButtonBox',
+	my $b = $this->add('buttons', 'Buttonbox',
 		-y    => -1,
 		%buttonargs
 	);
@@ -153,6 +159,18 @@ sub get()
 
 Curses::UI::Dialog::Basic - Create and manipulate basic dialogs
 
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Container
+            |
+            +----Curses::UI::Window
+                    |
+                    +----Curses::UI::Dialog::Basic
+
+
 =head1 SYNOPSIS
 
     use Curses::UI;
@@ -214,7 +232,7 @@ contain newline (\n) characters.
 
 These options sets the buttons that have to be used. For an
 explanation of these options, see the 
-L<Curses::UI::ButtonBox|Curses::UI::ButtonBox> documentation.
+L<Curses::UI::Buttonbox|Curses::UI::Buttonbox> documentation.
 
 =back
 
@@ -239,7 +257,7 @@ for an explanation of these.
 =item * B<get> ( )
 
 This method will call B<get> on the buttons object of the dialog
-and return its returnvalue. See L<Curses::UI::ButtonBox|Curses::UI::ButtonBox>
+and return its returnvalue. See L<Curses::UI::Buttonbox|Curses::UI::Buttonbox>
 for more information on this.
 
 =back
@@ -251,7 +269,7 @@ for more information on this.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Container|Curses::UI::Container>, 
-L<Curses::UI::ButtonBox|Curses::UI::ButtonBox>
+L<Curses::UI::Buttonbox|Curses::UI::Buttonbox>
 
 
 

@@ -12,16 +12,14 @@ TODO list for Curses::UI:
   Right now the display- and wrapping code is slowing down the editor.
 
 - Work out the way the hiding of widgets works. Now there is some
-  support, but it's not really finished yet.
+  support, but it's not really finished yet. Or I just don't get
+  it myself yet :-)
 
-- Add more events to the widgets, so more callbacks can be made.
-  
 - Replace the current -callback system with some kind of timer 
   system.
 
-- New Label facilities (multi lines) in CheckBox and dialogs.
+- Move root(), parent() and rootscr() from Common.pm to Widget.pm?
 
-- finish calendar widget docs.
-  add basic_test for calendar widget.
-
-
+- Make Popupmenu a Label descendant. This makes the widget a bit
+  more simple and it makes perfect sense to do so (it didn't back
+  then when I created it, but now I'm wondering why :-).

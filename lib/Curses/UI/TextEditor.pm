@@ -107,6 +107,9 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		# Parent info
 		-parent		=> undef,	  # the parent object
@@ -149,8 +152,11 @@ sub new ()
 		# Bindings
 		-routines 	 => {%routines},  # binding routines
 		-bindings 	 => {},		  # these are set by readonly()
+
+		# Events
+		-onchange	 => undef,	  # onChange event handler
 		
-		@_,
+		%userargs,
 
 		# These need some value for initial layout.
 		-scr_lines	 => [],
@@ -545,9 +551,10 @@ sub focus()
 {
 	my $this = shift;
 
-	$this->show;
 	$this->{-focus} = 1;
 	$this->draw;
+
+        $this->run_event('-onfocus');
 
 	my ($key, $do_key);
 	KEYSTROKE: for(;;)
@@ -604,6 +611,8 @@ sub focus()
 			
 			$this->{-focus} = 0;
 			$this->draw;
+
+			$this->run_event('-onblur');
 			return ($ret, $key);
 		}
 	
@@ -618,7 +627,7 @@ sub focus()
 		my $is_illegal = 0;
 		if ($this->{-maxlength}) {
 		    $is_illegal = 1 if length($this->{-text}) > $this->{-maxlength};
-		}	
+		}
 		if (not $is_illegal and defined $this->{-maxlines}) {
 		    my $lines = $this->split_to_lines($this->{-text});
 		    $is_illegal = 1 if @$lines > $this->{-maxlines};
@@ -635,6 +644,7 @@ sub focus()
 			}
 			$this->dobeep();
 		} else {		# Legal input? Redraw the text.
+			$this->run_event('-onchange');
 			$this->draw;
 		}
 	
@@ -1176,7 +1186,7 @@ sub text()
 	{
 		$this->{-text} = $text;
 		$this->layout_content;
-		$this->draw(1);
+		$this->intellidraw;
 		return $this;
 	}
 	return $this->{-text};
@@ -1207,6 +1217,15 @@ sub getline_at_ypos($;) { shift()->{-scr_lines}->[shift()] }
 =head1 NAME
 
 Curses::UI::TextEditor - Create and manipulate texteditor widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+ Curses::UI::Searchable
+    |
+    +----Curses::UI::TextEditor
+
 
 =head1 SYNOPSIS
 
@@ -1262,7 +1281,8 @@ for a short demo of these.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -1371,6 +1391,13 @@ to uppercase. By default BOOLEAN is false.
 If BOOLEAN is true, all entered text will be converted
 to lowercase. By default BOOLEAN is false.
 
+=item * B<-onchange> < CODEREF >
+
+This sets the onChange event handler for the texteditor widget.
+If the text is changed by typing, the code in CODEREF will 
+be executed.  It will get the widget reference as its argument.
+
+
 =back
 
 
@@ -1388,6 +1415,10 @@ to lowercase. By default BOOLEAN is false.
 
 =item * B<focus> ( )
 
+=item * B<onFocus> ( CODEREF )
+
+=item * B<onBlur> ( CODEREF )
+
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
 for an explanation of these.
 
@@ -1402,6 +1433,11 @@ of the texteditor.
 
 This method will call B<text> without any arguments, so it
 will return the contents of the texteditor.
+
+=item * B<onChange> ( CODEREF )
+
+This method can be used to set the B<-onchange> event handler
+(see above) after initialization of the texteditor. 
 
 =back
 

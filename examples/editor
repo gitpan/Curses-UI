@@ -69,7 +69,7 @@ my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
 # Add the menu to the root.
 my $menu = $cui->add(
-	'menu','MenuBar', 
+	'menu','Menubar', 
 	-menu => \@menu,
 );
 

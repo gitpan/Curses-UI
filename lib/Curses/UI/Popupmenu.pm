@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::PopupBox
+# Curses::UI::Popupmenu
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,13 +9,13 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::PopupBox;
+package Curses::UI::Popupmenu;
 
 use strict;
 use Curses;
 use Curses::UI::Common;
 use Curses::UI::Widget;
-use Curses::UI::ListBox;
+use Curses::UI::Listbox;
 use Curses::UI::Label;
 
 use vars qw($VERSION @ISA);
@@ -45,6 +45,9 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = (
 		-parent		 => undef,	# the parent window
 		-width		 => undef,	# the width of the checkbox
@@ -55,11 +58,12 @@ sub new ()
 		-selected	 => undef,	# the current selected value
 		-wraparound      => undef,      # wraparound? 
 		-sbborder	 => 1,		# square bracket border
+		-onchange        => undef,      # event handler
 
 		-bindings	 => {%bindings},
 		-routines	 => {%routines},
 
-		@_,
+		%userargs,
 	
 		-focus		 => 0,
 	);
@@ -75,7 +79,7 @@ sub new ()
 
 	my $this = $class->SUPER::new( %args );
 
-	# Create the ListBox. Layouting will be done
+	# Create the Listbox. Layouting will be done
 	# in the layout routine.
 
 	my %listbox_options = ();
@@ -84,7 +88,7 @@ sub new ()
 			if defined $this->{$option};
 	}
 
-	my $listbox = new Curses::UI::ListBox(
+	my $listbox = new Curses::UI::Listbox(
 		-parent		=> $this,
 		-assubwin 	=> 0,
 		-border   	=> 1,
@@ -97,6 +101,8 @@ sub new ()
 
 	return bless $this, $class;
 }
+
+sub onChange(;$)  { shift()->set_event('-onchange',  shift()) }
 
 sub layout()
 {
@@ -112,6 +118,7 @@ sub layout()
 		-paddingspaces => 1,
 		-x             => 0,
 		-y             => 0,
+		-intellidraw   => 0,
 	);
 	$this->{-labelobject} = $label;
 
@@ -168,13 +175,18 @@ sub draw(;$)
 
 	# Get the selected label.
 	my $sellabel = $this->{-listboxobject}->get_selectedlabel;
-	if (defined $sellabel) {
+
+	if (defined $sellabel) # Found selection.
+	{ 
 		$this->{-labelobject}->reverse($this->{-focus});
 		$this->{-labelobject}->text($sellabel);
-	} else {
+	} 
+	else # No selection yet.
+	{
 		$this->{-labelobject}->reverse($this->{-focus});
 		$this->{-labelobject}->dim(not $this->{-focus});
-		$this->{-labelobject}->text("-"x($this->{-labelobject}->screenwidth));
+		my $width = $this->{-labelobject}->screenwidth;
+		$this->{-labelobject}->text("-"x$width);
 	}
 
 	# Draw the label
@@ -190,6 +202,7 @@ sub draw(;$)
 sub focus()
 {
 	my $this = shift;
+
 	$this->generic_focus(
 		2,
 		NO_CONTROLKEYS,
@@ -200,9 +213,19 @@ sub focus()
 sub open_popup()
 {
 	my $this = shift;
-        $this->{-listboxobject}->draw;
+	my $pre_value = $this->get;
         $this->{-listboxobject}->focus;
+	my $post_value = $this->get;
+
 	$this->root->rebuild;
+
+	if ((not defined $pre_value and 
+             defined $post_value) or 
+	    (defined $pre_value and
+            $pre_value ne $post_value)) {
+		$this->run_event('-onchange');
+	}
+
 	return $this;
 }
 
@@ -215,6 +238,8 @@ sub get()
 sub select_next()
 {
 	my $this = shift;
+	
+	my $pre_value = $this->get;
 	unless (defined $this->{-listboxobject}->{-selected}) 
 	{
 		$this->{-listboxobject}->{-selected} = 0;
@@ -222,14 +247,30 @@ sub select_next()
 		$this->{-listboxobject}->option_next;
 		$this->{-listboxobject}->option_select;
 	}
+	my $post_value = $this->get;
+
+	if (defined $pre_value and 
+            $pre_value ne $post_value) {
+		$this->run_event('-onchange');
+	}
+
 	return $this;
 }
 
 sub select_prev()
 {
 	my $this = shift;
+
+	my $pre_value = $this->get;
 	$this->{-listboxobject}->option_prev;
 	$this->{-listboxobject}->option_select;
+	my $post_value = $this->get;
+
+	if (defined $pre_value and 
+            $pre_value ne $post_value) {
+		$this->run_event('-onchange');
+	}
+
 	return $this;
 }
 
@@ -254,7 +295,15 @@ sub set_routine()
 
 =head1 NAME
 
-Curses::UI::PopupBox - Create and manipulate popupbox widgets
+Curses::UI::Popupmenu - Create and manipulate popupbox widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Popupmenu
+
 
 =head1 SYNOPSIS
 
@@ -263,7 +312,7 @@ Curses::UI::PopupBox - Create and manipulate popupbox widgets
     my $win = $cui->add('window_id', 'Window');
 
     my $popupbox = $win->add(
-        'mypopupbox', 'PopupBox',
+        'mypopupbox', 'Popupmenu',
         -values    => [1, 2, 3],
         -labels    => { 1 => 'One', 
                         2 => 'Two', 
@@ -276,8 +325,8 @@ Curses::UI::PopupBox - Create and manipulate popupbox widgets
 
 =head1 DESCRIPTION
 
-Curses::UI::Popupbox is a widget that can be used to create 
-something very similar to a basic L<Curses::UI::ListBox|Curses::UI::ListBox>.
+Curses::UI::Popupmenu is a widget that can be used to create 
+something very similar to a basic L<Curses::UI::Listbox|Curses::UI::Listbox>.
 The difference is that the widget will show only the
 currently selected value (or "-------" if no value is yet
 selected). The list of possible values will be shown as a 
@@ -298,7 +347,7 @@ If the popup window is opened, it looks something like this:
  +--------------+
 
 
-See exampes/demo-Curses::UI::PopupBox in the distribution
+See exampes/demo-Curses::UI::Popupmenu in the distribution
 for a short demo.
 
 
@@ -308,7 +357,8 @@ for a short demo.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -329,8 +379,15 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 =item * B<-wraparound> < BOOLEAN >
 
 These options are exactly the same as the options for
-the ListBox widget. So for an explanation of these,
-take a look at L<Curses::UI::ListBox|Curses::UI::ListBox>.
+the Listbox widget. So for an explanation of these,
+take a look at L<Curses::UI::Listbox|Curses::UI::Listbox>.
+
+=item * B<-onchange> < CODEREF >
+
+This sets the onChange event handler for the popupmenu widget.
+If a new item is selected, the code in CODEREF will be executed.
+It will get the widget reference as its argument.
+
 
 =back
 
@@ -347,7 +404,13 @@ take a look at L<Curses::UI::ListBox|Curses::UI::ListBox>.
 
 =item * B<draw> ( BOOLEAN )
 
+=item * B<intellidraw> ( )
+
 =item * B<focus> ( )
+
+=item * B<onFocus> ( CODEREF )
+
+=item * B<onBlur> ( CODEREF )
 
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
 for an explanation of these.
@@ -355,6 +418,11 @@ for an explanation of these.
 =item * B<get> ( )
 
 This method will return the currently selected value.
+
+=item * B<onChange> ( CODEREF )
+
+This method can be used to set the B<-onchange> event handler
+(see above) after initialization of the popupmenu. 
 
 =back
 
@@ -403,8 +471,8 @@ get selected.
 =head2 The popup listbox
 
 The bindings for the popup listbox are the same as the bindings
-for the ListBox widget. So take a look at 
-L<Curses::UI::ListBox|Curses::UI::Listbox> for a description
+for the Listbox widget. So take a look at 
+L<Curses::UI::Listbox|Curses::UI::Listbox> for a description
 of these. The difference is that the 'return' and 'option-select'
 routine will have the popup listbox to close. If the routine
 'option-select' is called, the active item will get selected.
@@ -413,7 +481,7 @@ routine will have the popup listbox to close. If the routine
 =head1 SEE ALSO
 
 L<Curses::UI|Curses::UI>, 
-L<Curses::UI::ListBox|Curses::UI:ListBox>
+L<Curses::UI::Listbox|Curses::UI:Listbox>
 L<Curses::UI::Widget|Curses::UI::Widget>, 
 L<Curses::UI::Common|Curses::UI::Common>
 

@@ -12,28 +12,28 @@ my $cui = new Curses::UI ( -clear_on_exit => 1 );
 my $win = $cui->add('window_id', 'Window');
 
 $win->add(
-	'1', 'ProgressBar',
+	'1', 'Progressbar',
 	-y 	    => 1,
 	-width	    => 40,
 	-max        => 100,
 );
 
 $win->add(
-	'2', 'ProgressBar',
+	'2', 'Progressbar',
 	-y 	    => 4,
 	-width	    => 40,
 	-max        => 200,
 );
 
 $win->add(
-	'3', 'ProgressBar',
+	'3', 'Progressbar',
 	-y 	    => 7,
 	-width	    => 20,
 	-max        => 200,
 );
 
 $win->add(
-	'4', 'ProgressBar',
+	'4', 'Progressbar',
 	-y 	    => 11,
 	-width	    => 40,
 	-max        => 80,
@@ -43,7 +43,7 @@ $win->add(
 );
 
 $win->add(
-	'5', 'ProgressBar',
+	'5', 'Progressbar',
 	-y 	    => 13,
 	-width	    => 40,
 	-max        => 60,
@@ -52,7 +52,7 @@ $win->add(
 );
 
 $win->add(
-	'6', 'ProgressBar',
+	'6', 'Progressbar',
 	-y 	    => 15,
 	-width	    => 40,
 	-max        => 40,

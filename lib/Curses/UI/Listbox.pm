@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::ListBox
+# Curses::UI::Listbox
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,7 +9,7 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::ListBox;
+package Curses::UI::Listbox;
 
 use strict;
 use Curses;
@@ -75,6 +75,9 @@ sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
 		-values     => [],	# values to show
 		-labels     => {},	# optional labels for the values 
@@ -87,7 +90,10 @@ sub new ()
 		-radio      => 0,	# show radio buttons? Only for ! -multi
 		-selected   => undef,	# the selected item
 		-wraparound => 0,	# wraparound on first/last item
-		@_,
+		-onchange   => undef,   # onChange event handler
+		
+		%userargs,
+
 		-yscrpos    => 0,
 		-routines   => {%routines},
 		-bindings   => {%bindings},
@@ -109,6 +115,8 @@ sub new ()
 	$this->layout_content();
 	bless $this, $class;
 }
+
+sub onChange(;$) { shift()->set_event('-onchange', shift()) }
 
 sub maxlabelwidth(@;)
 {
@@ -310,8 +318,6 @@ sub focus()
 {
 	my $this = shift;
 
-	$this->show;
-	
 	# No values? Then do not focus.
 	return 'RETURN' unless @{$this->{-values}};
 
@@ -390,9 +396,13 @@ sub option_select()
 	{
 		$this->{-selected}->{$this->{-ypos}} = 
 		   !$this->{-selected}->{$this->{-ypos}};
+		$this->run_event('-onchange');
 		return $this;
 	} else {
+		my $changed = (not defined $this->{-selected} or
+                              ($this->{-selected} != $this->{-ypos}));
 		$this->{-selected} = $this->{-ypos};
+		$this->run_event('-onchange') if $changed;
 		return ($this->{-radio} ? $this : 'RETURN');
 	}
 }
@@ -407,13 +417,19 @@ sub option_first()
 sub option_check()
 {
 	my $this = shift;
+
 	if ($this->{-multi})
 	{
+		my $changed = ($this->{-selected}->{$this->{-ypos}} ? 0 : 1);
 		$this->{-selected}->{$this->{-ypos}} = 1;
 		$this->{-ypos}++;
+		$this->run_event('-onchange') if $changed;
 		return $this;
 	} else {
+		my $changed = (not defined $this->{-selected} or
+                              ($this->{-selected} != $this->{-ypos}));
 		$this->{-selected} = $this->{-ypos};
+		$this->run_event('-onchange') if $changed;
 		return ($this->{-radio} ? $this : undef);
 	}
 }
@@ -423,7 +439,9 @@ sub option_uncheck()
 	my $this = shift;
 	if ($this->{-multi})
 	{
+		my $changed = ($this->{-selected}->{$this->{-ypos}} ? 1 : 0);
 		$this->{-selected}->{$this->{-ypos}} = 0;
+		$this->run_event('-onchange') if $changed;
 		$this->{-ypos}++;
 	} else {
 		$this->dobeep;
@@ -470,7 +488,16 @@ sub getline_at_ypos($;) { shift()->getlabel(shift()) }
 
 =head1 NAME
 
-Curses::UI::ListBox - Create and manipulate listbox widgets
+Curses::UI::Listbox - Create and manipulate listbox widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+ Curses::UI::Searchable
+    |
+    +----Curses::UI::Listbox
+
 
 =head1 SYNOPSIS
 
@@ -549,7 +576,8 @@ for a short demo.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -602,6 +630,12 @@ to go to the next value, the first value will be selected.
 Also the last value will be selected if this first value is
 selected and "goto previous value" is pressed.
 
+=item * B<-onchange> < CODEREF >
+
+This sets the onChange event handler for the listbox widget.
+If a new item is selected, the code in CODEREF will be executed.
+It will get the widget reference as its argument.
+
 
 
 =back
@@ -619,7 +653,13 @@ selected and "goto previous value" is pressed.
 
 =item * B<draw> ( BOOLEAN )
 
+=item * B<intellidraw> ( )
+
 =item * B<focus> ( )
+
+=item * B<onFocus> ( CODEREF )
+
+=item * B<onBlur> ( CODEREF )
 
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
 for an explanation of these.
@@ -629,6 +669,11 @@ for an explanation of these.
 This method will return the values of the currently selected items 
 in the list. If the listbox is not a multi-select listbox only one
 value will be returned of course.
+
+=item * B<onChange> ( CODEREF )
+
+This method can be used to set the B<-onchange> event handler
+(see above) after initialization of the listbox. 
 
 
 =back

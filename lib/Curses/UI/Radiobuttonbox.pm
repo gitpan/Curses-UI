@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::RadioButtonBox
+# Curses::UI::Radiobuttonbox
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,23 +9,27 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::RadioButtonBox;
+package Curses::UI::Radiobuttonbox;
 
 use strict;
 use Curses;
-use Curses::UI::ListBox;
+use Curses::UI::Common;
+use Curses::UI::Listbox;
 use Curses::UI::Widget;
 
 use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::ListBox);
+@ISA = qw(Curses::UI::Listbox);
 $VERSION = '1.00';
 	
 sub new ()
 {
 	my $class = shift;
 
+        my %userargs = @_;
+        keys_to_lowercase(\%userargs);
+
 	my %args = ( 
-		@_,
+		%userargs,
 		-radio => 1,
 		-multi => 0,
 	);
@@ -52,7 +56,19 @@ sub new ()
 
 =head1 NAME
 
-Curses::UI::RadioButtonBox - Create and manipulate radiobuttonbox widgets
+Curses::UI::Radiobuttonbox - Create and manipulate radiobuttonbox widgets
+
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+ Curses::UI::Searchable
+    |
+    +----Curses::UI::Listbox
+            |
+            +----Curses::UI::Radiobuttonbox
+
+
 
 =head1 SYNOPSIS
 
@@ -61,7 +77,7 @@ Curses::UI::RadioButtonBox - Create and manipulate radiobuttonbox widgets
     my $win = $cui->add('window_id', 'Window');
 
     my $radiobuttonbox = $win->add(
-        'myradiobuttonbox', 'RadioButtonBox',
+        'myradiobuttonbox', 'Radiobuttonbox',
         -values    => [1, 2, 3],
         -labels    => { 1 => 'One', 
                         2 => 'Two', 
@@ -74,7 +90,7 @@ Curses::UI::RadioButtonBox - Create and manipulate radiobuttonbox widgets
 
 =head1 DESCRIPTION
 
-Curses::UI::RadioButtonBox is a widget that can be used 
+Curses::UI::Radiobuttonbox is a widget that can be used 
 to create a radiobutton listbox. Only one value can be
 selected at a time. This kind of listbox looks somewhat 
 like this:
@@ -85,11 +101,11 @@ like this:
  |< > Three |
  +----------+
 
-A RadioButtonBox is derived from Curses::UI::ListBox. The
+A Radiobuttonbox is derived from Curses::UI::Listbox. The
 only special thing about this class is that the 
 B<-radio> option is forced to a true value. So for the
-usage of Curses::UI::RadioButtonBox see
-L<Curses::UI::ListBox|Curses::UI::ListBox>).
+usage of Curses::UI::Radiobuttonbox see
+L<Curses::UI::Listbox|Curses::UI::Listbox>).
 
 
 
@@ -97,7 +113,7 @@ L<Curses::UI::ListBox|Curses::UI::ListBox>).
 =head1 SEE ALSO
 
 L<Curses::UI|Curses::UI>, 
-L<Curses::UI::ListBox|Curses::UI::ListBox>, 
+L<Curses::UI::Listbox|Curses::UI::Listbox>, 
 
 
 

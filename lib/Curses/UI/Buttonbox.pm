@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::ButtonBox
+# Curses::UI::Buttonbox
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,7 +9,7 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::ButtonBox;
+package Curses::UI::Buttonbox;
 
 use strict;
 use Curses;
@@ -29,25 +29,25 @@ my %buttondef = (
 	'ok'	=> {
 			-label    => '< OK >',
 			-value    => 1,
-			-command  => undef,
+			-onpress  => undef,
 			-shortcut => 'o',
 		   },
 	'cancel'=> {
 			-label    => '< Cancel >',
 			-value    => 0,
-			-command  => undef,
+			-onpress  => undef,
 			-shortcut => 'c',
 		   }, 
 	'yes'	=> {
 			-label    => '< yes >',
 			-value    => 1,
-			-command  => undef,
+			-onpress  => undef,
 			-shortcut => 'y',
 		   },
 	'no'    => {
 			-label    => '< No >',
 			-value    => 0,
-			-command  => undef,
+			-onpress  => undef,
 			-shortcut => 'n',
 		   }, 
 	
@@ -79,6 +79,9 @@ my %bindings = (
 sub new ()
 {
 	my $class = shift;
+
+	my %userargs = @_;
+	keys_to_lowercase(\%userargs);
 	
 	my %args = (
 		-parent		 => undef,	  # the parent window
@@ -93,7 +96,7 @@ sub new ()
 		-routines	 => {%routines},
 		-bindings	 => {%bindings},
 
-		@_,
+		%userargs,
 
 		-focus		 => 0,
 	);
@@ -122,20 +125,22 @@ sub process_buttondefs($;)
 	foreach my $button (@$buttons)
 	{
 		if (ref $button eq 'HASH') {
-			push @buttons, $button;
+			# noop
 		}
 		elsif (not ref $button) {
-			my $def = $buttondef{$button};
-			if (defined $def) {
-				push @buttons, $def;
-			} else {
+			my $realbutton = $buttondef{$button};
+			unless (defined $realbutton) {
 				confess "Invalid button type: $button";
 			}
+			$button = $realbutton;
 		} else {
 			confess "Invalid button definition (it should " 
 			      . "be a hash reference, but is a "
 			      . (ref $button) . " reference."; 
 		}
+
+		keys_to_lowercase($button);
+		push @buttons, $button;
 	}
 
 	return \@buttons;
@@ -231,7 +236,7 @@ sub press_button()
 {
 	my $this = shift;
 	my $button = $this->get_selected_button;
-	my $command = $button->{-command};
+	my $command = $button->{-onpress};
 	if (defined $command and ref $command eq 'CODE') {
 		$command->($this);
 	}	
@@ -360,7 +365,14 @@ sub shortcut()
 
 =head1 NAME
 
-Curses::UI::ButtonBox - Create and manipulate button widgets
+Curses::UI::Buttonbox - Create and manipulate button widgets
+
+=head1 CLASS HIERARCHY
+
+ Curses::UI::Widget
+    |
+    +----Curses::UI::Buttonbox  
+
 
 =head1 SYNOPSIS
 
@@ -369,7 +381,7 @@ Curses::UI::ButtonBox - Create and manipulate button widgets
     my $win = $cui->add('window_id', 'Window');
 
     my $buttons = $win->add(
-        'mybuttons', 'ButtonBox',
+        'mybuttons', 'Buttonbox',
         -buttons   => [
             { 
               -label => '< Button 1 >',
@@ -389,10 +401,10 @@ Curses::UI::ButtonBox - Create and manipulate button widgets
 
 =head1 DESCRIPTION
 
-Curses::UI::ButtonBox is a widget that can be used to create an
+Curses::UI::Buttonbox is a widget that can be used to create an
 array of buttons (or, of course, only one button). 
 
-See exampes/demo-Curses::UI::ButtonBox in the distribution
+See exampes/demo-Curses::UI::Buttonbox in the distribution
 for a short demo.
 
 
@@ -402,7 +414,8 @@ for a short demo.
 B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>
+B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>, 
+B<-onblur>
 
 For an explanation of these standard options, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.
@@ -442,7 +455,7 @@ complete button definitions of your own.
   -shortcut   The button will act as if it was pressed
               if the key defined by -shortcut is pressed 
 
-  -command    If the value for -command is a CODE reference,
+  -onpress    If the value for -onpress is a CODE reference,
               this code will be executes if the button
               is pressed, before the buttons widget loses
               focus and returns.
@@ -456,22 +469,22 @@ complete button definitions of your own.
   ok          -label    => '< OK >'
               -shortcut => 'o'
               -value    => 1
-              -command  => undef
+              -onpress  => undef
 
   cancel      -label    => '< Cancel >'
               -shortcut => 'c'
               -value    => 0
-              -command  => undef
+              -onpress  => undef
   
   yes         -label    => '< Yes >'
               -shortcut => 'y'
               -value    => 1
-              -command  => undef
+              -onpress  => undef
 
   no          -label    => '< No >'
               -shortcut => 'n'
               -value    => 0
-              -command  => undef
+              -onpress  => undef
 
 Example:
 
@@ -488,7 +501,7 @@ Example:
       { -label => '< My second button >',
         -value => 'another one',
         -shortcut => 's',
-        -command => sub { die "Do not press my button!\n" } }
+        -onpress => sub { die "Do not press this button!\n" } }
   ]
   ....
     
@@ -529,6 +542,12 @@ this binding can be disabled.
 
 =item * B<focus> ( )
 
+=item * B<onFocus> ( CODEREF )
+
+=item * B<onBlur> ( CODEREF )
+
+=item * B<draw_if_visible> ( )
+
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
 for an explanation of these.
 
@@ -550,10 +569,12 @@ returned.
 
 =item * <B<tab>>
 
+TODO: fix docs on this...
 Call the 'loose-focus' routine. This will have the widget 
 loose its focus. If you do not want the widget to loose 
 its focus, you can disable this binding by using the
-B<-mayloosefocus> option (see below).
+B<-mayloosefocus> option (see above).
+END TODO
 
 =item * <B<enter>>, <B<space>> 
 

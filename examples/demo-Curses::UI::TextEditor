@@ -25,6 +25,11 @@ $win->add(
 	-title      => 'Default texteditor',
 	-vscrollbar => 1,
 	-hscrollbar => 1,
+	-onchange   => sub {
+		my $edit1 = shift;
+		my $win = $edit1->parent;
+		$win->getobj('edit2')->text($edit1->get);
+	},    
 );
 
 $win->add(
@@ -38,6 +43,11 @@ $win->add(
 	-wrapping   => 1,
 	-vscrollbar => 1,
 	-hscrollbar => 1,
+	-onchange   => sub {
+		my $edit2 = shift;
+		my $win = $edit2->parent;
+		$win->getobj('edit1')->text($edit2->get);
+	},    
 );
 
 $win->add(
@@ -68,6 +78,11 @@ $win->add(
 	-border => 1,
         -title => 'single-line',
         -singleline => 1,
+	-onchange   => sub {
+		my $edit4 = shift;
+		my $win = $edit4->parent;
+		$win->getobj('edit5')->text($edit4->get);
+	},    
 );
 
 $win->add(
@@ -77,6 +92,11 @@ $win->add(
         -width => 25,
 	-border => 1,
         -title => '-password',
+	-onchange   => sub {
+		my $edit5 = shift;
+		my $win = $edit5->parent;
+		$win->getobj('edit4')->text($edit5->get);
+	},    
 );
 
 $win->add(
