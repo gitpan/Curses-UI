@@ -365,7 +365,6 @@ sub search_get($$;)
 
 Curses::UI::Searchable - Add 'less'-like search abilities to a widget
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Searchable - base class
@@ -402,7 +401,7 @@ Curses::UI::Searchable - Add 'less'-like search abilities to a widget
 
     sub number_of_lines() {
         my $this = shift;
-        
+
         # Return the number of lines in
         # the widget's content.
         return ....
@@ -411,7 +410,7 @@ Curses::UI::Searchable - Add 'less'-like search abilities to a widget
     sub getline_at_ypos($;) {
         my $this = shift;
         my $ypos = shift; 
-        
+
         # Return the content on the line 
         # where ypos = $ypos
         return ....
@@ -440,7 +439,7 @@ The current vertical position in the widget should be
 identified by $this->{-ypos}. This y-position is the
 index of the line of content. Here's an example for 
 a Listbox widget.
-   
+
  -ypos
    |
    v

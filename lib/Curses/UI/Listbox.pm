@@ -144,7 +144,7 @@ sub onSelectionChange(;$) { shift()->set_event('-onselchange', shift()) };
 sub values(;$)
 {
     my $this = shift;
-    my $values = shift;
+    my $values = ref $_[0] ? $_[0] : [ @_ ];
 
     # Clear and go to first item if we get new data
     $this->clear_selection();
@@ -655,7 +655,7 @@ sub id()
     if ($this->{-multi}) {
         my @values = ();
         while (my ($id, $val) = each %{$this->{-selected}}) {
-            next unless $id;
+            next unless $val;
             push @values, $id;
         }
         return @values;
@@ -701,7 +701,6 @@ sub getline_at_ypos($;) { shift()->getlabel(shift()) }
 =head1 NAME
 
 Curses::UI::Listbox - Create and manipulate listbox widgets
-
 
 =head1 CLASS HIERARCHY
 
@@ -754,7 +753,7 @@ highlighted. This kind of listbox looks somewhat like this:
 This is also a list of values, but now more than one 
 value can be selected at once. This kind of listbox 
 looks somewhat like this:
-  
+
  +----------+
  |[X] One   |
  |[ ] Two   |

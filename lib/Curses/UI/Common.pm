@@ -138,6 +138,7 @@ sub text_wrap($$;)
     shift if ref $_[0];
     my ($line, $maxlen, $wordwrap) = @_;
     $wordwrap = WORDWRAP unless defined $wordwrap;
+    $maxlen = int $maxlen;
     
     return [""] if $line eq '';
 
@@ -537,7 +538,6 @@ sub get_key(;$)
 
 Curses::UI::Common - Common methods for Curses::UI
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Common - base class
@@ -550,7 +550,6 @@ Curses::UI::Common - Common methods for Curses::UI
     use Curses::UI::Common;
     use vars qw(@ISA);
     @ISA = qw(Curses::UI::Common);
- 
 
 =head1 DESCRIPTION
 

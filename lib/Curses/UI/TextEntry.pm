@@ -78,7 +78,6 @@ sub new ()
 
 Curses::UI::TextEntry - Create and manipulate textentry widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget

@@ -384,7 +384,6 @@ sub mouse_button1($$$;)
 
 Curses::UI::Popupmenu - Create and manipulate popupbox widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -424,7 +423,7 @@ Normally the widget will look something like this:
  [Current value ]
 
 If the popup window is opened, it looks something like this:
- 
+
 
  [Current value ]
  +--------------+
@@ -567,10 +566,10 @@ routine will have the popup listbox to close. If the routine
 
 =head1 SEE ALSO
 
-L<Curses::UI|Curses::UI>, 
-L<Curses::UI::Listbox|Curses::UI:Listbox>
-L<Curses::UI::Widget|Curses::UI::Widget>, 
-L<Curses::UI::Common|Curses::UI::Common>
+L<Curses::UI>, 
+L<Curses::UI::Listbox>
+L<Curses::UI::Widget>, 
+L<Curses::UI::Common>
 
 
 

@@ -276,14 +276,18 @@ sub focus_prev()
     my $circle_flag = 0;
 
     # Go to the previous object or wraparound.
-    if ( --$idx < 0) {
-        $idx = @{$this->{-focusorder}} - 1;
-        $circle_flag = 1;
+    until ($circle_flag) {
+	$idx--;
+	if ($idx < 0) {
+	    $idx = @{$this->{-focusorder}} - 1;
+	    $circle_flag = 1;
+	}
+	my $new_obj = $this->getobj($this->{-focusorder}[$idx]);
+	last if (defined $new_obj && $new_obj->focusable);
     }
 
     # Focus the previous object.    
     $this->focus($this->{-focusorder}->[$idx], undef, -1);
-
     if ( $circle_flag && $this->{-releasefocus} ) {
         $this->{-parent}->focus_prev;
     }
@@ -304,15 +308,21 @@ sub focus_next()
     my $idx = $this->focusorder_id2idx($id);
 
     # Go to the next object or wraparound.
-    if ( ++$idx > (@{$this->{-focusorder}}-1) ) {    
-        $idx = 0;
+    my $circle_flag = 0;
+    until ($circle_flag) {
+	$idx++;
+	if ($idx >= scalar (@{$this->{-focusorder}}) ) {
+	    $idx = 0;
+	    $circle_flag = 1;
+	}
+	my $new_obj = $this->getobj($this->{-focusorder}[$idx]);
+	last if (defined $new_obj && $new_obj->focusable);
     }
-
+    
     # Focus the next object.    
     $this->focus($this->{-focusorder}->[$idx], undef, +1);
-
     #check if we have to release the focus
-    if ( $idx == 0 && $this->{-releasefocus} ) {
+    if ( $circle_flag && $this->{-releasefocus} ) {
         $this->{-parent}->focus_next;
     }
 }
@@ -505,7 +515,6 @@ sub base_id2idx($;)
 
 Curses::UI::Container - Create and manipulate container widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -607,7 +616,7 @@ The hash OPTIONS contains the options that you want to pass
 on to the new instance of CLASS.
 
 Example:
-  
+
     $container->add(
         'myid',                   # ID 
         'Label',                  # CLASS

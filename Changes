@@ -1,5 +1,32 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.94_01
+===============
+		- Some patches by Luke Closs (lukec@activestate.com):
+		  - fixed 99template.t 
+		  - word wrap bug
+		  - Language.pm fixes
+		  - Dialog labels not-focusable
+		  - toggle password mode for text editor
+		  - Listbox id() method fix
+		  - Query Dialog
+		  - Buttonbox patch
+
+		- Listbox now take arrayrefs as well as
+		arrays as $l->values. 
+		(Patch by domi@komarr.grenoble.hp.com RT#6770)
+
+		- tabbing over the last _enabled_ component did
+		not result in leaving the container if that 
+		component was followed by a non focusable component 
+		in the focusorder.
+		(Patch by William Barsse RT#7027)
+
+		- small changes to the pod tests
+
+		- event_onblur to fix Checkbox behaviour by
+		  Joe Oppegaard and lots of POD fixes
+
 Version 0.93
 ============
 		- New languages: Turkish, Spanish, Chinese

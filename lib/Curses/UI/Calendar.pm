@@ -661,8 +661,6 @@ sub build_month ($$;)
 
 Curses::UI::Calendar - Create and manipulate calendar widgets
 
-
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -690,7 +688,7 @@ Curses::UI::Calendar - Create and manipulate calendar widgets
 Curses::UI::Calendar is a widget that can be used to create 
 a calendar in which the user can select a date. The calendar
 widget looks like this:
-    
+
   +----------------------+
   | mmm dd          yyyy | 
   +----------------------+

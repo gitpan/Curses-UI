@@ -87,7 +87,6 @@ sub draw(;$)
 
 Curses::UI::Dialog::Error - Create and manipulate error dialogs
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -115,7 +114,7 @@ Curses::UI::Dialog::Error - Create and manipulate error dialogs
     );
     $dialog->focus;
     $win->delete('mydialog');
-    
+
     # The easy way (see Curses::UI documentation).
     # --------------------------------------------
     $cui->error(-message => 'The world has gone!');

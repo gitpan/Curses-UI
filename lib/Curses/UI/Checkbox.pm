@@ -109,6 +109,17 @@ sub new ()
     return $this;
 }
 
+sub event_onblur()
+{
+    my $this = shift;
+    $this->SUPER::event_onblur;
+    
+    $this->{-focus} = 0;
+    $this->draw();
+
+    return $this;
+}
+    
 sub onChange(;$)  { shift()->set_event('-onchange',  shift()) }
 
 sub layout()
@@ -219,7 +230,6 @@ sub get()
 =head1 NAME
 
 Curses::UI::Checkbox - Create and manipulate checkbox widgets
-
 
 =head1 CLASS HIERARCHY
 

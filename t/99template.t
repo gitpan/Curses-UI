@@ -1,6 +1,6 @@
 # -*- perl -*-
 use strict;
-use Test::More qw(no_plan);
+use Test::More tests => 1;
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";
 use lib "$FindBin::RealBin/../lib";

@@ -84,22 +84,20 @@ sub loadlanguage($;)
     return $this if defined $this->{-lang} and 
                     $lang eq $this->{-lang};
 
-    # Determine classname and filename for the language package.
-    my $l_class = "Curses::UI::Language::${lang}";
-    my $l_file  = "Curses/UI/Language/${lang}.pm";
-
-    # Load the language package.
-    require $l_file;
+    # Determine filename for the language package.
+    (my $l_file = __FILE__) =~ s/\.pm$/\/$lang\.pm/;
 
     # Save the name of the currently loaded language.
     $this->{-lang} = $lang;
 
     # Create a filehandle to the __DATA__ section 
     # of the language package.
-    local *LANG_DATA = $l_class . '::DATA';
+    local *LANG_DATA;
+    open(LANG_DATA, "< $l_file") or die "Can't open $l_file: $!";
     
-    # Save __DATA__ filehandle position.
-    my $data_start = tell(LANG_DATA);
+    while (<LANG_DATA>) {
+	last if /^\s*__DATA__$/;
+    }
 
     # Read and store tags/blocks.
     my $tag   = undef;
@@ -124,9 +122,7 @@ sub loadlanguage($;)
     }
     $this->store($tag, $block);
 
-    # Reset __DATA__ filehandle.
-    seek(LANG_DATA, $data_start, 0);
-
+    close(LANG_DATA);
 }
 
 sub store($$;)

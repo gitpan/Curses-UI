@@ -30,7 +30,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.93";
+$VERSION = 0.94;
 
 @EXPORT = qw(
     MainLoop
@@ -905,6 +905,13 @@ sub dialog()
     $this->tempdialog('Dialog::Basic', %args);
 }
 
+sub question()
+{
+    my $this = shift;
+    my %args = $this->process_args('-question', @_);
+    $this->tempdialog('Dialog::Question', %args);
+}
+
 sub calendardialog()
 {
     my $this = shift;
@@ -1097,9 +1104,6 @@ sub set_color {
 =head1 NAME
 
 Curses::UI - A curses based OO user interface framework
-
-
-
 
 =head1 SYNOPSIS
 
@@ -1348,7 +1352,7 @@ Example:
     if ($yes) {
         # whatever
     }
-       
+
 
 =item B<error> ( MESSAGE or OPTIONS )
 
@@ -1473,7 +1477,7 @@ can be used to fast change all colors in a Curses::UI application.
 =head1 SEE ALSO
 
 L<Curses>
-L<Curses::UI::Container|Curse::UI::Container|Curses::UI::Color>,
+L<Curses::UI::Container>,
 
 =head1 BASIC TUTORIAL
 

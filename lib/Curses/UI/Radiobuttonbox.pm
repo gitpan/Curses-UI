@@ -64,7 +64,6 @@ sub new ()
 
 Curses::UI::Radiobuttonbox - Create and manipulate radiobuttonbox widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget

@@ -69,6 +69,7 @@ sub new ()
         -fg          => $this->{-fg},
         -bbg         => $this->{-bg},
         -bfg         => $this->{-fg},
+	-focusable   => 0,
     );    
 
     # Create a hash with arguments that may be passed to     
@@ -201,7 +202,6 @@ sub get()
 
 Curses::UI::Dialog::Basic - Create and manipulate basic dialogs
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -227,14 +227,14 @@ Curses::UI::Dialog::Basic - Create and manipulate basic dialogs
     );
     $dialog->focus;
     $win->delete('mydialog');
-    
+
     # The easy way (see Curses::UI documentation).
     # --------------------------------------------
     my $buttonvalue = $cui->dialog(-message => 'Hello, world!');
 
     # or even
     $cui->dialog('Hello, world!');
-    
+
 
 
 

@@ -53,7 +53,6 @@ sub new ()
 
 Curses::UI::TextViewer - Create and manipulate textviewer widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget

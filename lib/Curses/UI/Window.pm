@@ -89,7 +89,6 @@ sub layout ()
 
 Curses::UI::Window - Create and manipulate Window widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -143,7 +142,7 @@ To enable this option use a true value and to disable it use a
 false value. The default is not to center a window. Example:
 
     $cui->add('mywindow', 'Window', -centered => 1);
- 
+
 
 =back
 

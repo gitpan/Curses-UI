@@ -213,8 +213,7 @@ sub new ()
     $this->{-ypos}     = 0; # Y position for cursor in the document
 
     # Restrict the password character to a single character.
-    $this->{-password} = substr($this->{-password}, 0, 1)
-        if defined $this->{-password};
+    $this->set_password_char($this->{-password}) if defined $this->{-password};
 
     # Single line? Then initial text may only be singleline.
     if ($this->{-singleline} and 
@@ -1265,6 +1264,12 @@ sub text(;$)
 
 sub onChange(;$) { shift()->set_event('-onchange', shift()) }
 
+sub set_password_char {
+    my ($this, $char) = @_;
+    $char = substr($char, 0, 1)  if defined $char;
+    $this->{-password} = $char;
+}
+
 # ----------------------------------------------------------------------
 # Routines for search support
 # ----------------------------------------------------------------------
@@ -1306,7 +1311,6 @@ sub set_color_bg {
 =head1 NAME
 
 Curses::UI::TextEditor - Create and manipulate texteditor widgets
-
 
 =head1 CLASS HIERARCHY
 
@@ -1531,6 +1535,11 @@ will return the contents of the texteditor.
 This method can be used to set the B<-onchange> event handler
 (see above) after initialization of the texteditor. 
 
+=item * B<set_password_char> ( $char )
+
+This method can be used to change the password property.  The password 
+character will be set to $char, or turned off in $char is undef.
+
 =back
 
 
@@ -1733,11 +1742,11 @@ opposite direction.
 
 =head1 SEE ALSO
 
-L<Curses::UI|Curses::UI>, 
-L<Curses::UI::TextViewer|Curses::UI:TextViewer>
-L<Curses::UI::TextEntry|Curses::UI:TextEntry>
-L<Curses::UI::Widget|Curses::UI::Widget>, 
-L<Curses::UI::Common|Curses::UI::Common>
+L<Curses::UI>, 
+L<Curses::UI::TextViewer>
+L<Curses::UI::TextEntry>
+L<Curses::UI::Widget>, 
+L<Curses::UI::Common>
 
 
 

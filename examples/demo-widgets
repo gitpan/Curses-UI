@@ -68,6 +68,7 @@ my $dialog_demo_menu = [
     { -label => 'Progress dialog',    -value => sub{select_demo(12)} },
     { -label => 'Status dialog',      -value => sub{select_demo(13)} },
     { -label => 'Calendar dialog',    -value => sub{select_demo(14)} },
+    { -label => 'Question dialog',    -value => sub{select_demo(15)} },
 ];
 
 my $demo_menu = [
@@ -119,6 +120,7 @@ my %screens = (
     '12' => 'Progress dialog',
     '13' => 'Status dialog',
     '14' => 'Calendar dialog',
+    '15' => 'Question dialog',
 );
 
 my @screens = sort {$a<=>$b} keys %screens;
@@ -833,6 +835,68 @@ $w{14}->add(
 	   }
 	 }
     ]
+);
+
+# ----------------------------------------------------------------------
+# Dialog::Question
+# ----------------------------------------------------------------------
+
+$w{15}->add(
+    undef, 'Label',
+    -text => "Curses::UI has a number of ready-to-use dialog windows.\n"
+           . "The question dialog is one of them. Using this dialog\n"
+	   . "it is possible to prompt the user to enter an answer.",
+);
+
+$w{15}->add(
+    undef, 'Buttonbox',
+    -y => 7,    
+    -buttons => [
+         { 
+	   -label => "< Example 1 >",
+	   -onpress => sub {
+               my $button = shift;
+	       my $feeling = $button->root->question("How awesome are you?");
+               if ($feeling) {
+                   $button->root->dialog("You answered '$feeling'");
+               }
+               else {
+                   $button->root->dialog("Question cancelled.");
+               }
+	   } 
+	 },{ 
+	   -label => "< Example 2 >",
+	   -onpress => sub {
+               my $button = shift;
+	       my $feeling = $button->root->question(
+	           -question => "How does coffee make you feel?",
+                   -title    => 'Dialog::Question example',
+	       );
+               if ($feeling) {
+                   $button->root->dialog("You answered '$feeling'");
+               }
+               else {
+                   $button->root->dialog("Question cancelled.");
+               }
+	   } 
+	 },{ 
+	   -label => "< Example 3 >",
+	   -onpress => sub {
+               my $button = shift;
+	       my $feeling = $button->root->question(
+	           -question => "How does coffee make you feel?",
+                   -title    => 'Dialog::Question example',
+                   -answer   => "Really good.",
+	       );
+               if ($feeling) {
+                   $button->root->dialog("You answered '$feeling'");
+               }
+               else {
+                   $button->root->dialog("Question cancelled.");
+               }
+	   } 
+         }
+    ],
 );
 
 

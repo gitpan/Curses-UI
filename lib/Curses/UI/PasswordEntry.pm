@@ -61,7 +61,6 @@ sub new ()
 
 Curses::UI::PasswordEntry - Create and manipulate passwordentry widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget

@@ -120,7 +120,6 @@ sub message($;)
 
 Curses::UI::Dialog::Status - Create and manipulate status dialogs 
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -148,7 +147,7 @@ Curses::UI::Dialog::Status - Create and manipulate status dialogs
     $dialog->draw();
 
     $win->delete('mydialog');
-    
+
     # The easy way (see Curses::UI documentation).
     # --------------------------------------------
     $cui->status( -message => 'Some message' );
@@ -157,7 +156,7 @@ Curses::UI::Dialog::Status - Create and manipulate status dialogs
     $cui->status( 'Some message' );
 
     $cui->nostatus;
-    
+
 
 
 

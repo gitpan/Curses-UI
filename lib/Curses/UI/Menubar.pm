@@ -701,7 +701,6 @@ sub mouse_button1
 
 Curses::UI::Menubar - Create and manipulate menubar widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -774,7 +773,7 @@ will only use -submenu's. Example data structure:
         { -label => 'option 2', -value => '1-2' },
         { -label => 'option 3', -value => '1-3' },
     ];
-   
+
     my $menu2 = [
         { -label => 'option 1', -value => \&sel1 },
         { -label => 'option 2', -value => \&sel2 },
@@ -785,7 +784,7 @@ will only use -submenu's. Example data structure:
         { -label => 'suboption 1', -value => '3-3-1' },
         { -label => 'suboption 2', -callback=> \&do_it },
     ];
-    
+
     my $menu3 = [
         { -label => 'option 1', -value => \&sel2 },
         { -label => 'option 2', -value => \&sel3 },
@@ -846,13 +845,13 @@ menulistbox loses its focus, depends upon the
 returnvalue of it:
 
 * the value 'CURSOR_LEFT' 
-  
+
   Call the 'cursor-left' routine and after that
   call the 'pulldown' routine. So this will open
   the menulistbox for the previous menu.
 
 * the value 'CURSOR_RIGHT'
-  
+
   Call the 'cursor-right' routine and after that
   call the 'pulldown' routine. So this will open
   the menulistbox for the next menu.
@@ -898,9 +897,9 @@ the first menu will be selected.
 
 =head1 SEE ALSO
 
-L<Curses::UI|Curses::UI>, 
-L<Curses::UI::MenuListbox|Curses::UI::MenuListbox>, 
-L<Curses::UI::Listbox|Curses::UI:Listbox>
+L<Curses::UI>, 
+L<Curses::UI::MenuListbox>, 
+L<Curses::UI::Listbox>
 
 
 

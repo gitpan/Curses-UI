@@ -115,7 +115,8 @@ sub new ()
     );
 
     # The windowscr height should be 1.
-    $args{-height} = height_by_windowscrheight(scalar @{$args{-buttons}},%args);
+    my $height = $args{-vertical} ? scalar @{$args{-buttons}} : 1;
+    $args{-height} = height_by_windowscrheight($height ,%args);
  
     # Create the widget.
     my $this = $class->SUPER::new( %args );
@@ -565,7 +566,7 @@ complete button definitions of your own.
               get() method. If the value is not defined,
               the get() method will return the index
               of the button.
- 
+
   -shortcut   The button will act as if it was pressed
               if the key defined by -shortcut is pressed 
 
@@ -589,7 +590,7 @@ complete button definitions of your own.
               -shortcut => 'c'
               -value    => 0
               -onpress  => undef
-  
+
   yes         -label    => '< Yes >'
               -shortcut => 'y'
               -value    => 1
@@ -618,7 +619,7 @@ Example:
         -onpress => sub { die "Do not press this button!\n" } }
   ]
   ....
-    
+
 
 =item * B<-selected> < INDEX >
 

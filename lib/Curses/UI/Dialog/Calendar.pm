@@ -160,7 +160,6 @@ sub press_button_callback()
 
 Curses::UI::Dialog::Calendar - Create and manipulate calendar dialogs
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -187,7 +186,7 @@ Curses::UI::Dialog::Calendar - Create and manipulate calendar dialogs
     $dialog->modalfocus;
     $win->delete('mydialog');
     my $date = $dialog->get();
-    
+
     # The easy way (see Curses::UI documentation).
     # --------------------------------------------
     $date = $cui->calendardialog();

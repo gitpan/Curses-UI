@@ -329,7 +329,6 @@ sub press_button_callback()
 
 Curses::UI::Dialog::Dirbrowser - Create and manipulate filebrowser dialogs
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -356,7 +355,7 @@ Curses::UI::Dialog::Dirbrowser - Create and manipulate filebrowser dialogs
     $dialog->focus;
     my $file = $dialog->get();
     $win->delete('mydialog');
-    
+
     # The easy way (see Curses::UI documentation).
     # --------------------------------------------
     $file = $cui->filebrowser();

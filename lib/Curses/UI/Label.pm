@@ -236,7 +236,6 @@ sub draw(;$)
 
 Curses::UI::Label - Create and manipulate label widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget

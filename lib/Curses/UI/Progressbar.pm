@@ -170,7 +170,6 @@ sub draw(;$)
 
 Curses::UI::Progressbar - Create and manipulate progressbar widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget

@@ -1210,7 +1210,6 @@ sub new () { shift()->SUPER::new(@_) };
 
 Curses::UI::Widget - The base class for all widgets
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget - base class
@@ -1286,7 +1285,7 @@ is false. The default is not to use a square bracket border.
 
 
 =head2 POSITIONING:
- 
+
  +---------------------------------------------------+
  | parent                     ^                      |
  |                            |                      |
@@ -1345,7 +1344,7 @@ will use the maximum available height.
 
 
 =head2 PADDING:
- 
+
 =over 4
 
 =item * B<-pad> < VALUE >
@@ -1362,7 +1361,7 @@ With -pad you can specify the default padding outside the widget
 (the default value for -pad is 0). Using one of the -pad... options
 that have a direction in them, you can override the default
 padding.
- 
+
 =item * B<-ipad> < VALUE >
 
 =item * B<-ipadtop> < VALUE >
@@ -1390,7 +1389,7 @@ A title is drawn in the border of a widget. So a title will only
 be available if -border is true.
 
 =over 4
- 
+
 =item * B<-title> < TEXT >
 
 Set the title of the widget to TEXT. If the text is longer then the 
@@ -1410,7 +1409,7 @@ By default this option is disabled.
 
 =back
 
- 
+
 
 =head2 SCROLLBARS:
 
@@ -1421,7 +1420,7 @@ the so called "scrollbars", they aren't really scrollbars. A
 better name would be something like "document location indicators".
 But since they look so much like scrollbars I decided I could get
 away with this naming convention.
- 
+
 =over 4
 
 =item * B<-vscrollbar> < VALUE >
@@ -1739,7 +1738,7 @@ to follow this framework. As long as your widget has the methods
 new(), layout(), draw() and focus(), it can be used in Curses::UI.
 
     package Curses::UI::YourWidget
-    
+
     use Curses;
     use Curses::UI::Widget;  
     use Curses::UI::Common; # some common widget routines
@@ -1871,7 +1870,7 @@ new(), layout(), draw() and focus(), it can be used in Curses::UI.
                                # before a key is read. Mostly unused.
         );
     }  
-    
+
     ....your own widget handling routines....
 
 

@@ -155,7 +155,6 @@ sub message()
 
 Curses::UI::Dialog::Progress - Create and manipulate progress dialogs 
 
-
 =head1 CLASS HIERARCHY
 
  Curses::UI::Widget
@@ -186,7 +185,7 @@ Curses::UI::Dialog::Progress - Create and manipulate progress dialogs
     $dialog->draw();
 
     $win->delete('mydialog');
-    
+
     # The easy way (see Curses::UI documentation).
     # --------------------------------------------
     $cui->progress(
@@ -195,7 +194,7 @@ Curses::UI::Dialog::Progress - Create and manipulate progress dialogs
     );
     $cui->setprogress(10, 'Some other message');
     $cui->noprogress;
-    
+
 
 
 
