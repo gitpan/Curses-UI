@@ -30,7 +30,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.90";
+$VERSION = "0.91";
 
 @EXPORT = qw(
     MainLoop
@@ -107,13 +107,12 @@ sub new()
     $Curses::UI::ncurses_mouse = $args{-mouse_support}
         if defined $args{-mouse_support};
 
-    if ($Curses::UI::gpm_mouse) {
+    if ($Curses::UI::gpm_mouse && $args{-mouse_support}) {
 	$Curses::UI::ncurses_mouse = 1;
 	$args{-read_timeout} = 0.25;
+    } else {
+	$Curses::UI::gpm_mouse = 0;
     }
-
-    $Curses::UI::gpm_mouse = $args{-mouse_support}
-        if defined $args{-mouse_support};
 
     $Curses::UI::rootobject->fatalerror(
         "You can only initiate one Curses::UI rootobject!\n"
@@ -660,6 +659,8 @@ sub handle_gpm_mouse_event()
     my $this = shift;
     my $object = shift;
     $object = $this unless defined $object;
+
+    return unless $Curses::UI::gpm_mouse;
 
     my $MEVENT = gpm_get_mouse_event();
     # $MEVENT from C:UI:MH:GPM is identical.

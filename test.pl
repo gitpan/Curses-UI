@@ -2,7 +2,7 @@
 
 if ($ENV{INTERACTIVE_TEST})
 {
-    system "./examples/demo-widgets";
+    system $^X,"./examples/demo-widgets";
 } else {
     print "\n";
     print "-"x70 . "\n";

@@ -1,5 +1,10 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.91
+============
+		- fixed critical bug with call to a missing sub 
+		  that should have never happened.
+
 Version 0.90
 ============
 		- got an excellent patch by Ralf S. Engelschall 
