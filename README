@@ -2,7 +2,10 @@ Package       : Curses::UI
 Author        : Maurice Makaay
 E-mailaddress : maurice@gitaar.net
 Licence       : Curses::UI is free software and it is distributed 
-                under the same license as perl itself
+                under the same license as perl itself.
+Code maturity : The code is still in its alfa stage, so interfaces
+                might change during development.
+                
 
 Please do let me know if you find these modules useful and let me
 know if any appliction is built using them.
@@ -14,14 +17,16 @@ A UI framework based on the curses library. Curses::UI contains
 several widgets which can be used to build a user interface:
 
 - Widget (widget base element)
+- Calendar
 - Container (container base element)
 - Window
 - Label
 - Listbox 
 - Radiobuttonbox
+- PasswordEntry
 - Popupbox (a.k.a. pulldown- or dropdown menu)
 - Progressbar
-- Buttons 
+- Buttonbox 
 - Checkbox
 - MenuBar (uses MenuListbox)
 - Texteditor (has features like word wrapping and undo)
@@ -35,6 +40,25 @@ There are also a couple of dialog windows available:
 - Filebrowser 
 - Status window (no interaction so actually not a dialog)
 - Progress window (no interaction so actually not a dialog)
+
+Examples:
+=========
+
+Examples are in the distribution's "examples" directory.
+You do not have to install this distribution to test these
+examples.
+
+There aren't many examples yet, but the widgets are pretty much
+finished and functional. So far I have only built some small example
+applications using the Curses::UI widget-set, so interfacing with 
+them might miss out on some aspects, but as soon as I am going to
+build the project for which I created these widgets, this might
+change. 
+
+If you want me to add a particular functionality or 
+widget type, please feel free to send me an e-mail 
+(maurice@gitaar.net) and I'll see what I can do for you.
+Patches are even better :-)
 
 
 Some random features:
@@ -81,19 +105,5 @@ Some random features:
   with scrollbars on them.
   
   
-Examples:
-=========
-
-Examples are in the distribution's "examples" directory.
-There aren't many examples yet, but the widgets are pretty much
-finished and functional. So far I have only built some small example
-applications using the Curses::UI widget-set, so interfacing with 
-them might miss out on some aspects, but as soon as I am going to
-build the project for which I created these widgets, this might
-change. If you want me to add a particular functionality or 
-widget type, please feel free to send me an e-mail 
-(maurice@gitaar.net) and I'll see what I can do for you.
-Patches are even better :-)
-
 
 

@@ -100,7 +100,7 @@ sub new()
         return bless $this, $class;
 }
 
-sub current_item()
+sub active_item()
 {
 	my $this = shift;
 	$this->{-menu}->[$this->{-ypos}];
@@ -117,7 +117,7 @@ sub cursor_right()
 	my $this = shift;
 
 	# Get the current menu-item.
-	my $item = $this->current_item;
+	my $item = $this->active_item;
 
 	# This item has a submenu. Open it.
 	if (defined $item->{-submenu}) 
@@ -168,7 +168,7 @@ sub option_select()
 	my $this = shift;
 	
 	# Get the current menu-item.
-	my $item = $this->current_item;
+	my $item = $this->active_item;
 
 	if (defined $item->{-submenu}) { 
 		return $this->cursor_right;

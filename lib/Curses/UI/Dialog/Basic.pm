@@ -15,7 +15,7 @@ use strict;
 use Curses;
 use Curses::UI::Common;
 use Curses::UI::Window;
-use Curses::UI::Buttons; # for compute_buttonwidth()
+use Curses::UI::ButtonBox; # for compute_buttonwidth()
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Window Curses::UI::Common);
@@ -48,12 +48,11 @@ sub new ()
 	my %buttonargs = (
 		-buttonalignment => 'right',
 	);
-	foreach my $arg (qw(-buttons -values -shortcuts 
-		-selected -buttonalignment)) { 
+	foreach my $arg (qw(-buttons -selected -buttonalignment)) { 
 		$buttonargs{$arg} = $this->{$arg} 
 			if exists $this->{$arg}; 
 	}
-	my $b = $this->add('buttons', 'Buttons',
+	my $b = $this->add('buttons', 'ButtonBox',
 		-y    => -1,
 		%buttonargs
 	);
@@ -209,17 +208,13 @@ contain newline (\n) characters.
 
 =item * B<-buttons> < ARRAYREF >
 
-=item * B<-values> < ARRAYREF >
-
-=item * B<-shortcuts> < ARRAYREF >
-
 =item * B<-selected> < INDEX >
 
 =item * B<-buttonalignment> < VALUE >
 
 These options sets the buttons that have to be used. For an
 explanation of these options, see the 
-L<Curses::UI::Buttons|Curses::UI::Buttons> documentation.
+L<Curses::UI::ButtonBox|Curses::UI::ButtonBox> documentation.
 
 =back
 
@@ -244,7 +239,7 @@ for an explanation of these.
 =item * B<get> ( )
 
 This method will call B<get> on the buttons object of the dialog
-and return its returnvalue. See L<Curses::UI::Buttons|Curses::UI::Buttons>
+and return its returnvalue. See L<Curses::UI::ButtonBox|Curses::UI::ButtonBox>
 for more information on this.
 
 =back
@@ -256,7 +251,7 @@ for more information on this.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Container|Curses::UI::Container>, 
-L<Curses::UI::Buttons|Curses::UI::Buttons>
+L<Curses::UI::ButtonBox|Curses::UI::ButtonBox>
 
 
 

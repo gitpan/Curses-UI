@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::TextViewer
+# Curses::UI::PasswordEntry
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,25 +9,32 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::TextViewer;
+package Curses::UI::PasswordEntry;
 
 use strict;
 use Curses;
-use Curses::UI::TextEditor;
+use Curses::UI::TextEntry;
 
 use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::TextEditor);
-$VERSION = '1.01';
+@ISA = qw(Curses::UI::TextEntry);
+$VERSION = '1.00';
 	
 sub new ()
 {
 	my $class = shift;
 
 	my %args = ( 
+		-undolevels	 => 20,	# number of undolevels. 0 = infinite
+		-homeonreturn    => 1,	# cursor to homepos on return?
 		@_,
-		-readonly	 => 1,
+		-password	 => '*',# force password token
+		-showhardreturns => 0,	
 	);
-	return $class->SUPER::new( %args);
+
+	# Create the entry.
+	my $this = $class->SUPER::new( %args);
+
+	return bless $this, $class;
 }
 
 1;
@@ -37,7 +44,7 @@ sub new ()
 
 =head1 NAME
 
-Curses::UI::TextViewer - Create and manipulate textviewer widgets
+Curses::UI::PasswordEntry - Create and manipulate passwordentry widgets
 
 =head1 SYNOPSIS
 
@@ -45,24 +52,23 @@ Curses::UI::TextViewer - Create and manipulate textviewer widgets
     my $cui = new Curses::UI;
     my $win = $cui->add('window_id', 'Window');
 
-    my $textviewer = $win->add( 
-        'mytextviewer', 'TextViewer',
-	-text => "Hello, world!\n"
-               . "Goodbye, world!"
+    my $passwordentry = $win->add( 
+        'mypasswordentry', 'PasswordEntry'
     );
 
-    $textviewer->focus();
+    $passwordentry->focus();
+    my $password = $passwordentry->get();
 
 
 =head1 DESCRIPTION
 
-Curses::UI::TextViewer is a widget that can be used 
-to create a textviewer widget. This class is
-derived from Curses::UI::TextEditor. The
+Curses::UI::PasswordEntry is a widget that can be used 
+to create a passwordentry widget. This class is
+derived from Curses::UI::TextEntry. The
 only special thing about this class is that the 
-B<-readonly> option is forced to a true value. 
-So for the usage of Curses::UI::TextViewer see
-L<Curses::UI::TextEditor|Curses::UI::TextEditor>.
+B<-password> option is forced to '*'.
+So for the usage of Curses::UI::PasswordEntry see
+L<Curses::UI::TextEntry|Curses::UI::TextEntry>.
 
 
 
@@ -70,7 +76,7 @@ L<Curses::UI::TextEditor|Curses::UI::TextEditor>.
 =head1 SEE ALSO
 
 L<Curses::UI|Curses::UI>, 
-L<Curses::UI::TextEditor|Curses::UI::TextEditor>, 
+L<Curses::UI::TextEntry|Curses::UI::TextEntry>, 
 
 
 

@@ -1,5 +1,63 @@
 Changelog for the Curses::UI distribution:
 
+
+Version 0.62
+============
+
+2001-01-14:     - Changed the Label widget. The text to
+                  show on the widget may contain more than
+                  one line of text (so newline characters
+                  may be used). The status-dialog is changed
+                  accordingly. Other widgets that use Labels
+                  are not updated yet.
+
+                - Updated Curses::UI::Dialog::Progress for
+                  use with the new Label widget.
+
+                - Fixed a layout bug in Curses::UI::Widget
+                  (the available height and width were 
+                  incorrectly computed when using negative
+                  -x and -y offsets).
+
+                - Renamed Curses::UI::Buttons to 
+                  Curses::UI::ButtonBox, which is more like
+                  the naming of the rest of the widget set.
+                  Updated all examples and wigets for this
+                  change.
+
+                - Fixed some undefined value warnings in
+                  Curses::UI::Dialog::FileBrowser.
+
+                - Incorporated multi-line label support in
+                  the checkbox widget.
+
+                - Added new widgets + documentation:
+                  - Curses::UI::PasswordEntry
+                  - Curses::UI::Calendar
+                
+		- Added new example applications:
+                  - demo-Curses::UI::Calendar
+
+2001-01-13:     - Changed the way the buttons are defined
+                  in Curses::UI::Buttons (all information
+                  is now in the -buttons option and there
+                  are predefined button types).
+                  The documentation for Curses::UI::Buttons
+                  is updated.
+
+                - Buttons can now have a -command assigned
+                  to them. This command will execute after
+                  the button is pressed and before the focus
+                  is lost.
+
+                - All examples are updated for the changed
+                  Curses::UI::Buttons class.
+
+                - Solved a warning for some versions of
+                  perl about a prototype.
+
+                - Fixed some documentation typos.
+
 Version 0.61
 ============
 

@@ -40,10 +40,13 @@ my $popup = $win1->add(
 );
 
 my $but1 = $win1->add(
-        'buttons', 'Buttons',
+        'buttons', 'ButtonBox',
         -x => 2, 
         -y => 4, 
-        -buttons => ['< goto window 2 >', '< Quit >'],
+        -buttons => [
+	    { -label => '< goto window 2 >', -value => 'goto2' },
+            { -label => '< Quit >', -value => 'quit' },
+	],
 );
     
    
@@ -59,10 +62,13 @@ my $editor = $win2->add(
 );
 
 my $but2 = $win2->add(
-        'buttons', 'Buttons',
+        'buttons', 'ButtonBox',
         -x => 2,
         -y => -2,
-        -buttons => ['< goto window 1 >', '< Quit >'],
+        -buttons => [
+	    { -label => '< goto window 1 >', -value => 'goto1' },
+            { -label => '< Quit >', -value => 'quit' },
+	],
 );
 
 
@@ -97,11 +103,11 @@ MAINLOOP: for(;;) {
             # First get the button object of the focused window.
             my $btn = $win->getobj('buttons');
 
-            # Get the index of the pressed button.
-            my $button_id = $btn->get;
+            # Get the value of the pressed button.
+            my $button_value = $btn->get;
 
-            # If the $button_id == 1, the Quit button was clicked.
-            last MAINLOOP if $button_id == 1;
+            # If the $button_value is 'quit', the Quit button was clicked.
+            last MAINLOOP if $button_value eq 'quit';
      }
 }
 

@@ -15,7 +15,7 @@ my $win = $cui->add( 'window1', 'Window' );
 
 sub pause 
 { 
-	select (undef,undef,undef,0.10);
+	select (undef,undef,undef,0.1);
 }
 
 sub error($;) 
@@ -33,16 +33,21 @@ sub error($;)
 
 sub test_label()
 {
-	$win->add('label1', 'Label', -x => 1, -y => 1,
-	    -text => "This is a basic test to see if Curses::UI works like ");
-
-	$win->add('label2', 'Label', -x => 1, -y => 2,
-	    -text => "it should do. One moment please...");
+	$win->add(
+		'label', 'Label', 
+		-x => 1, -y => 1, 
+		-width => -1, 
+		-border => 1,
+		-paddingspaces => 1, 
+		-reverse => 1,
+	    	-text => "\nThis is a basic test to see if Curses::UI works like\n"
+	               . "it should do. One moment please...\n",
+	    	-textalignment => 'middle'
+	);
 
 	$cui->draw;
 	sleep 2;
-	$win->delete('label1');
-	$win->delete('label2');
+	$win->delete('label');
 	$cui->draw;
 }
 
@@ -53,10 +58,12 @@ sub test_label()
 sub test_buttons()
 {
 	my $b = $win->add(
-		'buttons', 'Buttons', 
+		'buttons', 'ButtonBox', 
 		-y => 1, -x => 1,
-		-buttons => ['< Button >', '< Test >'],
-		-values  => [1, 2],
+		-buttons => [
+		    { -label => '< Button >', -value => 1 },
+		    { -label => '< Test >',   -value => 2 },
+		],
 	);
 
 	$b->{-focus} = 1;
@@ -65,13 +72,13 @@ sub test_buttons()
 
 	$b->next_button;
 	$b->draw;
-	error "Unexpected value from Curses::UI::Buttons->get()"
+	error "Unexpected value from Curses::UI::ButtonBox->get()"
 		unless $b->get() == 2;
 	pause();
 
 	$b->previous_button;
 	$b->draw;
-	error "Unexpected value from Curses::UI::Buttons->get()"
+	error "Unexpected value from Curses::UI::ButtonBox->get()"
 		unless $b->get() == 1;
 	pause();
 
@@ -88,7 +95,7 @@ sub test_checkbox()
 	my $c = $win->add(
 		'checkbox', 'CheckBox',
 		-y => 1, -x => 1,
-		-label => 'The checkbox does work',
+		-label => "The checkbox does work",
 		-checked => 0,
 	);
 
@@ -308,6 +315,49 @@ sub test_texteditor()
 }
 
 # ----------------------------------------------------------------------
+# Test calender
+# ----------------------------------------------------------------------
+
+sub test_calendar()
+{
+	my $b = $win->add(
+		'calendar', 'Calendar', 
+		-y => 1, -x => 1,
+		-border => 1,
+		-date => 20010101
+	);
+
+	$b->{-focus} = 1;
+	$b->draw;
+
+	error "Curses::UI::TextEditor: test 1 failed"
+		unless $b->get() eq '2001-01-01';
+
+	for(1..10) {
+		$b->date_nextday();
+		$b->draw;
+		pause;
+	}
+	for(1..6) {
+		$b->date_nextweek();
+		$b->draw;
+		pause;
+	}
+	for(1..3) {
+		$b->date_nextmonth();
+		$b->draw;
+		pause;
+	}
+	$b->date_select;
+
+	error "Curses::UI::TextEditor: test 2 failed"
+		unless $b->get() eq '2001-05-22';
+
+	$win->delete('calendar');
+	$cui->draw;
+}
+
+# ----------------------------------------------------------------------
 # Run tests
 # ----------------------------------------------------------------------
 
@@ -318,6 +368,7 @@ test_listbox();
 test_popupbox();
 test_progressbar();
 test_texteditor();
+test_calendar();
 endwin();
 
 

@@ -3,6 +3,7 @@
 # Deny STDERR
 open STDERR, ">/dev/null";
 
+
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;

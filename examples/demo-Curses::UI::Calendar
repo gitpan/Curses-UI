@@ -1,0 +1,43 @@
+#!/usr/bin/perl -w
+use strict;
+
+# We do not want STDERR to clutter our screen.
+open STDERR, ">/dev/null";
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI ( -clear_on_exit => 1 );
+
+my $win = $cui->add('window_id', 'Window');
+
+$win->add(
+        'label0', 'Label',
+        -text => "Press <CTRL+Q> to leave this demo."
+);
+
+$win->add('label1', 'Label', -y=>2,-x=>1,-text => 'Julian -> Gregorian');
+$win->add(
+	'calendar1', 'Calendar',
+	-date => '01.09.1752',
+	-y => 3,
+	-border => 1,
+);
+
+$win->add('label2', 'Label', -y=>2,-x=>25,-text => 'Start at today:');
+$win->add(
+	'calendar2', 'Calendar',
+	-border => 1,
+	-y => 3,
+	-x => 24,
+);
+
+$win->returnkeys("\cC", "\cQ");
+
+$win->focus;
+
+$cui->dialog(
+	"You selected the following dates:\n"
+      . "calendar 1: " . $win->getobj('calendar1')->get . "\n"
+      . "calendar 2: " . $win->getobj('calendar2')->get
+);

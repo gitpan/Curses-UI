@@ -90,10 +90,14 @@ sub setup_connection()
 	);
 
 	my $buttons = $conwin->add(
-		'buttons', 'Buttons',
+		'buttons', 'ButtonBox',
 		-x => 14, -y => 8,
-		-buttons => ['< Connect >', '< Quit >'],
-		-values  => ['connect', 'quit'],
+		-buttons => [
+		    { -label => '< Connect >',
+		      -value => 'connect' },
+		    { -label => '< Quit >',
+		      -value => 'quit' },
+		],
 	);
 
 

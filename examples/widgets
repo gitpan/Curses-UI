@@ -184,7 +184,8 @@ my $page2 = $cui->add(
 $page2->add(
 	'checkbox', 'CheckBox',
 	-x => 0, -y => 0,
-	-label => 'This is just a very simple page... ',
+	-label => "This is just a very simple page\n"
+                . "Check the checkbox if you agree.",
 );
 
 $page2->add(
@@ -315,9 +316,7 @@ FOCUS_CHANGE: for (;;)
 	{
 		my $return = $cui->dialog(
 			-title     => "Are you sure???", 
-			-buttons   => ['< Yes >' , '< No >'],
-			-values    => [1         , 0       ],
-			-shortcuts => ['y'       , 'n'     ],
+			-buttons   => ['yes','no'],
 			-message => "Do you really want to quit\n"
 				  . "from this marvelous program\n"
 				  . "and miss out on all it's great "

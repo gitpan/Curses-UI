@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Curses::UI::Buttons
+# Curses::UI::ButtonBox
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,10 +9,11 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
-package Curses::UI::Buttons;
+package Curses::UI::ButtonBox;
 
 use strict;
 use Curses;
+use Carp qw(confess);
 use Curses::UI::Widget;
 use Curses::UI::Common;
 
@@ -23,9 +24,40 @@ require Exporter;
 @ISA = qw(Curses::UI::Widget Exporter Curses::UI::Common);
 @EXPORT = qw(compute_buttonwidth);
 
-my $default_btn = [ '< OK >' ];
+# Definition of the most common buttons.
+my %buttondef = (
+	'ok'	=> {
+			-label    => '< OK >',
+			-value    => 1,
+			-command  => undef,
+			-shortcut => 'o',
+		   },
+	'cancel'=> {
+			-label    => '< Cancel >',
+			-value    => 0,
+			-command  => undef,
+			-shortcut => 'c',
+		   }, 
+	'yes'	=> {
+			-label    => '< yes >',
+			-value    => 1,
+			-command  => undef,
+			-shortcut => 'y',
+		   },
+	'no'    => {
+			-label    => '< No >',
+			-value    => 0,
+			-command  => undef,
+			-shortcut => 'n',
+		   }, 
+	
+);
+
+# The default button to use if no buttons were defined.
+my $default_btn = [ 'ok' ];
 
 my %routines = (
+	'press-button'  => \&press_button,
 	'return' 	=> 'LEAVE_CONTAINER',
 	'loose-focus'	=> 'LOOSE_FOCUS',
 	'next'		=> \&next_button,
@@ -34,8 +66,8 @@ my %routines = (
 );
 
 my %bindings = (
-	KEY_ENTER()	=> 'return',
-	KEY_SPACE()	=> 'return',
+	KEY_ENTER()	=> 'press-button',
+	KEY_SPACE()	=> 'press-button',
 	KEY_LEFT()	=> 'previous',
 	'h'		=> 'previous',
 	KEY_RIGHT()	=> 'next',
@@ -51,11 +83,9 @@ sub new ()
 	my %args = (
 		-parent		 => undef,	  # the parent window
 		-buttons 	 => $default_btn, # buttons (arrayref)
-		-values		 => undef,	  # values for buttons (arrayref)
-		-shortcuts	 => undef,	  # shortcut keys
 		-buttonalignment => undef,  	  # left / middle / right
 		-selected 	 => 0,		  # which selected
-		-width		 => undef,	  # the width of the buttonwidget
+		-width		 => undef,	  # the width of the buttons widget
 		-x		 => 0,		  # the horizontal position rel. to parent
 		-y		 => 0,		  # the vertical position rel. to parent
 
@@ -71,12 +101,44 @@ sub new ()
 	# The windowscr height should be 1.
 	$args{-height} = height_by_windowscrheight(1,%args);
 
+	# Process button definitions.
+	$args{-buttons} = process_buttondefs($args{-buttons});
+
 	# Create the widget.
 	my $this = $class->SUPER::new( %args );
 
 	$this->layout();
 
 	return bless $this, $class;
+}
+
+
+sub process_buttondefs($;)
+{
+	my $buttons = shift;
+
+	# Process button types.
+	my @buttons = ();
+	foreach my $button (@$buttons)
+	{
+		if (ref $button eq 'HASH') {
+			push @buttons, $button;
+		}
+		elsif (not ref $button) {
+			my $def = $buttondef{$button};
+			if (defined $def) {
+				push @buttons, $def;
+			} else {
+				confess "Invalid button type: $button";
+			}
+		} else {
+			confess "Invalid button definition (it should " 
+			      . "be a hash reference, but is a "
+			      . (ref $button) . " reference."; 
+		}
+	}
+
+	return \@buttons;
 }
 
 sub layout()
@@ -113,23 +175,31 @@ sub layout()
 		if $this->{-mayloosefocus};
 
 	# Make shortcuts all upper-case.	
-	if (defined $this->{-shortcuts}) {
-		foreach (@{$this->{-shortcuts}}) {
-			$_ = uc $_;
+	foreach my $button (@{$this->{-buttons}}) {
+		if (defined $button->{-shortcut}) {
+			$button->{-shortcut} = uc $button->{-shortcut};
 		}
 	}
 
 	return $this;
 }
 
+sub get_selected_button()
+{
+	my $this = shift;
+	my $selected = $this->{-selected}; 
+	my $button = $this->{-buttons}->[$selected];
+	return $button;
+}
+
 sub get()
 {
 	my $this = shift;
-	my $s = $this->{-selected}; 
-	if (defined $this->{-values}) {
-		return $this->{-values}->[$s];
+	my $button = $this->get_selected_button;
+	if (defined $button->{-value}) {
+		return $button->{-value};
 	} else {
-		return $s;
+		return $this->{-selected};
 	}
 }
 
@@ -157,6 +227,18 @@ sub previous_button()
 	return $this;
 }
 
+sub press_button()
+{
+	my $this = shift;
+	my $button = $this->get_selected_button;
+	my $command = $button->{-command};
+	if (defined $command and ref $command eq 'CODE') {
+		$command->($this);
+	}	
+
+	return $this->do_routine('return', undef);
+}
+
 sub draw(;$)
 {
 	my $this = shift;
@@ -178,7 +260,7 @@ sub draw(;$)
 	my $id = 0;
 	my $x  = 0;
 	my $cursor_x = 0;
-	foreach (@{$this->{-buttons}})
+	foreach my $button (@{$this->{-buttons}})
 	{
 		# Make the focused button reverse.
 		if ($this->{-focus} and defined $this->{-selected} 
@@ -190,18 +272,18 @@ sub draw(;$)
 		$this->{-windowscr}->addstr(
 			0,
 			$this->{-xpos} + $x,
-			$_
+			$button->{-label}
 		);	
 
 		
 		# Draw shortcut if available.
-		my $sc = $this->{-shortcuts}->[$id];
+		my $sc = $button->{-shortcut};
 		if (defined $sc)
 		{
-			my $pos = index(uc $_, $sc);
+			my $pos = index(uc $button->{-label}, $sc);
 			if ($pos >= 0)
 			{
-				my $letter = substr($_, $pos, 1); 
+				my $letter = substr($button->{-label}, $pos, 1); 
 				$this->{-windowscr}->attron(A_UNDERLINE);
 				$this->{-windowscr}->addch(
 					0,
@@ -212,7 +294,7 @@ sub draw(;$)
 			}
 		}
 
-		$x += 1 + length($_);
+		$x += 1 + length($button->{-label});
 		$this->{-windowscr}->attroff(A_REVERSE) if $this->{-focus};
 		
 		$id++;
@@ -228,14 +310,15 @@ sub compute_buttonwidth($;)
 {
         my $buttons = shift;
         $buttons = $default_btn unless defined $buttons;
+	$buttons = process_buttondefs($buttons);
 
         # Spaces
         my $width = @$buttons - 1;
 
         # Buttons
-        foreach (@$buttons) {
-                $width += length($_);
-        };
+        foreach my $button (@$buttons) {
+                $width += length($button->{-label});
+        }
 
         return $width;
 }
@@ -247,21 +330,23 @@ sub shortcut()
 	
 	# Walk through shortcuts to see if the pressed key
 	# is in the list of -shortcuts.
-	my $idx = -1;
-	SHORTCUT: for (my $i=0; $i<@{$this->{-shortcuts}}; $i++) 
+	my $idx = 0;
+	my $found_idx;
+	SHORTCUT: foreach my $button (@{$this->{-buttons}})
 	{
-		my $sc = $this->{-shortcuts}->[$i];
+		my $sc = $button->{-shortcut};
 		if (defined $sc and $sc eq $key)
 		{
-			$idx = $i;
+			$found_idx = $idx;
 			last SHORTCUT;
 		}
+		$idx++;
 	}
 
 	# Shortcut found?
-	if ($idx > -1) 
+	if (defined $found_idx) 
 	{
-		$this->{-selected} = $idx;
+		$this->{-selected} = $found_idx;
 		return $this->process_bindings(KEY_ENTER());
 	}
 
@@ -275,7 +360,7 @@ sub shortcut()
 
 =head1 NAME
 
-Curses::UI::Buttons - Create and manipulate button widgets
+Curses::UI::ButtonBox - Create and manipulate button widgets
 
 =head1 SYNOPSIS
 
@@ -284,10 +369,18 @@ Curses::UI::Buttons - Create and manipulate button widgets
     my $win = $cui->add('window_id', 'Window');
 
     my $buttons = $win->add(
-        'mybuttons', 'Buttons',
-        -buttons   => ['< Button 1 >', '< Button 2>']
-        -values    => [1,2] 
-        -shortcuts => ['1','2'],
+        'mybuttons', 'ButtonBox',
+        -buttons   => [
+            { 
+              -label => '< Button 1 >',
+              -value => 1,
+              -shortcut => 1 
+            },{ 
+              -label => '< Button 2 >',
+              -value => 2,
+              -shortcut => 2 
+            }
+        ]
     );
 
     $buttons->focus();
@@ -296,10 +389,10 @@ Curses::UI::Buttons - Create and manipulate button widgets
 
 =head1 DESCRIPTION
 
-Curses::UI::Buttons is a widget that can be used to create an
-array of buttons. 
+Curses::UI::ButtonBox is a widget that can be used to create an
+array of buttons (or, of course, only one button). 
 
-See exampes/demo-Curses::UI::Buttons in the distribution
+See exampes/demo-Curses::UI::ButtonBox in the distribution
 for a short demo.
 
 
@@ -323,20 +416,82 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 
 =item * B<-buttons> < ARRAYREF >
 
-This option takes a reference to a list of buttonlabels
-as its argument. 
+This option takes a reference to a list of buttons.
+The list may contain both predefined button types and  
+complete button definitions of your own.
 
-=item * B<-values> < ARRAYREF >
+* B<Your own button definition>
 
-This option takes a reference to a list of values as its
-argument. The order of the values in the list corresponds
-to the order of the buttons.
+  A button definition is a reference to a hash. This
+  hash can have the following key-value pairs:
 
-=item * B<-shortcuts> < ARRAYREF >
+  obligatory:
+  -----------
 
-This option takes a reference to a list of shortcut
-keys as its argument. The order of the keys in the list 
-corresponds to the order of the buttons.
+  -label      This determines what text should be drawn
+              on the button.
+
+  optional:
+  ---------
+
+  -value      This determines the returnvalue for the
+              get() method. If the value is not defined,
+              the get() method will return the index
+              of the button.
+ 
+  -shortcut   The button will act as if it was pressed
+              if the key defined by -shortcut is pressed 
+
+  -command    If the value for -command is a CODE reference,
+              this code will be executes if the button
+              is pressed, before the buttons widget loses
+              focus and returns.
+
+* B<Predefined button type>
+
+  This module has a predefined list of frequently used button
+  types. Using these in B<-buttons> makes things a lot
+  easier. The predefined button types are:
+
+  ok          -label    => '< OK >'
+              -shortcut => 'o'
+              -value    => 1
+              -command  => undef
+
+  cancel      -label    => '< Cancel >'
+              -shortcut => 'c'
+              -value    => 0
+              -command  => undef
+  
+  yes         -label    => '< Yes >'
+              -shortcut => 'y'
+              -value    => 1
+              -command  => undef
+
+  no          -label    => '< No >'
+              -shortcut => 'n'
+              -value    => 0
+              -command  => undef
+
+Example:
+
+  ....
+  -buttons => [
+      { -label => '< My own button >',
+        -value => 'mine!',
+        -shortcut => 'm' },
+
+      'ok',
+
+      'cancel',
+
+      { -label => '< My second button >',
+        -value => 'another one',
+        -shortcut => 's',
+        -command => sub { die "Do not press my button!\n" } }
+  ]
+  ....
+    
 
 =item * B<-selected> < INDEX >
 
@@ -381,7 +536,8 @@ for an explanation of these.
 
 This method will return the index of the currently active
 button. If a value is given for that index (using the
-B<-values> option, see above), that value will be returned.
+B<-value> option, see B<-buttons> above), that value will be 
+returned.
 
 =back
 

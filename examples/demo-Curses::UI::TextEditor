@@ -71,14 +71,12 @@ $win->add(
 );
 
 $win->add(
-	'edit5', 'TextEditor',
+	'edit5', 'PasswordEntry',
 	-y => 14,
         -x => 26,
         -width => 25,
 	-border => 1,
         -title => '-password',
-        -singleline => 1,
-	-password   => '*',
 );
 
 $win->add(

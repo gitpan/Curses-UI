@@ -2,17 +2,20 @@
 
 # Deny STDERR
 open STDERR, ">/dev/null";
+open STDERR, ">/tmp/r";
 
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
 my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
-$cui->status( "This is a status window" );
-sleep 2;
+$cui->status( "This is a status window. It can be used to provide some\n"
+            . "textual status feedback to the user of your program.\n"
+            . "Now a basic example follows...");
+sleep 3;
 $cui->nostatus();
 sleep 1;
-$cui->status( "As you can see it simply displays a status" );
+$cui->status( "Loading file..." );
 sleep 2;
 $cui->nostatus();
 sleep 1;

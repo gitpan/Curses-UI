@@ -18,7 +18,7 @@ use Curses::UI::Window;
 
 use vars qw($VERSION @ISA);
 @ISA = qw(Curses::UI::Window Curses::UI::Common);
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 sub new ()
 {
@@ -36,9 +36,8 @@ sub new ()
 	my $this = $class->SUPER::new(%args);
 	$args{-message} = 'no message' unless defined $args{-message};
 
-	$this->add(
+	my $l = $this->add(
 		'label', 'Label',
-		-width => -1,
 		-text  => $this->{-message},
 	);
 
@@ -51,20 +50,29 @@ sub layout()
 {
 	my $this = shift;
 
-	# Compute the width the dialog needs.
-	if (not defined $this->{-width})
-	{
-		my $msg = $this->{-message};
-		my $needwidth = length($msg);
-		my $width = $this->width_by_windowscrwidth($needwidth, %$this);
-		$this->{-width}  = $width;
-	}
+	my $label = $this->getobj('label');
 
-	# Compute the height the dialog needs.
-	if (not defined $this->{-height})
+	# The label might not be added at this point.
+	if (defined $label)
 	{
-		my $height = $this->height_by_windowscrheight(1, %$this);
-		$this->{-height} = $height;
+		# Compute the width the dialog window needs.
+		if (not defined $this->{-width})
+		{
+			$this->{-width} = $this->width_by_windowscrwidth(
+				$label->{-width}, 
+				%$this
+			);
+		}
+
+		# Compute the height the dialog window needs.
+		if (not defined $this->{-height})
+		{
+			$this->{-height} = $this->height_by_windowscrheight(
+				$label->{-height}, 
+				%$this
+			);
+		}
+
 	}
 
 	$this->SUPER::layout;
@@ -149,8 +157,6 @@ Set the title of the dialog window to TEXT.
 =item * B<-message> < TEXT >
 
 This option sets the initial message to show to TEXT.
-This message is displayed using a L<Curses::UI::Label|Curses::UI::Label>,
-so it can not contain any newline (\n) characters.
 
 =back
 
@@ -184,7 +190,7 @@ B<draw> method of the progress dialog.
 =head1 SEE ALSO
 
 L<Curses::UI|Curses::UI>, 
-L<Curses::UI::Container|Curses::UI::Container>, 
+L<Curses::UI::Container|Curses::UI::Container>
 
 
 

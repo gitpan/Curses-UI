@@ -32,6 +32,7 @@ require Exporter;
 	text_wrap
 	scrlength
 	split_to_lines
+	text_dimension
 	KEY_ESCAPE	 KEY_SPACE	KEY_TAB
 	WORDWRAP	 NO_WORDWRAP
 	CONTROLKEYS	 NO_CONTROLKEYS
@@ -114,6 +115,17 @@ sub delallwin()
 	}
 
         return $this;
+}
+
+sub accessor($;$)
+{
+        my $this  = shift;
+	my $key   = shift;
+        my $value = shift;
+        if (defined $value) {
+                $this->{$key} = $value
+        }
+        return $this->{$key};
 }
 
 
@@ -247,6 +259,26 @@ sub text_wrap($$;)
 	}
 		
 	return \@wrapped;
+}
+
+sub text_dimension ($;)
+{
+        # Make $this->text_wrap() possible.
+        shift if ref $_[0];
+	my $text = shift;
+	
+	my $lines = split_to_lines($text);
+	
+	my $height = scalar @$lines;
+	
+	my $width = 0;
+	foreach (@$lines)
+	{
+		my $l = length($_);
+		$width = $l if $l > $width;
+	}
+
+	return ($width, $height);
 }
 
 # ----------------------------------------------------------------------
@@ -401,7 +433,7 @@ sub get_key(;$$)
 
 =head1 NAME
 
-Curses::UI::Common - Common methods for Curse::UI
+Curses::UI::Common - Common methods for Curses::UI
 
 =head1 SYNOPSIS
 
@@ -443,9 +475,13 @@ of the Curses::UI instance).
 
 This method will walk through all the data members of the
 class intance. Each data member that is a Curses::Window
-descendant will be removed. This method is mostly used
-in the B<layout> method of widgets to remove all contained
-subwidgets before adding them again.
+descendant will be removed.
+
+=item * B<accessor> ( NAME, [VALUE] )
+
+If VALUE is set, the value for the data member NAME will be 
+changed. The method will return the current value for
+data member NAME.
 
 =back
 
@@ -466,6 +502,11 @@ with the perl function length() is that this method will
 expand TAB characters. It is exported by this class and it may
 be called as a stand-alone routine.
 
+=item B<text_dimension> ( TEXT )
+
+This method will return an array containing the width 
+(the length of the longest line) and the height (the
+number of lines) of the TEXT.
 
 =item B<text_wrap> ( LINE, LENGTH, WORDWRAP ) 
 
@@ -581,7 +622,7 @@ B<-nobeep> is false.
 
 =head1 SEE ALSO
 
-L<Curses::UI|Curses::UI>, 
+L<Curses::UI|Curses::UI>
 
 
 

@@ -52,7 +52,7 @@ sub new ()
 
 =head1 NAME
 
-Curses::UI::RadiobuttonBox - Create and manipulate radiobuttonbox widgets
+Curses::UI::RadioButtonBox - Create and manipulate radiobuttonbox widgets
 
 =head1 SYNOPSIS
 
@@ -61,7 +61,7 @@ Curses::UI::RadiobuttonBox - Create and manipulate radiobuttonbox widgets
     my $win = $cui->add('window_id', 'Window');
 
     my $radiobuttonbox = $win->add(
-        'myradiobuttonbox', 'RadiobuttonBox',
+        'myradiobuttonbox', 'RadioButtonBox',
         -values    => [1, 2, 3],
         -labels    => { 1 => 'One', 
                         2 => 'Two', 
@@ -74,7 +74,7 @@ Curses::UI::RadiobuttonBox - Create and manipulate radiobuttonbox widgets
 
 =head1 DESCRIPTION
 
-Curses::UI::RadiobuttonBox is a widget that can be used 
+Curses::UI::RadioButtonBox is a widget that can be used 
 to create a radiobutton listbox. Only one value can be
 selected at a time. This kind of listbox looks somewhat 
 like this:
@@ -85,10 +85,10 @@ like this:
  |< > Three |
  +----------+
 
-A RadiobuttonBox is derived from Curses::UI::ListBox. The
+A RadioButtonBox is derived from Curses::UI::ListBox. The
 only special thing about this class is that the 
 B<-radio> option is forced to a true value. So for the
-usage of Curses::UI::RadiobuttonBox see
+usage of Curses::UI::RadioButtonBox see
 L<Curses::UI::ListBox|Curses::UI::ListBox>).
 
 

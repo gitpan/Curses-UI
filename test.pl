@@ -2,7 +2,7 @@ use Test;
 
 open STDERR, ">/tmp/r";
 
-BEGIN { plan tests => 25 };
+BEGIN { plan tests => 26 };
 
 # The base classes
 use Curses::UI;
@@ -13,11 +13,13 @@ use Curses::UI::Container;
 ok(1);
 
 # The widgets
-use Curses::UI::Buttons;
+use Curses::UI::ButtonBox;
 ok(1);
 use Curses::UI::CheckBox;
 ok(1);
 use Curses::UI::Common;
+ok(1);
+use Curses::UI::Calendar;
 ok(1);
 use Curses::UI::Label;
 ok(1);

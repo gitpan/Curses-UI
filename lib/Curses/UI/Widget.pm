@@ -25,7 +25,7 @@ use vars qw($VERSION @ISA @EXPORT);
 	width_by_windowscrwidth
 	process_padding
 );
-$VERSION = '1.18';
+$VERSION = '1.19';
 
 sub new ()
 {
@@ -147,8 +147,14 @@ sub layout()
 
 	my $w = $this->{-parentdata}->{-w};
 	my $h = $this->{-parentdata}->{-h};
-	my $avail_h = $h - abs($this->{-y});
-	my $avail_w = $w - abs($this->{-x});
+
+	my $cor_h = $this->{-y};
+	$cor_h = abs($this->{-y}+1) if $cor_h < 0;
+	my $cor_w = $this->{-x};
+	$cor_w = abs($this->{-x}+1) if $cor_w < 0;
+	
+	my $avail_h = $h - $cor_h;
+	my $avail_w = $w - $cor_w;
 	
 	# Compute horizontal widget size and adjust if neccessary.
 	my $min_w = ($this->{-border} ? 2 : 0) 
@@ -652,27 +658,33 @@ sub process_bindings($;)
 		$binding = $this->{-bindings}->{''}; 
 	}
 	
-	if (defined $binding)
-	{
-		# Find the routine to call.
-		my $routine = $this->{-routines}->{$binding};
-		if (defined $routine) 
-		{
-			if (ref $routine eq 'CODE')
-			{
-				my $return = $routine->($this, $key);
-				return $return;
-			} else {
-				return $routine;
-			}
-		} else {
-			confess "No routine defined for "
-			  . "keybinding \"$binding\"!";
-		}
-
-	# No binding?
+	if (defined $binding) {
+		return $this->do_routine($binding, $key);
 	} else {
 		return $this;
+	}
+}
+
+sub do_routine($;$)
+{
+	my $this = shift;
+	my $binding = shift;
+	my $key = shift; # TODO find out what $key was for :-)
+
+	# Find the routine to call.
+	my $routine = $this->{-routines}->{$binding};
+
+	if (defined $routine) 
+	{
+		if (ref $routine eq 'CODE') {
+			my $return = $routine->($this, $key);
+			return $return;
+		} else {
+			return $routine;
+		}
+	} else {
+		confess "No routine defined for "
+			  . "keybinding \"$binding\"!";
 	}
 }
 

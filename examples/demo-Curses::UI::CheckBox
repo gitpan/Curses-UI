@@ -16,7 +16,7 @@ $win->add(
 my $cb = $win->add(
         'mycheckbox', 'CheckBox',
 	-y => 3,
-        -label     => 'Say hello to the world',
+        -label     => "Say hello to the world\nmy dear fellow",
 );
 $cb->set_routine('return', 'LEAVE_CONTAINER');
 

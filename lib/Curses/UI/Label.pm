@@ -13,6 +13,7 @@ package Curses::UI::Label;
 use strict;
 use Curses;
 use Curses::UI::Widget;
+use Curses::UI::Common;
 
 use vars qw($VERSION @ISA);
 $VERSION = '1.00';
@@ -24,6 +25,7 @@ sub new ()
 	my %args = (
 		-parent		 => undef,	# the parent window
 		-width		 => undef,	# the width of the label
+		-height		 => undef,      # the height of the label
 		-x		 => 0,		# the horizontal position,
                                                 # relative to the parent
 		-y		 => 0,		# the vertical position,
@@ -39,16 +41,31 @@ sub new ()
 		@_,
 	);
 
-	# The windowscr height should be 1.
-	$args{-height} = height_by_windowscrheight(1,%args);
+	# Get the text dimension if -width or -height is undefined.
+	my @text_dimension = (undef,1);
+	unless (defined $args{-width} and defined $args{-height}) {
+		@text_dimension = text_dimension($args{-text})
+			if defined $args{-text};
+	}
+
+	# If the -height is not set, determine the height
+	# using the initial contents of the -text.
+	if (not defined $args{-height}) 
+	{
+		my $l = $text_dimension[1];
+		$l = 1 if $l <= 0;
+		$args{-height} = height_by_windowscrheight($l, %args);
+	}
 	
 	# No width given? Then make the width the same size
 	# as the text. No initial text? Then let
 	# Curses::UI::Widget figure it out.
-	$args{-width} = width_by_windowscrwidth(length($args{-text}), %args)
+	$args{-width} = width_by_windowscrwidth($text_dimension[0], %args)
 		unless defined $args{-width} or not defined $args{-text};
-	$args{-text} = '' unless defined $args{-text};
 
+	# If no text was defined (how silly...) we define an empty strin. 
+	$args{-text} = '' unless defined $args{-text};
+	
 	# Create the widget.
 	my $this = $class->SUPER::new( %args );
 
@@ -62,7 +79,6 @@ sub layout()
 	my $this = shift;
 	$this->SUPER::layout;
 	return $this if $Curses::UI::screen_too_small;
-	$this->compute_xpos;
 	return $this;
 }
 
@@ -92,7 +108,6 @@ sub text($;)
 	if (defined $text) 
 	{
 		$this->{-text} = $text;
-		$this->compute_xpos;
 		$this->draw(1);
 		return $this;
 	} else {
@@ -107,7 +122,6 @@ sub textalignment($;)
 	my $this = shift;
 	my $value = shift;
 	$this->{-textalignment} = $value;
-	$this->compute_xpos;
 	$this->draw(1);
 	return $this;
 }
@@ -115,21 +129,20 @@ sub textalignment($;)
 sub compute_xpos()
 {
 	my $this = shift;
+	my $line = shift;
 
 	# Compute the x location of the text.
 	my $xpos = 0;
 	if (defined $this->{-textalignment})
 	{
 	    if ($this->{-textalignment} eq 'right') {
-		$xpos = $this->screenwidth - length($this->{-text});
+		$xpos = $this->screenwidth - length($line);
 	    } elsif ($this->{-textalignment} eq 'middle') {
-		$xpos = int (($this->screenwidth-length($this->{-text}))/2);
+		$xpos = int (($this->screenwidth-length($line))/2);
 	    }
 	}
 	$xpos = 0 if $xpos < 0;
-	$this->{-xpos} = $xpos;
-
-	return $this;
+	return $xpos;
 }
 
 sub draw(;$)
@@ -159,16 +172,23 @@ sub draw(;$)
 
 
 	# Draw the text. Clip it if it is too long.
-	my $show = $this->{-text};
-	if (length($show) > $this->screenwidth) {
-		# Break text
-		$show = substr($show, 0, $this->screenwidth);
-		$show =~ s/...$/.../;
-	} elsif ($this->{-paddingspaces}) {
-		$this->{-windowscr}->addstr(0, 0, " "x$this->screenwidth);	
-	}
+	my $ypos = 0;
+	my $split = split_to_lines($this->{-text});
+	foreach my $line (@$split)
+	{
+		if (length($line) > $this->screenwidth) {
+			# Break text
+			$line = substr($line, 0, $this->screenwidth);
+			$line =~ s/.$/\$/;
+		} elsif ($this->{-paddingspaces}) {
+			$this->{-windowscr}->addstr($ypos, 0, " "x$this->screenwidth);	
+		}
 
-	$this->{-windowscr}->addstr(0, $this->{-xpos}, $show);
+		my $xpos = $this->compute_xpos($line);
+		$this->{-windowscr}->addstr($ypos, $xpos, $line);
+
+		$ypos++;
+	}
 
 	$this->{-windowscr}->noutrefresh;
 	doupdate() unless $no_doupdate;
@@ -228,6 +248,11 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 =head1 WIDGET-SPECIFIC OPTIONS
 
 =over 4
+
+=item * B<-height> < VALUE >
+
+If you do not define B<-height>, the label will compute 
+its needed height using the initial B<-text>. 
 
 =item * B<-text> < TEXT >
 

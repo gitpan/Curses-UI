@@ -17,11 +17,12 @@ BEGIN { $ENV{TERM} = 'vt100' unless defined $ENV{TERM} }
 use Carp qw(confess);
 use Curses;
 use Curses::UI::Container;
+use Curses::UI::Common;
 use Term::ReadKey;
 
 use vars qw($VERSION @ISA);
-$VERSION = "0.61";
-@ISA = qw(Curses::UI::Container);
+$VERSION = "0.62";
+@ISA = qw(Curses::UI::Container Curses::UI::Common);
 
 $Curses::UI::resizing = 0; 
 $Curses::UI::resizetime = undef; 
@@ -70,6 +71,9 @@ sub new()
 	return $this;
 }
 
+sub compat(;$)        { shift()->accessor('-compat', shift()) }
+sub clear_on_exit(;$) { shift()->accessor('-clear_on_exit', shift()) }
+
 sub layout()
 {
 	my $this = shift;
@@ -102,15 +106,6 @@ sub layout()
 	return $this;	
 }
 
-sub compat(;$)
-{
-	my $this = shift;
-	my $val = shift;
-	if (defined $val) {
-		$this->{-compat} = $val
-	}
-	return $this->{-compat};
-}
 
 sub check_for_too_small_screen()
 {
@@ -385,41 +380,77 @@ Curses::UI can be used for the development of curses
 based user interfaces. Currently, it contains the 
 following classes:
 
-Base elements
+B<Base elements>
 
-  Curses::UI::Widget
-  Curses::UI::Container
+=over 4
 
-Widgets
+=item * L<Curses::UI::Widget|Curses::UI::Widget>
 
-  Curses::UI::Window
-  Curses::UI::Label
-  Curses::UI::TextEditor
-  Curses::UI::TextEntry
-  Curses::UI::TextViewer
-  Curses::UI::Buttons
-  Curses::UI::CheckBox
-  Curses::UI::ListBox
-  Curses::UI::RadioButtonBox
-  Curses::UI::PopupBox
-  Curses::UI::MenuBar
-  Curses::UI::MenuListBox (used by Curses::UI::MenuBar)
-  Curses::UI::ProgressBar
+=item * L<Curses::UI::Container|Curses::UI::Container>
 
-Dialogs
+=back
 
-  Curses::UI::Dialog::Basic
-  Curses::UI::Dialog::Error
-  Curses::UI::Dialog::FileBrowser
-  Curses::UI::Dialog::Status
+B<Widgets>
 
-Support classes
+=over 4
 
-  Curses::UI::Common
-  Curses::UI::SearchEntry
-  Curses::UI::Searchable
+=item * L<Curses::UI::ButtonBox|Curses::UI::ButtonBox>
 
+=item * L<Curses::UI::Calendar|Curses::UI::Calendar>
 
+=item * L<Curses::UI::CheckBox|Curses::UI::CheckBox>
+
+=item * L<Curses::UI::Label|Curses::UI::Label>
+
+=item * L<Curses::UI::ListBox|Curses::UI::ListBox>
+
+=item * L<Curses::UI::MenuBar|Curses::UI::MenuBar>
+
+=item * L<Curses::UI::MenuListBox|Curses::UI::MenuListBox> (used by Curses::UI::MenuBar)
+
+=item * L<Curses::UI::PasswordEntry|Curses::UI::PasswordEntry>
+
+=item * L<Curses::UI::PopupBox|Curses::UI::PopupBox>
+
+=item * L<Curses::UI::ProgressBar|Curses::UI::ProgressBar>
+
+=item * L<Curses::UI::RadioButtonBox|Curses::UI::RadioButtonBox>
+
+=item * L<Curses::UI::SearchEntry|Curses::UI::SearchEntry> (used by Curses::UI::Searchable)
+
+=item * L<Curses::UI::TextEditor|Curses::UI::TextEditor>
+
+=item * L<Curses::UI::TextEntry|Curses::UI::TextEntry>
+
+=item * L<Curses::UI::TextViewer|Curses::UI::TextViewer>
+
+=item * L<Curses::UI::Window|Curses::UI::Window>
+
+=back
+
+B<Dialogs>
+
+=over 4
+
+=item * L<Curses::UI::Dialog::Basic|Curses::UI::Dialog::Basic>
+
+=item * L<Curses::UI::Dialog::Error|Curses::UI::Dialog::Error>
+
+=item * L<Curses::UI::Dialog::FileBrowser|Curses::UI::Dialog::FileBrowser>
+
+=item * L<Curses::UI::Dialog::Status|Curses::UI::Dialog::Status>
+
+=back
+
+B<Support classes>
+
+=over 4
+
+=item * L<Curses::UI::Common|Curses::UI::Common>
+
+=item * L<Curses::UI::Searchable|Curses::UI::Searchable>
+
+=back
 
 
 =head1 OPTIONS
@@ -476,9 +507,15 @@ have to call this method directly.
 
 =item B<compat> ( [BOOLEAN] )
 
-The B<-compat> option will be set to the BOOLEAN value. If the
-argument is omitted, this method will only return the current
-value for B<-compat>.
+The B<-compat> option will be set to the BOOLEAN value, unless
+BOOLEAN is omitted. The method returns the current value 
+for B<-compat>.
+
+=item B<clear_on_exit> ( [BOOLEAN] )
+
+The B<-clear_on_exit> option will be set to the BOOLEAN value, unless
+BOOLEAN is omitted. The method returns the current value 
+for B<-clear_on_exit>.
 
 =item B<dialog> ( MESSAGE or OPTIONS )
 
@@ -520,7 +557,7 @@ it's just like B<dialog>. Example:
 
 The B<filebrowser> method will create a file browser
 dialog. For an explanation of the arguments that can be 
-used, see L<Curses::UI::FileBrowser|Curses::UI::FileBrowser>.
+used, see L<Curses::UI::Dialog::FileBrowser|Curses::UI::Dialog::FileBrowser>.
 Example:
 
     my $file = $cui->filebrowser(
@@ -693,10 +730,13 @@ the first window.
     );
 
     my $but1 = $win1->add(
-        'buttons', 'Buttons',
+        'buttons', 'ButtonBox',
         -x => 2,
         -y => 4,
-        -buttons => ['< goto window 2 >', '< Quit >'],
+        -buttons => [
+            { -label => '< goto window 2 >', -value => 'goto2' },
+            { -label => '< Quit >', -value => 'quit' },
+        ],
     ); 
 
 We'll add a texteditor and some buttons to the second window. Look how
@@ -719,17 +759,20 @@ screen and the widgets will follow!
     );
 
     my $but2 = $win2->add(
-        'buttons', 'Buttons',
+        'buttons', 'ButtonBox',
         -x => 2,
         -y => -2,
-        -buttons => ['< goto window 1 >', '< Quit >'],
+        -buttons => [
+            { -label => '< goto window 1 >', -value => 'goto1' },
+            { -label => '< Quit >', -value => 'quit' },
+        ],
     );
 
 =head1 Specify when the windows will loose their focus
 
-We have a couple of Buttons on each window. As soon as a 
+We have a couple of buttons on each window. As soon as a 
 button is pressed, it will have the window loose its
-focus (Buttons will have any kind of Container object
+focus (buttons will have any kind of Container object
 loose its focus). You will only have to do something
 if this is not the desired behaviour. 
 
@@ -793,10 +836,11 @@ on them, we will have to make things work like they should.
             my $btn = $win->getobj('buttons');
 
             # Get the index of the pressed button.
-            my $button_id = $btn->get;
+            my $button_value = $btn->get;
 
-            # If the $button_id == 1, the Quit button was pressed.
-            last MAINLOOP if $button_id == 1;
+            # If the $button_value is 'quit', the Quit button 
+            # was pressed.
+            last MAINLOOP if $button_value eq 'quit';
         }
     }
 

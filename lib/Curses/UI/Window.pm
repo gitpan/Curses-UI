@@ -52,8 +52,10 @@ sub layout ()
 		my $avail_height = $ENV{LINES};
 
 		# Compute the coordinates for the widget.
-		my $x = int(($avail_width - $this->{-width}) / 2);
-		my $y = int(($avail_height - $this->{-height}) / 2);
+		my $w = $this->{-width} || 1;
+		my $h = $this->{-height} || 1;
+		my $x = int(($avail_width - $w) / 2);
+		my $y = int(($avail_height - $h) / 2);
 		$x = 0 if $x < 0;
 		$y = 0 if $y < 0;
 		$this->{-x} = $x; 

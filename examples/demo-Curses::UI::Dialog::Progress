@@ -1,24 +1,38 @@
 #!/usr/bin/perl -w
 use strict;
 
+open STDERR, ">/tmp/r";
+
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
 my $cui = new Curses::UI ( -clear_on_exit => 1 );
 
-my $msg = "Counting from 1 to 200";
+my $msg = "Counting from 1 to 80:\n";
 $cui->progress(
-        -max => 200,
+        -max => 80,
         -message => "$msg"
 );
 
-for my $count (0..200) {
-        $cui->setprogress($count, $msg . ": $count");
+for my $count (0..80) {
+        $cui->setprogress($count, $msg . "$count of 80");
 	$cui->draw;
 	select (undef, undef, undef, 0.02);
 }
 
-$cui->setprogress(200, "I'm done!");
+$cui->setprogress(80, "I'm done!");
+sleep 1;
+$cui->noprogress;
+
+$cui->progress(
+	-nomessage => 1,
+	-max => 100,
+	-title => 'no message',
+);
+for my $count (0..100) {
+        $cui->setprogress($count)->draw;
+	select (undef, undef, undef, 0.02);
+}
 sleep 1;
 $cui->noprogress;
 

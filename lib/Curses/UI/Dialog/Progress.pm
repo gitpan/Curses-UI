@@ -24,12 +24,17 @@ sub new ()
 {
 	my $class = shift;
 	my %args = ( 
-		-nomessage 	 => 0,
-		-message 	 => '',   # The message to show
-		-ipad            => 1,
-		-border 	 => 1,
-		-width           => 60,
-		-height          => undef,
+		-nomessage 	 => 0,     # Do we want a message or not?
+		-message 	 => '',    # The message to show
+		-min		 => undef, # Arguments for the progressbar
+		-max		 => undef, 
+		-pos		 => undef, 
+		-nocenterline	 => undef, 
+		-nopercentage	 => undef, 
+		-ipad            => 1,     # Default widget settings
+		-border 	 => 1,     
+		-width           => 60,    
+		-height          => undef, 
 		@_,
 		-centered        => 1,
 	);
@@ -55,8 +60,8 @@ sub new ()
 	}
 
 	$this->add(
-		'progress', 'ProgressBar',
-		-y => 2 - ($this->{-nomessage} ? 2 : 0),
+		'progressbar', 'ProgressBar',
+		-y => -1,
 		-width => -1,
 		%pb_args,
 	);
@@ -70,11 +75,28 @@ sub layout()
 {
 	my $this = shift;
 
-	# Compute the height the dialog needs.
-	my $need = ($this->{-nomessage} ? 0 : 2) + # label
-		   3;                              # progress bar
-	my $height = $this->height_by_windowscrheight($need, %$this);
-	$this->{-height} = $height;
+	if (not defined $this->{-height} 
+	    and defined $this->getobj('progressbar'))
+	{
+		# Space between progressbar and message.
+		my $need = ($this->{-nomessage} ? 0 : 1);
+			print STDERR "Start with $need\n";
+
+		# The height for the message.
+		if (defined $this->getobj('label')) {
+			$need += $this->getobj('label')->height;
+		}
+		
+		# The height for the progressbar.
+		if (defined $this->getobj('progressbar')) {
+			my $pbheight = $this->getobj('progressbar')->height;
+			$need += $pbheight;
+		}
+
+
+		my $height = $this->height_by_windowscrheight($need, %$this);
+		$this->{-height} = $height;
+	}
 
 	$this->SUPER::layout;
 
@@ -85,7 +107,7 @@ sub pos($;)
 {
 	my $this = shift;
 	my $pos = shift;
-	$this->getobj('progress')->pos($pos);
+	$this->getobj('progressbar')->pos($pos);
 	return $this;
 }
 
@@ -230,7 +252,7 @@ B<draw> method of the progress dialog.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Container|Curses::UI::Container>, 
-L<Curses::UI::ProgressBar|Curses::UI::ProgressBar>.
+L<Curses::UI::ProgressBar|Curses::UI::ProgressBar>
 
 
 

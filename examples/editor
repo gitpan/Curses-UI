@@ -193,9 +193,7 @@ sub exit_dialog()
 {
 	my $return = $cui->dialog(
 			-title     => "Are you sure???", 
-			-buttons   => ['< Yes >' , '< No >'],
-			-values    => [1         , 0       ],
-			-shortcuts => ['y'       , 'n'     ],
+			-buttons   => ['yes', 'no'],
 			-message => "Do you really want to quit?"
 	);
 

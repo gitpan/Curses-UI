@@ -14,10 +14,14 @@ TODO list for Curses::UI:
 - Work out the way the hiding of widgets works. Now there is some
   support, but it's not really finished yet.
 
-- Curses::UI::TextBlock widget, for simply displaying some text.
-  A bit like a multi-line Label.
-
 - Add more events to the widgets, so more callbacks can be made.
   
 - Replace the current -callback system with some kind of timer 
   system.
+
+- New Label facilities (multi lines) in CheckBox and dialogs.
+
+- finish calendar widget docs.
+  add basic_test for calendar widget.
+
+

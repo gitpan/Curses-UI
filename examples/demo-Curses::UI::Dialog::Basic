@@ -16,8 +16,10 @@ $cui->draw;
 
 my $pressed = $cui->dialog(
 	-message => "Some extra buttons",
-	-buttons => ['< Yeah, so? >', '< Why would I care? >'],
-	-values  => ['first', 'second'],
+	-buttons => [ 
+	    {-label => '< Yeah, so? >', -value => 'first'}, 
+            {-label => '< Why would I care? >', -value => 'second'},
+	],
 );
 
 $cui->draw;
@@ -25,7 +27,7 @@ $cui->draw;
 $cui->dialog(
 	-message => "I don't know but you pressed\n"
                   . "the $pressed button",
-	-buttons => ['< Allright, get me outta here! >']
+	-buttons => [ {-label => '< Allright, get me outta here! >'} ]
 );
 
 $cui->draw;

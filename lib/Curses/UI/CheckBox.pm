@@ -85,6 +85,15 @@ sub layout()
 {
 	my $this = shift;
 	return $this if $Curses::UI::screen_too_small;
+
+	my $label = $this->getobj('label');
+	if (defined $label)
+	{
+		my $lh = $label->{-height};
+		$lh = 1 if $lh <= 0;	
+		$this->{-height} = $lh;
+	}
+
 	$this->SUPER::layout;
 	return $this;
 }

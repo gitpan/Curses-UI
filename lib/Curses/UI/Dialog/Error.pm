@@ -13,7 +13,6 @@ package Curses::UI::Dialog::Error;
 
 use strict;
 use Curses;
-use Curses::UI::Buttons;
 use Curses::UI::Common;
 use Curses::UI::Dialog::Basic;
 

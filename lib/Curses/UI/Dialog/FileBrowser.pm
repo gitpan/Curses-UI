@@ -41,7 +41,7 @@ sub new ()
 	);
 
 	# Does -file contain a path? Then do some splitting.
-	if ($args{-file} =~ m|/|) 
+	if (defined $args{-file} and $args{-file} =~ m|/|) 
 	{
 		my $file = "";
 		my $path = "";
@@ -69,13 +69,12 @@ sub new ()
 	# if the -path is not defined.
 	$this->goto_homedirectory unless defined $this->{-path};
 
-	my $buttons = $this->add('buttons', 'Buttons',
+	my $buttons = $this->add('buttons', 'ButtonBox',
 		-y 		 => -1,
 		-x		 => 0,
 		-width 		 => undef, 
 		-buttonalignment => 'right',
-		-buttons 	 => ['< OK >', '< Cancel >'],
-		-values 	 => [1, 0],
+		-buttons 	 => [ 'ok', 'cancel' ],
 	);
 	$buttons->set_routine('return', \&return);
 
@@ -404,7 +403,11 @@ sub focus()
 	my $this = shift;
 	$this->show;
 	$this->SUPER::draw;
-	$this->focus_to_object($this->{-file} ne ''?'buttons':'dirbrowser');
+	$this->focus_to_object(
+		defined $this->{-file} and $this->{-file} ne ''
+		? 'buttons'
+		: 'dirbrowser'
+	);
 	my ($return, $key) = $this->SUPER::focus;
 	
 	# Escape pressed? Then select the cancel button.
@@ -584,7 +587,7 @@ will chdir to the homedirectory of the current user.
 
 L<Curses::UI|Curses::UI>, 
 L<Curses::UI::Container|Curses::UI::Container>, 
-L<Curses::UI::Buttons|Curses::UI::Buttons>
+L<Curses::UI::ButtonBox|Curses::UI::ButtonBox>
 
 
 

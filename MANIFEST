@@ -11,7 +11,8 @@ examples/widgets
 examples/basic_test
 examples/hello_world
 examples/demo-Curses::UI
-examples/demo-Curses::UI::Buttons
+examples/demo-Curses::UI::ButtonBox
+examples/demo-Curses::UI::Calendar
 examples/demo-Curses::UI::CheckBox
 examples/demo-Curses::UI::Dialog::Basic
 examples/demo-Curses::UI::Dialog::FileBrowser
@@ -24,7 +25,8 @@ examples/demo-Curses::UI::PopupBox
 examples/demo-Curses::UI::ProgressBar
 examples/demo-Curses::UI::TextEditor
 lib/Curses/UI.pm
-lib/Curses/UI/Buttons.pm
+lib/Curses/UI/ButtonBox.pm
+lib/Curses/UI/Calendar.pm
 lib/Curses/UI/CheckBox.pm
 lib/Curses/UI/Common.pm
 lib/Curses/UI/Container.pm
@@ -33,6 +35,7 @@ lib/Curses/UI/Label.pm
 lib/Curses/UI/ListBox.pm
 lib/Curses/UI/MenuBar.pm
 lib/Curses/UI/MenuListBox.pm
+lib/Curses/UI/PasswordEntry.pm
 lib/Curses/UI/PopupBox.pm
 lib/Curses/UI/ProgressBar.pm
 lib/Curses/UI/RadioButtonBox.pm

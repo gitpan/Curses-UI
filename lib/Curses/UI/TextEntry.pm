@@ -64,9 +64,8 @@ Curses::UI::TextEntry - Create and manipulate textentry widgets
     my $cui = new Curses::UI;
     my $win = $cui->add('window_id', 'Window');
 
-    my $textentry = $win->add( 
-        'mytextentry', 'TextEntry',
-        -password => '*',
+    my $textentry = $win->add(
+        'mytextentry', 'TextEntry'
     );
 
     $textentry->focus();
@@ -81,7 +80,7 @@ derived from Curses::UI::TextEditor. The
 only special thing about this class is that the 
 B<-singleline> option is forced to a true value. 
 So for the usage of Curses::UI::TextEntry see
-L<Curses::UI::TextEditor|Curses::UI::TextEditor>).
+L<Curses::UI::TextEditor|Curses::UI::TextEditor>.
 
 
 
