@@ -30,7 +30,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.80";
+$VERSION = "0.85";
 
 @EXPORT = qw(
     MainLoop
@@ -178,7 +178,7 @@ sub layout()
 	    if $Curses::UI::debug;
         # In case of gpm, mousemask fails. 
 	eval { mousemask( ALL_MOUSE_EVENTS(), $old ) };
-        print STDERR "mousemask() failed: $@\n" if $@;
+        print STDERR "mousemask() failed: $@\n" if $@ && $Curses::UI::debug ;
     }   
 
     # find the terminal size.
@@ -708,17 +708,8 @@ sub process_args()
 {
     my $this = shift;        
     my $ifone = shift;
-    my %new;
-
-    if (@_ == 1) { 
-	%new = ($ifone => $_[0]);
-    } else {
-	$new{$ifone} = shift @_;
-	    if ((@_ % 2) == 0) {
-		%new = (%new, @_);
-	    }
-    }
-    return %new;
+    if (@_ == 1) { @_ = ($ifone => $_[0]) }
+    return @_;
 }
 
 sub error()
@@ -755,6 +746,21 @@ sub filebrowser()
 
     # Select a file to load from.
     $this->tempdialog('Dialog::Filebrowser', %args);
+}
+
+sub dirbrowser()
+{
+    my $this = shift;
+    my %args = $this->process_args('-title', @_);
+
+    # Create title
+    unless (defined $args{-title}) {
+	my $l = $this->root->lang;
+	$args{-title} = $l->get('dir_title');
+    }
+
+    # Select a file to load from.
+    $this->tempdialog('Dialog::Dirbrowser', %args);
 }
 
 sub savefilebrowser()
@@ -1032,7 +1038,7 @@ If the B<-mouse_support> option is set to a false value
 mouse support will be disabled. This is used to override
 the auto determined value and to disable mouse support.
 
-=item * B<-userdata> < SCALAR >
+=item B<-userdata> < SCALAR >
 
 This option specifies a user data that can be retrieved with
 the B<userdata>() method.  It is usefull to store application's
@@ -1139,8 +1145,8 @@ L<Curses::UI::Dialog::Basic|Curses::UI::Dialog::Basic>.
 Example:
 
     my $yes = $cui->dialog(
-        -message => "Hello, world?");
-        -buttons => ['< Yes >','< No >']
+        -message => "Hello, world?",
+        -buttons => ['< Yes >','< No >'],
         -values  => [1,0],
         -title   => 'Question',
     );
@@ -1275,170 +1281,9 @@ can be used to fast change all colors in a Curses::UI application.
 L<Curses>
 L<Curses::UI::Container|Curse::UI::Container|Curses::UI::Color>,
 
-
-
-
 =head1 BASIC TUTORIAL
 
-=head1 First requirements
-
-Any perl program that uses Curses::UI needs to include
-"use Curses::UI". A program should also use "use strict"
-and the B<-w> switch to ensure the program is working
-without common errors (but of course Curses::UI will work
-without them). After that an instance of Curses::UI must
-be created. From now on, this instance will be called
-"the UI".
-
-    #!/usr/bin/perl -w
-
-    use strict;
-    use Curses::UI;
-    my $cui = new Curses::UI;
-
-=head1 Create windows
-
-After the initialization has been done, windows can be
-added to the UI. You will always have to do this. It is not
-possible to add widgets to the UI directly. Here is an
-example that creates a window with a title and a border,
-which has a padding of 2 (For the explanation of $cui->add, 
-see the Curses::UI::Container manual page).
-
-    my $win1 = $cui->add(
-        'win1', 'Window',
-        -border => 1,
-        -title => 'My first Curses::UI window!',
-        -pad => 2,
-    );
-
-Well... that's fun! Let's add another window! And let's
-give it more padding, so that the window is smaller than
-the previous one.
-    
-    my $win2 = $cui->add(
-        'win2', 'Window',
-        -border => 1,
-        -title => 'My second Curses::UI window!',
-        -pad => 6,
-    );
-
-=head1 Add some widgets
-
-Now that we have a couple of windows, we can add widgets
-to them. We'll add a popupmenu and some buttons to 
-the first window.
-
-    my $popup = $win1->add(
-        'popup', 'Popupmenu',
-        -x => 2,
-        -y => 2,
-        -sbborder => 1, 
-        -values => [ 1, 2, 3, 4, 5 ],
-        -labels => {
-            1 => 'One', 
-            2 => 'Two', 
-            3 => 'Three', 
-            4 => 'Four', 
-            5 => 'Five', 
-        },
-    );
-
-    my $but1 = $win1->add(
-        'buttons', 'Buttonbox',
-        -x => 2,
-        -y => 4,
-        -buttons => [
-            { -label => '< goto window 2 >', -value => 'goto2' },
-            { -label => '< Quit >', -value => 'quit' },
-        ],
-    ); 
-
-We'll add a texteditor and some buttons to the second window. Look how
-we can use padding to do some basic layouting. We do not specifiy the
-with and height of the TextEditor widget, so the widget will stretch
-out itself as far as possible. But because of the -padbottom option,
-it will leave some space to put the buttons. By specifying a negative
--y offset for the buttons, we have a scalable application. Resize the
-screen and the widgets will follow!
-    
-    my $editor = $win2->add(
-        'editor', 'TextEditor',
-        -border => 1,
-        -vscrollbar => 1,
-        -wrapping => 1,
-        -x => 2,
-        -y => 1,
-        -padright => 2,
-        -padbottom => 3,
-    );
-
-    my $but2 = $win2->add(
-        'buttons', 'Buttonbox',
-        -x => 2,
-        -y => -2,
-        -buttons => [
-            { -label => '< goto window 1 >', -value => 'goto1' },
-            { -label => '< Quit >', -value => 'quit' },
-        ],
-    );
-
-=head1 Specify when the windows will loose their focus
-
-We have a couple of buttons on each window. As soon as a 
-button is pressed, it will have the window loose its
-focus (buttons will have any kind of Container object
-loose its focus). You will only have to do something
-if this is not the desired behaviour. 
-
-If you want the buttons themselves to loose focus if 
-pressed, then change its routine for the "return" 
-binding from "LEAVE_CONTAINER" to "LOOSE_FOCUS". Example:
-
-    $but1->set_routine('loose-focus', 'LOOSE_FOCUS');
-
-To make things a bit more snappy, we want to add some
-shortcut keys to the appliction:
-
-    CTRL+Q : Quit the application
-    CTRL+N : Go to the next window
-
-This can be done by assigning "returnkeys" to a window.
-Each widget in the window will get extra keybindings to
-have the window loose its focus if one of the returnkeys
-is pressed. For our application we can set the desired
-shortcut keys like this:
-
-    $win1->returnkeys("\cN", "\cQ");
-    $win2->returnkeys("\cN", "\cQ");
-
-From now on both windows will loose focus if either CTRL+Q
-or CTRL+N is pressed. Important: make sure that returnkeys 
-are assigned to a window _after_ all windgets have been 
-added. 
-
-=head1 The main loop
-
-The main loop is called by
-
-    $cui->MainLoop;
-
-=head1 Add a good-bye dialog
-
-Curses::UI has a couple of methods that are easy for showing dialogs 
-(see the METHODS section below). We'll use a dialogbox to say goodbye
-to the user of our program. After the mainloop we add:
-
-    $cui->dialog("Bye bye!");
-
-=head1 You're done!
-
-We have built a genuine Curses::UI application! Not that it is a
-very useful one, but who cares? Now try out if it works like you 
-think it should. The complete source code of this application can 
-be found in the examples directory of the distribution 
-(examples/demo-Curses::UI).
-
+see 'perldoc Curses::UI::Tutorial'
 
 =head1 REFERENCES
 

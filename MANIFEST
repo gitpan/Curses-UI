@@ -9,7 +9,10 @@ examples/editor
 examples/hello_world
 examples/mouse_focustest
 examples/pop3_reader
+examples/tutorial
 INSTALL
+CREDITS
+lib/Curses/UI/Tutorial.pod
 lib/Curses/UI/Buttonbox.pm
 lib/Curses/UI/Calendar.pm
 lib/Curses/UI/Checkbox.pm
@@ -20,6 +23,7 @@ lib/Curses/UI/Dialog/Basic.pm
 lib/Curses/UI/Dialog/Calendar.pm
 lib/Curses/UI/Dialog/Error.pm
 lib/Curses/UI/Dialog/Filebrowser.pm
+lib/Curses/UI/Dialog/Dirbrowser.pm
 lib/Curses/UI/Dialog/Progress.pm
 lib/Curses/UI/Dialog/Status.pm
 lib/Curses/UI/Label.pm

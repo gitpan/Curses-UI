@@ -1506,7 +1506,7 @@ for an explanation of these.
 
 =item * B<text> ( [TEXT] )
 
-If SCALAR is defined, this will set the text of the widget to TEXT.
+If TEXT is defined, this will set the text of the widget to TEXT.
 To see the change, the widget needs to be redrawn by the B<draw> method.
 If TEXT is not defined, this method will return the current contents
 of the texteditor.

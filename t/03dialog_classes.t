@@ -1,7 +1,7 @@
 use strict;
 use Test;
 
-BEGIN { plan tests => 6 }
+BEGIN { plan tests => 7 }
 
 foreach my $class (qw(
     Curses::UI::Dialog::Basic
@@ -9,6 +9,7 @@ foreach my $class (qw(
     Curses::UI::Dialog::Error
     Curses::UI::Dialog::Status
     Curses::UI::Dialog::Calendar
+    Curses::UI::Dialog::Dirbrowser
     Curses::UI::Dialog::Progress )) {
 
     my $file = $class;

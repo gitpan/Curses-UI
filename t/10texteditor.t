@@ -1,8 +1,12 @@
+# -*- perl -*-
 use Test::More qw(no_plan);
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";
 use lib "$FindBin::RealBin/../lib";
 require ("$FindBin::RealBin/lorem.pl");
+
+$ENV{LINES} = 25;
+$ENV{COLUMNS} = 80;
 
 BEGIN { use_ok( "Curses::UI"); }
 

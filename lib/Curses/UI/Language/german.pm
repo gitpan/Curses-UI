@@ -50,6 +50,9 @@ August September Oktober November Dezember
 [file_savetitle] Dateiauswahl zum Speichern
 [file_loadtitle] Dateiauswahl zum Laden
 
+# The dirbrowser title
+[dir_title]     Verzeichnisauswahl
+
 # The labels for the dialog screen.
 [file_path]      Pfad  :
 [file_file]      Datei :

@@ -501,7 +501,6 @@ make '/' a forward search and '?' a backward search:
 =head1 SEE ALSO
 
 L<Curses::UI|Curses::UI>, 
-L<Curses::UI::SearchEntry|Curses::UI::SearchEntry>, 
 
 
 

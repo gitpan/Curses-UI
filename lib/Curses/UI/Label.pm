@@ -382,7 +382,7 @@ for an explanation of these.
 
 =item * B<reverse> ( BOOLEAN )
 
-=item * B<unlderline> ( BOOLEAN )
+=item * B<underline> ( BOOLEAN )
 
 =item * B<blink> ( BOOLEAN )
 

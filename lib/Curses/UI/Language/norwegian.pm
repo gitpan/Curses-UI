@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------------
-# Curses::UI::Language::english
-# Maintainer: marcus@thiesenweb.de
+# Curses::UI::Language::norwegian
+# Maintainer: Vlad Tepes (miceme@start.no)
 # ----------------------------------------------------------------------
 
-package Curses::UI::Language::english; 
+package Curses::UI::Language::norwegian; 
 1;
 __DATA__
 

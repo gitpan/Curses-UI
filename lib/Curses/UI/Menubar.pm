@@ -612,7 +612,6 @@ sub pulldown()
 	# $this = <object>.
         if ($return =~ /^COLLAPSE\:?(.*)$/)
         {
-	    print STDERR "COLLAPSE: $1 $this\n";
 	    if ($this ne $1) 
 	    {
                 $this->{-prevobject}->{-returnaction} = $return;

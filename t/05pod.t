@@ -1,10 +1,11 @@
+# -*- perl -*-
 # Testing Plain old Documentation for Curses::UI
 # 2003 (c) by Marcus Thiesen
 # marcus@cpan.org
 
 use strict;
 use FindBin;
-use Test::Pod (tests => 20);
+use Test::Pod (tests => 21);
 
 my $dir = "$FindBin::RealBin/../lib/Curses";
 
@@ -28,3 +29,4 @@ pod_file_ok( "$dir/UI/TextEntry.pm", "Curses::UI::TextEntry POD");
 pod_file_ok( "$dir/UI/TextViewer.pm", "Curses::UI::TextViewer POD");
 pod_file_ok( "$dir/UI/Widget.pm", "Curses::UI::Widget POD");
 pod_file_ok( "$dir/UI/Window.pm", "Curses::UI::Window POD");
+pod_file_ok( "$dir/UI/Tutorial.pod", "Curses::UI::Tutorial POD");

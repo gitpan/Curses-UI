@@ -1401,7 +1401,7 @@ Remark:
 
 Since the user of a Curses::UI program has no real control over
 the so called "scrollbars", they aren't really scrollbars. A 
-better name would be something like "document loction indicators".
+better name would be something like "document location indicators".
 But since they look so much like scrollbars I decided I could get
 away with this naming convention.
  
@@ -1519,7 +1519,8 @@ It returns the current widget.
 
 =item * B<modalfocus> ( )
 
-??? 
+Gives the widget a modal focus, i.e. no other widget can be active
+till this widget is removed. 
 
 =item * B<title> ( TEXT )
 

@@ -50,6 +50,9 @@ August September October November December
 [file_savetitle] Select a file to save to
 [file_loadtitle] Select a file to load from
 
+# The dirbrowser title
+[dir_title]     Select a directory
+
 # The labels for the dialog screen.
 [file_path]      Path :
 [file_file]      File :

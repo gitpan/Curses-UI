@@ -426,6 +426,7 @@ sub event_onblur()
 
     #get the id
     my $id = $this->{-draworder}->[-1];
+    return unless $id;
 
     #get the object
     my $obj = $this->{-id2object}->{$id};
@@ -645,7 +646,7 @@ explanation of this method.
 If the container contains no widgets, this routine will
 return immediately. Else the container will get focus.
 
-If the container gets focus, on of the contained widgets
+If the container gets focus, one of the contained widgets
 will get the focus. The returnvalue of this widget determines
 what has to be done next. Here are the possible cases:
 

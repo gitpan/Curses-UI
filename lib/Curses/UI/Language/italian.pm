@@ -21,7 +21,7 @@ Premi <CTRL+C> per uscire...
 # ----------------------------------------------------------------------
 
 [months]
-Gennaio Febbraio Marzo Aprile Maggio Giugno Liglio
+Gennaio Febbraio Marzo Aprile Maggio Giugno Luglio
 Agosto Settembre Ottobre Novembre Dicembre 
 
 [days_short] Do Lu Ma Me Gi Ve Sa
@@ -46,9 +46,12 @@ Agosto Settembre Ottobre Novembre Dicembre
 # ----------------------------------------------------------------------
 
 # The filebrowser title
-[file_title]     Selezione un file
-[file_savetitle] Selezione un file da salvare  #Select a file to save to
+[file_title]     Seleziona un file
+[file_savetitle] Seleziona un file da salvare  #Select a file to save to
 [file_loadtitle] Seleziona un file da aprire   #Select a file to load from
+
+# The dirbrowser title
+[dir_title]      Seleziona una directory
 
 # The labels for the dialog screen.
 [file_path]      Percorso :

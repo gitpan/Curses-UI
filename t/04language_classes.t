@@ -14,7 +14,7 @@ $filename =~ s/\.pm//gi;
 $filename = File::Spec->catfile($filename, "Language");
 
 opendir DIR, "$filename" or die "Couldn't open language dir $filename: $!\n";
-my @entries = grep /.pm/, readdir(DIR);
+my @entries = grep /.pm$/, readdir(DIR);
 
 foreach my $file (@entries) {
     require "Curses/UI/Language/$file";

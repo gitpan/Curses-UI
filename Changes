@@ -1,5 +1,15 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.85
+============
+		- new Widget: Dirbrowser
+
+		- new tutorial and some doc fixes
+		
+		- italian language updated
+
+		- a couple of bugfixes
+
 Version 0.80
 ============
 		- small fixes to avoid warnings
