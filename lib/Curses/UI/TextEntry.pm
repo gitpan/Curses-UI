@@ -41,6 +41,9 @@ sub new ()
         -undolevels      => 20, # number of undolevels. 0 = infinite
         -homeonblur      => 1,  # cursor to homepos on blur?
 
+	-bg              => -1,
+        -fg              => -1,
+
         %userargs,
 
         -singleline      => 1,  # single line mode or not?

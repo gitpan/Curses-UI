@@ -46,6 +46,8 @@ sub new ()
         -nocenterline => 0,    # show the center line or not?
         -showvalue    => 0,    # show value instead of percentage
         -border       => 1,
+	-fg           => -1,
+        -bg           => -1,
 
         %userargs,    
     
@@ -95,6 +97,16 @@ sub draw(;$)
     $this->{-pos} = $this->{-max} if $this->{-pos} > $this->{-max};
     $this->{-pos} = $this->{-min} if $this->{-pos} < $this->{-min};
 
+    if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-fg},
+			     $this->{-bg});
+
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+
+    }
+
     # Compute percentage
     my $perc = ($this->{-pos}-$this->{-min})
                 /($this->{-max}-$this->{-min})*100;
@@ -107,7 +119,7 @@ sub draw(;$)
 	$this->{-pos} != $this->{-min}) { $blocks++ }
     if ($blocks == $this->canvaswidth and 
 	$this->{-pos} != $this->{-max}) { $blocks-- }
-    
+
     # Draw center line
     $this->{-canvasscr}->addstr(0, 0, "-"x$this->canvaswidth)
         unless $this->{-nocenterline};

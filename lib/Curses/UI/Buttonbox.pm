@@ -98,6 +98,8 @@ sub new ()
         -width           => undef,        # the width of the buttons widget
         -x               => 0,            # the horizontal pos rel. to parent
         -y               => 0,            # the vertical pos rel. to parent
+	-bg              => -1,
+        -fg              => -1,
 
         %userargs,
 
@@ -309,6 +311,17 @@ sub draw(;$)
     my $cursor_x = 0;
     foreach my $button (@{$this->{-buttons}})
     {
+	    # Let there be color
+	if ($Curses::UI::color_support) {
+	    my $co = $Curses::UI::color_object;
+	    my $pair = $co->get_color_pair(
+					   $this->{-fg},
+					   $this->{-bg});
+
+	    $this->{-canvasscr}->attron(COLOR_PAIR($pair));
+
+	}
+
         # Make the focused button reverse.
         if ($this->{-focus} and defined $this->{-selected} 
              and $id == $this->{-selected}) {
@@ -474,8 +487,6 @@ Curses::UI::Buttonbox - Create and manipulate button widgets
 Curses::UI::Buttonbox is a widget that can be used to create an
 array of buttons (or, of course, only one button). 
 
-See exampes/demo-Curses::UI::Buttonbox in the distribution
-for a short demo.
 
 
 

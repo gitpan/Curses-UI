@@ -102,6 +102,9 @@ sub new ()
         -wraparound => 0,     # wraparound on first/last item
         -onchange   => undef, # onChange event handler
 	-onselchange=> undef, # onSelectionChange event handler
+
+	-bg         => -1,
+        -fg         => -1,
         
         %userargs,
 
@@ -258,6 +261,17 @@ sub draw(;$)
     $this->SUPER::draw(1) or return $this;
 
     $this->layout_content;
+
+     # Let there be color
+    if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-fg},
+			     $this->{-bg});
+
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+
+    }
 
     # No values? 
     if (not @{$this->{-values}})
@@ -584,6 +598,19 @@ sub get_selectedlabel()
     my $label = $this->{-labels}->{$value};
     return (defined $label ? $label : $value); 
 }
+
+sub set_color_fg {
+    my $this = shift;
+    $this->{-fg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_bg {
+    my $this = shift;
+    $this->{-bg} = shift;
+    $this->intellidraw;
+}
+
 
 # ----------------------------------------------------------------------
 # Routines for search support

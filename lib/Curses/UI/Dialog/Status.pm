@@ -42,6 +42,8 @@ sub new ()
         -border      => 1,
         -width       => undef,
         -height      => undef,
+        -fg          => -1,
+        -bg          => -1,
 
         %userargs,
 
@@ -54,6 +56,8 @@ sub new ()
     my $l = $this->add(
         'label', 'Label',
         -text  => $this->{-message},
+        -fg    => $this->{-fg},
+        -bg    => $this->{-bg},
     );
 
     $this->layout();

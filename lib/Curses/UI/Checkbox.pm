@@ -66,6 +66,10 @@ sub new ()
         -label          => '',       # the label text
         -onchange       => undef,    # event handler
 
+	-bg             => -1,
+	-fg             => -1,
+
+
         %userargs,
     
         -bindings       => {%bindings},
@@ -92,6 +96,8 @@ sub new ()
         -x              => 4,
         -y              => 0,
         -intellidraw    => 0,
+        -bg             => $this->{-bg},
+        -fg             => $this->{-fg},
     );
 
     $this->layout;
@@ -130,6 +136,16 @@ sub draw(;$)
     $this->SUPER::draw(1) or return $this;
 
     # Draw the checkbox.
+     if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-fg},
+			     $this->{-bg});
+
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+
+    }
+
     $this->{-canvasscr}->attron(A_BOLD) if $this->{-focus};    
     $this->{-canvasscr}->addstr(0, 0, '[ ]');
     $this->{-canvasscr}->addstr(0, 1, 'X') if $this->{-checked};

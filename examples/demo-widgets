@@ -1,13 +1,16 @@
 #!/usr/bin/perl -w
 use strict;
+use File::Temp qw( :POSIX );
 
 my $debug = 0;
 if (@ARGV and $ARGV[0] eq '-d') {
-    open STDERR, ">>/tmp/Curses::UI_debug";
+    my $fh = tmpfile();
+    open STDERR, ">&fh";
     $debug = 1;
 } else {
     # We do not want STDERR to clutter our screen.
-    open STDERR, ">/dev/null";
+    my $fh = tmpfile();
+    open STDERR, ">&fh";
 }
 
 use FindBin;

@@ -1,18 +1,23 @@
-BUGS:
+Bugs:
 =====
  
-- Curses on solaris will have output frozen if keypresses
-  arive during updating or drawing or so. It's best seen in the
-  progressbar dialog demo. If you press a key halfway, the
-  screen will freeze. The application hower, will continue
+- Curses on Solaris will have output frozen if key-presses
+  arrive during updating or drawing or so. It's best seen in the
+  progress-bar dialog demo. If you press a key halfway, the
+  screen will freeze. The application however, will continue
   running! ---> bug in curses that was shipped with the
-  system. Using ncurses -> OK! I do not know if there is
+  system. Using NCurses -> OK! I do not know if there is
   a workaround for this.
+
+- Curses::UI has a strange behavior when recursively creating
+  widgets. If you e.g. create a Listbox out of a Listbox and
+  delete the originating Listbox the visible focus gets lost
+  though it reacts on keystrokes. Seems to be a problem with
+  closures and such stuff, but I haven't figured it out yet.
 
 TODO list for Curses::UI:
 =========================
 
 The documentation is still very outdated, patches welcome !
 
-As this module is not developed any further, look at the new Curses::UI
-2.0 interface.
+The TODO List for the color support is in COLOR_TODO

@@ -49,6 +49,9 @@ sub new ()
         -width           => 60,    
         -height          => undef, 
 
+        -fg              => -1,
+        -bg              => -1,
+
         %userargs,
 
         -centered        => 1,
@@ -63,6 +66,7 @@ sub new ()
             -width       => -1,
             -text        => $this->{-message},
             -intellidraw => 0,
+	      
         );
     }
 
@@ -79,6 +83,9 @@ sub new ()
         'progressbar', 'Progressbar',
         -y           => -1,
         -width       => -1,
+ 	-fg          => $this->{-fg},
+  	-bg          => $this->{-bg},
+
         %pb_args,
         -intellidraw => 0,
     );

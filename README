@@ -19,16 +19,8 @@
 
 ==============================================================================
 
-WARNING: As soon as Curses::UI 2.0 is released this module will be
-	considered as deprecated. Only bugfix changes will be done.
-	Any new work should be based on Curses::UI 2.0 but feel free
-	to send patches that don't break backward compatibility.
-
-	The documentation is still very outdated. I only made changes
-	to the main Pod (Curses::UI) and the Listbox widget.
-
 Please do let me know if you find these modules useful and let me
-know if any appliction is built using them. If you have a nice
+know if any application is built using them. If you have a nice
 example application, I would be most willing to add it to the 
 distribution.
 
@@ -116,7 +108,7 @@ Some random features:
   system. So if a listbox widget has focus, pressing "/" or "?"
   will invoke a search on the contents of the listbox. Since the
   listbox is also used for radiobuttons, popupboxes and menulistboxes,
-  all these are automatically searschable as well;
+  all these are automatically searchable as well;
 
 - The base element of most widgets (Curses::UI::Widget) has the 
   ability of showing "scrollbars" for both the x- and y-direction. 
@@ -138,8 +130,8 @@ Esther Bronk   : (my girl) For being so patient while I was harassing
 	         and for providing me the initial idea for Curses::UI 
 	         (so basically it was her own fault :-).
 
-InterNLnet     : (my employer) For the enthousiasm and support that I got
-                 from my collegues and for sponsoring this project
+InterNLnet     : (my employer) For the enthusiasm and support that I got
+                 from my colleagues and for sponsoring this project
 	         (I got to play hooky :-) See: http://www.internl.net/
 
 William Setzer : Author of the Perl5 Curses extension, the module on 
@@ -150,6 +142,9 @@ Nick Slussar   : For criticizing my software and for bringing
 
 Marcus Thiesen : For taking over the development of Curses::UI, so I 
 		 can completely focus on finishing Curses::UI 2.0.
+
+Raul Dias      : For putting effort into Curses::UI and submitting
+		 multiple patches.
 
 Language Credits:
 ===============
@@ -162,6 +157,6 @@ Andrzej Kukula		: Polish translation
 
 Albrecht Kleine		: German translation
 
+Sebastian Desreux	: French translation
 
-
-
+Raul Dias		: Portuguese translation

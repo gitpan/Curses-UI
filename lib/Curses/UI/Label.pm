@@ -24,7 +24,7 @@ use vars qw(
     @ISA
 );
 
-$VERSION = '1.10';
+$VERSION = '1.11';
 
 @ISA = qw(
     Curses::UI::Widget
@@ -51,6 +51,8 @@ sub new ()
         -dim             => 0,
         -blink           => 0,
         -paddingspaces   => 0,        # Pad text with spaces?
+	-bg              => -1,
+	-fg              => -1,
         
         %userargs,
         
@@ -116,6 +118,8 @@ sub set_attribute($$;)
 
     return $this;
 }
+
+
 
 sub text($;$)
 {
@@ -184,6 +188,17 @@ sub draw(;$)
     $this->{-canvasscr}->attron(A_BLINK)     if $this->{-blink};
     $this->{-canvasscr}->attron(A_DIM)       if $this->{-dim};
 
+    # Let there be color
+    if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-fg},
+			     $this->{-bg});
+
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+
+    }
+
     # Draw the text. Clip it if it is too long.
     my $ypos = 0;
     my $split = split_to_lines($this->{-text});
@@ -195,7 +210,7 @@ sub draw(;$)
             $line =~ s/.$/\$/;
         } elsif ($this->{-paddingspaces}) {
             $this->{-canvasscr}->addstr($ypos, 0, " "x$this->canvaswidth);    
-        }
+        } 
 
         my $xpos = $this->compute_xpos($line);
         $this->{-canvasscr}->addstr($ypos, $xpos, $line);
@@ -208,6 +223,9 @@ sub draw(;$)
 
     return $this;
 }
+
+
+
 
 1;
 
@@ -235,7 +253,7 @@ Curses::UI::Label - Create and manipulate label widgets
 
     my $label = $win->add(
         'mylabel', 'Label',
-        -label     => 'Hello, world!',
+        -text      => 'Hello, world!',
         -bold      => 1,
     );
 

@@ -38,6 +38,8 @@ sub new ()
 
     my %args = ( 
 	-message      => '',        # The message to show
+	-fg           => -1,
+        -bg           => -1,
 
 	%userargs,
 

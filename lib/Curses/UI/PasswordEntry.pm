@@ -37,6 +37,8 @@ sub new ()
 	my %args = ( 
 		-undolevels	 => 20,	# number of undolevels. 0 = infinite
 		-homeonblur      => 1,	# cursor to homepos on blur?
+		-fg              => -1,
+		-bg              => -1,
 	
 		%userargs,
 

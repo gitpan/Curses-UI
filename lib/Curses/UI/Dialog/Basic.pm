@@ -40,6 +40,8 @@ sub new ()
         -border       => 1,
         -message      => '',        # The message to show
         -ipad         => 1, 
+	-fg           => -1,
+        -bg           => -1,
 
         %userargs,
 
@@ -63,6 +65,10 @@ sub new ()
         -wrapping    => 1,
         -padbottom   => 2,
         -text        => $this->{-message},
+        -bg          => $this->{-bg},
+        -fg          => $this->{-fg},
+        -bbg         => $this->{-bg},
+        -bfg         => $this->{-fg},
     );    
 
     # Create a hash with arguments that may be passed to     
@@ -77,6 +83,9 @@ sub new ()
     my $b = $this->add(
        'buttons', 'Buttonbox',
        -y => -1,
+       -bg          => $this->{-bg},
+       -fg          => $this->{-fg},
+
        %buttonargs
     );
 

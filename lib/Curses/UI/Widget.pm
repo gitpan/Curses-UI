@@ -89,6 +89,16 @@ sub new ()
 	#user data
 	-userdata	=> undef,    #user internal data
 
+	#color
+		 # Border
+        -bfg             => -1,
+        -bbg             => -1,
+		 # Scrollbar
+	-sfg             => -1,
+        -sbg             => -1,
+		 # Titlebar
+	-tfg             => -1,
+        -tbg             => -1,
 
         %userargs,
     
@@ -519,6 +529,16 @@ sub draw(;$)
     # Do borderstuff?
     if (defined $this->{-borderscr})
     {
+
+	if ($Curses::UI::color_support) {
+	    my $co = $Curses::UI::color_object;
+	    my $pair = $co->get_color_pair(
+					   $this->{-bfg},
+					   $this->{-bbg} );
+
+	    $this->{-borderscr}->attron(COLOR_PAIR($pair));
+        }
+
         # Draw a border if needed.
         if ($this->{-sbborder})  # Square bracket ([,]) border
         {
@@ -549,6 +569,15 @@ sub draw(;$)
         # Draw a title if needed.
         if (defined $this->{-title})
         {
+	    if ($Curses::UI::color_support) {
+		my $co = $Curses::UI::color_object;
+		my $pair = $co->get_color_pair(
+					       $this->{-tfg},
+					       $this->{-tbg} );
+
+		$this->{-borderscr}->attron(COLOR_PAIR($pair));
+	    }
+
             $this->{-borderscr}->attron(A_REVERSE) 
                 if $this->{-titlereverse};
             if ($this->{-titlefullwidth} 
@@ -637,6 +666,15 @@ sub draw_scrollbars()
         }
         $this->{-borderscr}->attroff(A_BOLD) if $this->{-focus};
 
+	if ($Curses::UI::color_support) {
+	    my $co = $Curses::UI::color_object;
+	    my $pair = $co->get_color_pair(
+					   $this->{-sfg},
+					   $this->{-sbg} );
+
+	    $this->{-borderscr}->attron(COLOR_PAIR($pair));
+        }
+
         # Should an active region be drawn?
         my $scroll_active = ($this->{-vscrolllen} > $scrlen);
         # Draw scrollbar base, in case there is
@@ -649,6 +687,16 @@ sub draw_scrollbars()
             }
             $this->{-borderscr}->attroff(A_REVERSE);
         }
+
+	if ($Curses::UI::color_support) {
+	    my $co = $Curses::UI::color_object;
+	    my $pair = $co->get_color_pair(
+					   $this->{-bfg},
+					   $this->{-bbg} );
+
+	    $this->{-borderscr}->attron(COLOR_PAIR($pair));
+        }
+
     }
     
     if ($this->{-hscrollbar} and defined $this->{-hscrolllen})
@@ -702,6 +750,16 @@ sub draw_scrollbars()
         $this->{-borderscr}->attroff(A_BOLD) if $this->{-focus};
 
         # Should an active region be drawn?
+
+	if ($Curses::UI::color_support) {
+	    my $co = $Curses::UI::color_object;
+	    my $pair = $co->get_color_pair(
+					   $this->{-sfg},
+					   $this->{-sbg} );
+
+	    $this->{-borderscr}->attron(COLOR_PAIR($pair));
+        }
+
         my $scroll_active = ($this->{-hscrolllen} > $scrlen);
         # Draw active region.
         if ($scroll_active) 
@@ -1051,6 +1109,58 @@ sub run_event($;)
     }
     return;
 } 
+
+###
+### Color attribute functions
+###
+
+sub set_color_fg{ 
+    my $this = shift;
+    $this->{-fg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_bg{ 
+    my $this = shift;
+    $this->{-bg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_tfg{ 
+    my $this = shift;
+    $this->{-tfg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_tbg{ 
+    my $this = shift;
+    $this->{-tbg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_bfg{ 
+    my $this = shift;
+    $this->{-bfg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_bbg{ 
+    my $this = shift;
+    $this->{-bbg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_sfg{ 
+    my $this = shift;
+    $this->{-sfg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_sbg{ 
+    my $this = shift;
+    $this->{-sbg} = shift;
+    $this->intellidraw;
+}
 
 package Curses::UI::ContainerWidget;
 

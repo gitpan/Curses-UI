@@ -1,0 +1,31 @@
+What works:
+	- Label
+	- TextViewer (Only filled lines)
+	- TextEditor 
+        - TextEntry
+        - Dialog Widgets (only the text)
+	- Listbox (with a small hole between selection and text)
+	- Window Borders
+	- Scrollbars
+	- Title Bar colors
+	- Progress bar widget
+	- Dialogs
+		+ Error
+		+ Status
+		+ Progress	
+		+ Filebrowser
+		+ Calendar
+	- Menubars and Menuentries
+	- Button colors
+
+
+TODO:
+	- More documentation
+	- the set functions for all options don't exist yet.
+
+General considerations:
+	- Default color for Widgets if color support is turned on,
+	  e.g. Red error widgets...
+
+	- The colors are not really what they seem to be, e.g. yellow
+	  is more brown. Maybe I'll redefine some colors in the future

@@ -1,5 +1,16 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.75     
+============
+2003-07-28	- WE GOT COLOR!!! see Curses::UI::Color for details and
+		  the new color_editor demo 
+
+		- added french and portuguese translation
+
+		- various small changes and fixes
+		
+		- Some work by Raul Dias to fix some focus bugs
+
 Version 0.74
 ============
 

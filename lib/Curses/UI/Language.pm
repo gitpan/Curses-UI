@@ -20,7 +20,9 @@ my %lang_alias = (
     'us'        => 'english',
 
     'it'        => 'italian',
+
     'pl'        => 'polish',
+
     'ru'        => 'russian',
 
     'de'        => 'german',
@@ -28,7 +30,14 @@ my %lang_alias = (
     'ch'        => 'german',
 
     'du'        => 'dutch',
-    'nl'        => 'dutch'
+    'nl'        => 'dutch',
+
+    'fr'        => 'french',
+
+    'pt'        => 'portuguese',
+    'pt_BR'     => 'portuguese',
+    'br'        => 'portuguese',
+
 );
 
 sub new()

@@ -45,6 +45,8 @@ sub new ()
         -mask           => undef,
         -mask_selected  => 0,
         -editfilename   => 0,
+	-bg             => -1,
+        -fg             => -1,
 
         %userargs,
 
@@ -92,6 +94,8 @@ sub new ()
         -width           => undef, 
         -buttonalignment => 'right',
         -buttons         => [ 'ok', 'cancel' ],
+        -bg              => $this->{-bg},
+        -fg              => $this->{-fg},
     );
 
     # Let the window in which the buttons are loose focus
@@ -107,7 +111,12 @@ sub new ()
         -padbottom       => 6,
         -values          => [],
         -vscrollbar      => 1,
-        -labels          => { '..' => ".. ($one_up)" } 
+        -labels          => { '..' => ".. ($one_up)" },
+        -bg              => $this->{-bg},
+        -fg              => $this->{-fg},
+        -bbg              => $this->{-bg},
+        -bfg              => $this->{-fg},
+
     );    
 
     $dirbrowser->set_routine('option-select',\&dirselect);
@@ -122,6 +131,10 @@ sub new ()
         -padbottom       => 6,
         -vscrollbar      => 1,
         -values          => ["info.txt","passwd"],
+        -bg              => $this->{-bg},
+        -fg              => $this->{-fg},
+        -bbg              => $this->{-bg},
+        -bfg              => $this->{-fg},
     );    
 
     $filebrowser->set_routine('option-select', \&fileselect);
@@ -142,6 +155,8 @@ sub new ()
         -x              => $labeloffset, 
         -y              => $this->canvasheight - 5, 
         -text           => $l_path,
+        -bg              => $this->{-bg},
+        -fg              => $this->{-fg},
     );
     $this->add(
         'pathvalue', 'Label',
@@ -149,6 +164,8 @@ sub new ()
         -y              => $this->canvasheight - 5, 
         -width          => $this->canvaswidth - 6,
         -text           => $this->{-path},
+        -bg              => $this->{-bg},
+        -fg              => $this->{-fg},
     );
 
     $this->add(
@@ -156,6 +173,8 @@ sub new ()
         -x              => $labeloffset, 
         -y              => $this->canvasheight - 4, 
         -text           => $l_file,
+        -bg              => $this->{-bg},
+        -fg              => $this->{-fg},
     );
     
     if ($this->{-editfilename})
@@ -170,25 +189,33 @@ sub new ()
             -border     => 0,
             -sbborder   => 0,
             -regexp     => '/^[^\/]*$/',
+	    -bg          => $this->{-bg},
+            -fg          => $this->{-fg},
+
         );
     } else {
         $this->add(
-            'filevalue', 'Label',
-            -x          => $textoffset, 
-            -y          => $this->canvasheight - 4, 
-            -text       => $this->{-file},
-            -width      => $this->canvaswidth - 6,
-        );
+		   'filevalue', 'Label',
+		   -x          => $textoffset, 
+		   -y          => $this->canvasheight - 4, 
+		   -text       => $this->{-file},
+		   -width      => $this->canvaswidth - 6,
+		   -bg              => $this->{-bg},
+		   -fg              => $this->{-fg},
+		   );
     }
 
     if (defined $this->{-mask} and ref $this->{-mask} eq 'ARRAY') 
     {
         $this->add(
-            'masklabel', 'Label',
-            -x          => $labeloffset,
-            -y          => $this->canvasheight - 2,
-            -text       => $l_mask,
-        );
+		   'masklabel', 'Label',
+		   -x          => $labeloffset,
+		   -y          => $this->canvasheight - 2,
+		   -text       => $l_mask,
+		   -bg              => $this->{-bg},
+		   -fg              => $this->{-fg},
+
+		   );
 
         my @values = ();
         my %labels = ();
@@ -207,6 +234,9 @@ sub new ()
             -labels     => \%labels,
             -selected   => $this->{-mask_selected},
             -onchange   => \&maskbox_onchange,
+            -bg         => $this->{-bg},
+	    -fg         => $this->{-fg},
+
         );
         $this->{-activemask} = $maskbox->get;
     }

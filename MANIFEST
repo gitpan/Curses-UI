@@ -1,9 +1,12 @@
+COLOR_TODO
 Changes
 INSTALL
 MANIFEST
 Makefile.PL
 README
 TODO
+examples/color_editor
+examples/demo-color
 examples/demo-language
 examples/demo-widgets
 examples/editor
@@ -14,6 +17,7 @@ lib/Curses/UI.pm
 lib/Curses/UI/Buttonbox.pm
 lib/Curses/UI/Calendar.pm
 lib/Curses/UI/Checkbox.pm
+lib/Curses/UI/Color.pm
 lib/Curses/UI/Common.pm
 lib/Curses/UI/Container.pm
 lib/Curses/UI/Dialog/Basic.pm
@@ -26,9 +30,11 @@ lib/Curses/UI/Label.pm
 lib/Curses/UI/Language.pm
 lib/Curses/UI/Language/dutch.pm
 lib/Curses/UI/Language/english.pm
+lib/Curses/UI/Language/french.pm
 lib/Curses/UI/Language/german.pm
 lib/Curses/UI/Language/italian.pm
 lib/Curses/UI/Language/polish.pm
+lib/Curses/UI/Language/portuguese.pm
 lib/Curses/UI/Language/russian.pm
 lib/Curses/UI/Listbox.pm
 lib/Curses/UI/Menubar.pm

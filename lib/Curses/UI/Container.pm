@@ -43,6 +43,8 @@ sub new()
     keys_to_lowercase(\%userargs);
 
     my %args = (
+        -releasefocus => 0,     # Allows the focus to be released to parent on end
+
         %userargs,
 
         -id2object    => undef, # Id to object mapping
@@ -270,13 +272,20 @@ sub focus_prev()
     # Find the current focusorder index.
     my $idx = $this->focusorder_id2idx($id);
 
+    my $circle_flag = 0;
+
     # Go to the previous object or wraparound.
     if ( --$idx < 0) {
         $idx = @{$this->{-focusorder}} - 1;
+        $circle_flag = 1;
     }
 
     # Focus the previous object.    
     $this->focus($this->{-focusorder}->[$idx], undef, -1);
+
+    if ( $circle_flag && $this->{-releasefocus} ) {
+        $this->{-parent}->focus_prev;
+    }
 }
 
 sub focus_next()
@@ -300,6 +309,11 @@ sub focus_next()
 
     # Focus the next object.    
     $this->focus($this->{-focusorder}->[$idx], undef, +1);
+
+    #check if we have to release the focus
+    if ( $idx == 0 && $this->{-releasefocus} ) {
+        $this->{-parent}->focus_next;
+    }
 }
 
 sub focus(;$$$)
@@ -402,6 +416,30 @@ sub event_onfocus()
 
     return $this;
 }
+
+sub event_onblur()
+{
+    my $this = shift;
+
+    #If the Container loose it focus
+    #the current focused child must be unfocused
+
+    #get the id
+    my $id = $this->{-draworder}->[-1];
+
+    #get the object
+    my $obj = $this->{-id2object}->{$id};
+    return unless $obj;
+
+    #draw the widget without the focus
+    $obj->{-focus} = 0;
+    $obj->draw;
+
+    $this->SUPER::event_onblur();
+
+    return $this;
+}
+
 
 sub set_focusorder(@;)
 {
@@ -518,9 +556,20 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 
 =head1 WIDGET-SPECIFIC OPTIONS
 
-Currently this class does not have any specific options.
+=over 4
 
+=item * B<-releasefocus>
 
+If this option is set, the widgets inside this Container will be
+part of the focus ordering of the parent widget.
+This means that when this Container gets the focus, its first widget
+will be focused.  When the focus leaves the last widget inside the 
+Container it will give the focus back to the parent instead
+of cycling back to the first widget in this Container.
+This option is useful to create a sub-class packed with common used 
+widgets, making the reuse easier.
+
+=back
 
 
 

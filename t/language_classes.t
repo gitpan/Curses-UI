@@ -1,18 +1,24 @@
 use strict;
-use Test;
+use Test::Simple tests => 8;
+use File::Spec;
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
 
-BEGIN { plan tests => 3 }
+my $filename;
+foreach my $mod (keys %INC) {
+	$filename  = $INC{$mod} if ($mod =~ /UI\.pm/);
+}
 
-foreach my $class (qw(
-    Curses::UI::Language
-    Curses::UI::Language::english
-    Curses::UI::Language::dutch)) {
+$filename =~ s/\.pm//gi;
+$filename = File::Spec->catfile($filename, "Language");
 
-    my $file = $class;
-    $file =~ s|::|/|g;
-    $file .= '.pm';
+opendir DIR, "$filename" or die "Couldn't open language dir $filename: $!\n";
+my @entries = grep /.pm/, readdir(DIR);
 
-    require $file;
-    ok(1);
+foreach my $file (@entries) {
+    require "Curses/UI/Language/$file";
+	$file =~ s/\.pm//gi;
+    ok(1,$file);
 }
 

@@ -124,6 +124,8 @@ sub new ()
         -wraparound   => undef,    # wraparound? 
         -sbborder     => 1,        # square bracket border
         -onchange     => undef,    # event handler
+	-fg           => -1,
+	-bg           => -1,
 
         %userargs,
 
@@ -215,6 +217,17 @@ sub draw(;$)
 	$sellabel = $this->{-values}->[$this->{-selected}];
 	$sellabel = $this->{-labels}->{$sellabel} 
 	    if defined $this->{-labels}->{$sellabel};
+    }
+
+    # Let there be color
+    if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-fg},
+			     $this->{-bg});
+
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+
     }
 
     $this->{-canvasscr}->attron(A_REVERSE) if $this->{-focus};

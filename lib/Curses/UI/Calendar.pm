@@ -93,6 +93,8 @@ sub new ()
         -width      => 0,       # Widget will fix width itself
         -height     => 0,       # Widget will fix height itself
         -onchange   => undef,   # Event handler    
+	-fg         => -1,
+        -bg         => -1,
 
         %userargs,
 
@@ -240,6 +242,17 @@ sub draw(;$)
     
     $this->make_sane_date;
     $this->make_sane_date(1);
+ 
+    # Let there be color
+    if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-fg},
+			     $this->{-bg});
+
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+
+    }
 
     # Bold font on if the widget has focus and the selected
     # date is the active date.

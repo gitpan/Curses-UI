@@ -19,6 +19,7 @@ use Curses;
 use Curses::UI::Container;
 use Curses::UI::Common;
 use Curses::UI::Language;
+use Curses::UI::Color;
 use FileHandle;
 use Term::ReadKey;
 require Exporter;
@@ -29,7 +30,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.74";
+$VERSION = "0.75";
 
 @EXPORT = qw(
     MainLoop
@@ -44,6 +45,8 @@ $Curses::UI::rootobject       = undef;
 $Curses::UI::debug            = 0; 
 $Curses::UI::screen_too_small = 0; 
 $Curses::UI::initialized      = 0;
+$Curses::UI::color_support    = 0;
+$Curses::UI::color_object     = 0;
 
 # Detect ncurses functionality. Magic for Solaris 8
 eval { $Curses::UI::ncurses_mouse    = (Curses->can('NCURSES_MOUSE_VERSION') and
@@ -67,7 +70,8 @@ sub new()
 	-debug         => undef, # Turn on debugging mode?
 	-language      => undef, # Which language to use?
 	-mouse_support => 1,     # Do we want mouse support
-
+	-color_support => 0,
+	-default_colors=> 1, 
         #user data
         -userdata       => undef,    #user internal data
  
@@ -94,6 +98,10 @@ sub new()
     print STDERR "DEBUG: Loaded language: $lang->{-lang}\n"
 	if $Curses::UI::debug;
 
+    # Color support
+    $Curses::UI::color_support = $args{-color_support} if
+	defined $args{-color_support};
+
     $this->layout();    
 
     return $this;
@@ -111,6 +119,7 @@ DESTROY
 
     if ($this->{-clear_on_exit})
     {
+	## Todo: Win32
         my $save_path = $ENV{PATH};
         $ENV{PATH} = "/bin:/usr/bin";
         system "clear";
@@ -152,6 +161,15 @@ sub layout()
     noecho();
     raw();
 
+    # Colors
+    if ($Curses::UI::color_support) {
+	if ( has_colors() && can_change_colors ) {
+	    $Curses::UI::color_object = new Curses::UI::Color(-default_colors => $this->{-default_colors});
+	} else {
+	    $Curses::UI::color_support = 0;
+	}
+    }
+
     # Mouse events if possible
     my $old = 0;
     if ( $Curses::UI::ncurses_mouse ) 
@@ -162,7 +180,7 @@ sub layout()
 	eval { mousemask( ALL_MOUSE_EVENTS(), $old ) };
         print STDERR "mousemask() failed: $@\n" if $@;
     }   
-	
+
     # find the terminal size.
     my ($cols,$lines) = GetTerminalSize;
     $ENV{COLS}  = $cols;
@@ -188,7 +206,6 @@ sub layout()
     $this->layout_contained_objects;
     
     $Curses::UI::initialized = 1;
-    
     return $this;    
 }
 
@@ -864,6 +881,20 @@ sub reset_curses()
     reset_prog_mode();
 }
 
+### Color support
+
+sub color() {
+    my $this = shift;
+    return $Curses::UI::color_object;
+}
+
+sub color_set {
+    my $this = shift;
+    my $co   = shift;
+    
+    $Curses::UI::color_object = $co;
+}
+
 1;
 
 
@@ -871,7 +902,7 @@ sub reset_curses()
 
 =head1 NAME
 
-Curses::UI - A curses based user user interface framework
+Curses::UI - A curses based OO user interface framework
 
 
 
@@ -900,6 +931,8 @@ B<Base elements>
 =item * L<Curses::UI::Widget|Curses::UI::Widget>
 
 =item * L<Curses::UI::Container|Curses::UI::Container>
+
+=item * L<Curses::UI::Color|Curses::UI::Color>
 
 =back
 
@@ -995,6 +1028,19 @@ the auto determined value and to disable mouse support.
 This option specifies a user data that can be retrieved with
 the B<userdata>() method.  It is usefull to store application's
 internal data that otherwise would not be accessible in callbacks.
+
+=item B<-color_support> < BOOLEAN >
+
+If this option is set to a true value Curses::UI will try to
+determine if color is available on the terminal and if so enable
+it.
+
+=item B<-default_colors> < BOOLEAN >
+
+If -default_colors is set to a true value Curses::UI will try
+to enable color support without changing the original terminal
+settings.
+
 
 =back
 
@@ -1205,12 +1251,21 @@ Example:
 
 =back
 
+=item B<color> ( )
+
+Returns the currently used Curses::UI::Color object
+
+=item B<set_color> ( OBJECT )
+
+Replaces the currently used Color object with an other. This
+can be used to fast change all colors in a Curses::UI application.
+
 
 
 =head1 SEE ALSO
 
 L<Curses>
-L<Curses::UI::Container|Curse::UI::Container>,
+L<Curses::UI::Container|Curse::UI::Container|Curses::UI::Color>,
 
 
 

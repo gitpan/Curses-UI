@@ -40,6 +40,8 @@ sub new ()
     my %args = ( 
         -title          => undef,
         -date           => undef, 
+        -fg             => -1,
+        -bg             => -1,
 
         %userargs,
 
@@ -61,6 +63,8 @@ sub new ()
         -width           => undef, 
         -buttonalignment => 'right',
         -buttons         => [ 'ok', 'cancel' ],
+        -bg              => $this->{-bg},
+        -fg              => $this->{-fg},
     );
 
     # Let the window in which the buttons are loose focus
@@ -72,6 +76,8 @@ sub new ()
         -border          => 0,
         -padbottom       => 1,
         -date            => $this->{-date},
+        -bg              => $this->{-bg},
+        -fg              => $this->{-fg},
     )->focus;    
 
     # Selecting a date may bring the focus to the OK button.

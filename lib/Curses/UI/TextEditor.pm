@@ -164,6 +164,11 @@ sub new ()
         # Events
         -onchange        => undef,       # onChange event handler
         
+	# Color       
+	-bg              => -1,
+	-fg              => -1,
+
+
         %userargs,
         
         -routines        => {%routines}, # binding routines
@@ -462,6 +467,17 @@ sub draw_text(;$)
     # Draw the text.
     for my $id (0 .. $this->canvasheight - 1)
     {    
+	# Let there be color
+	if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-fg},
+			     $this->{-bg});
+
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+
+        }
+
         if (defined $this->{-search_highlight} 
             and $this->{-search_highlight} == ($id+$this->{-yscrpos})) {
             $this->{-canvasscr}->attron(A_REVERSE);
@@ -1257,6 +1273,23 @@ sub number_of_columns()
     return $columns;
 }
 sub getline_at_ypos($;) { shift()->{-scr_lines}->[shift()] }
+
+#
+# Color
+#
+
+sub set_color_fg {
+    my $this = shift;
+    $this->{-fg} = shift;
+    $this->intellidraw;
+}
+
+sub set_color_bg {
+    my $this = shift;
+    $this->{-bg} = shift;
+    $this->intellidraw;
+}
+
 
 1;
 

@@ -54,6 +54,11 @@ sub new()
         -prevobject    => undef,  # Ref to "parent" object (the real parent 
 				  # is the rootwindow, but we need to know 
 				  # which menulistbox or menubar is parent).
+	-bg            => -1,
+        -fg            => -1,
+	-bbg           => -1,
+        -bfg           => -1,
+
         %userargs,
 
         -vscrollbar    => 1,      # Always use a vscrollbar
@@ -345,6 +350,9 @@ sub new ()
         -menu           => [],       # the menu definition
         -menuhandler    => undef,    # a custom menu handler (optional)
 
+	-bg             => -1,
+        -fg             => -1,
+
         %userargs,
 
         -routines       => {%routines},
@@ -362,6 +370,7 @@ sub new ()
         -menuoption     => undef,    # the value for the chosen option
                                      # (is also set by MenuListboxes).
         -is_expanded    => 0,        # let show focused on expand
+		
     );
 
     my $this = $class->SUPER::new( %args );
@@ -396,6 +405,17 @@ sub draw()
 
     # Create full reverse menubar.
     $this->{-canvasscr}->attron(A_REVERSE);
+
+    # Let there be color
+    if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-bg},
+			     $this->{-fg});
+
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+    }
+ 
     $this->{-canvasscr}->addstr(0, 0, " "x$this->canvaswidth);
 
     # Create menu-items.
@@ -405,6 +425,16 @@ sub draw()
     {
         # By default the bar is drawn in reverse.
         $this->{-canvasscr}->attron(A_REVERSE);
+	# Let there be color
+	if ($Curses::UI::color_support) {
+	    my $co = $Curses::UI::color_object;
+	    my $pair = $co->get_color_pair(
+					   $this->{-bg},
+					   $this->{-fg});
+
+	    $this->{-canvasscr}->attron(COLOR_PAIR($pair));
+	}
+
 
         # If the bar has focus, the selected item is
         # show without reverse.
@@ -415,7 +445,7 @@ sub draw()
         my $label = $item->{-label};
         $this->{-canvasscr}->addstr(0, $x, " " . $item->{-label} . " ");
         $x += length($label) + 2;
-        
+
         $idx++;
     }
     $this->{-canvasscr}->attroff(A_REVERSE);
@@ -529,6 +559,10 @@ sub pulldown()
         -menu       => $this->{-menu}->[$this->{-selected}]->{-submenu},
         -menubar    => $this,
         -prevobject => $this,
+        -fg         => $this->{-fg},
+	-bg         => $this->{-bg},			   
+        -bfg        => $this->{-fg},
+        -bbg        => $this->{-bg},
     );
 
     # Focus the new window and wait until it returns.
