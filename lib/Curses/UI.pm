@@ -30,7 +30,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.85";
+$VERSION = "0.90";
 
 @EXPORT = qw(
     MainLoop
@@ -47,10 +47,28 @@ $Curses::UI::screen_too_small = 0;
 $Curses::UI::initialized      = 0;
 $Curses::UI::color_support    = 0;
 $Curses::UI::color_object     = 0;
+$Curses::UI::ncurses_mouse    = 0;
+$Curses::UI::gpm_mouse        = 0;
 
+# Detect if we should use the new moushandler
+if ($ENV{"TERM"} ne "xterm") {
+    eval { 
+	require Curses::UI::Mousehandler::GPM;
+	import Curses::UI::Mousehandler::GPM;
+    };
+    if (!$@) {
+	$Curses::UI::gpm_mouse = gpm_enable();
+	print STDERR "DEBUG: gpm_mouse: " . $Curses::UI::gpm_mouse . "\n"
+	    if $Curses::UI::debug;
+    }
+} else {
 # Detect ncurses functionality. Magic for Solaris 8
-eval { $Curses::UI::ncurses_mouse    = (Curses->can('NCURSES_MOUSE_VERSION') and
-                                 (NCURSES_MOUSE_VERSION() >= 1 ) ) };
+    eval { $Curses::UI::ncurses_mouse    = (Curses->can('NCURSES_MOUSE_VERSION') and
+					    (NCURSES_MOUSE_VERSION() >= 1 ) ) };
+    print STDERR "DEBUG: Detected mouse support value is $Curses::UI::ncurses_mouse\n" if
+	$Curses::UI::debug;
+}
+ 
 
 # ----------------------------------------------------------------------
 # Constructor
@@ -70,6 +88,7 @@ sub new()
 	-debug         => undef, # Turn on debugging mode?
 	-language      => undef, # Which language to use?
 	-mouse_support => 1,     # Do we want mouse support
+	-overlapping   => 1,     # Whether overlapping widgets are supported
 	-color_support => 0,
 	-default_colors=> 1, 
         #user data
@@ -77,13 +96,23 @@ sub new()
  
         %userargs,
 
-	-read_timeout  => -1,    # full blocking read by default
+	-read_timeout   => -1,    # full blocking read by default
+	-scheduled_code => [],
+	-added_code     => {},
     );
 
     $Curses::UI::debug = $args{-debug} 
         if defined $args{-debug};
 
     $Curses::UI::ncurses_mouse = $args{-mouse_support}
+        if defined $args{-mouse_support};
+
+    if ($Curses::UI::gpm_mouse) {
+	$Curses::UI::ncurses_mouse = 1;
+	$args{-read_timeout} = 0.25;
+    }
+
+    $Curses::UI::gpm_mouse = $args{-mouse_support}
         if defined $args{-mouse_support};
 
     $Curses::UI::rootobject->fatalerror(
@@ -114,8 +143,11 @@ sub new()
 DESTROY 
 { 
     my $this = shift;
+    my $scr = $this->{-canvasscr};
+    $scr->delwin() if (defined($scr));
     endwin();
     $Curses::UI::rootobject = undef;
+    $Curses::UI::initialized = 0;
 
     if ($this->{-clear_on_exit})
     {
@@ -135,6 +167,7 @@ sub compat(;$)        { shift()->accessor('-compat',          shift()) }
 sub clear_on_exit(;$) { shift()->accessor('-clear_on_exit',   shift()) }
 sub cursor_mode(;$)   { shift()->accessor('-cursor_mode',     shift()) }
 sub lang(;$)          { shift()->accessor('-language_object', shift()) }
+sub overlapping(;$)   { shift()->accessor('-overlapping',     shift()) }
 
 # TODO: document
 sub debug(;$)         
@@ -171,15 +204,20 @@ sub layout()
     }
 
     # Mouse events if possible
-    my $old = 0;
-    if ( $Curses::UI::ncurses_mouse ) 
-    {
-	print STDERR "DEBUG: ncurses mouse events are enabled\n"
-	    if $Curses::UI::debug;
-        # In case of gpm, mousemask fails. 
-	eval { mousemask( ALL_MOUSE_EVENTS(), $old ) };
-        print STDERR "mousemask() failed: $@\n" if $@ && $Curses::UI::debug ;
-    }   
+#    my $old = 0;
+#    my $mmreturn;
+#    if ( $Curses::UI::ncurses_mouse ) 
+#    {
+#	print STDERR "DEBUG: ncurses mouse events are enabled\n"
+#	    if $Curses::UI::debug;
+#        # In case of gpm, mousemask fails. (MT: Not for me, maybe GPM changed?)
+#	eval { $mmreturn = mousemask( ALL_MOUSE_EVENTS(), $old ) };
+#	if ($Curses::UI::debug) {
+#	    print STDERR "DEBUG: mousemak returned $mmreturn\n";
+#	    print STDERR "DEBUG: Old is now $old\n";
+#	    print STDERR "DEBUG: mousemask() failed: $@\n" if $@; 
+#	}
+#    }   
 
     # find the terminal size.
     my ($cols,$lines) = GetTerminalSize;
@@ -208,6 +246,37 @@ sub layout()
     $Curses::UI::initialized = 1;
     return $this;    
 }
+
+sub layout_new()
+{
+    my $this = shift;
+
+    $Curses::UI::screen_too_small = 0;
+
+    # find the terminal size.
+    my ($cols,$lines) = GetTerminalSize;
+    $ENV{COLS}  = $cols;
+    $ENV{LINES} = $lines;
+
+    # Let this object present itself as a standard 
+    # Curses::UI widget, regarding size, location and
+    # drawing area. This will make it possible for
+    # child windows / widgets to layout and draw themselves.
+    #    
+    $this->{-width}  = $this->{-w} = $this->{-bw} = $cols;
+    $this->{-height} = $this->{-h} = $this->{-bh} = $lines;
+    $this->{-x}      = $this->{-y} = 0;
+#    $this->{-canvasscr} = $root;
+
+    # Walk through all contained objects and let them 
+    # layout themselves.
+    $this->layout_contained_objects;
+    
+    $Curses::UI::initialized = 1;
+    $this->draw();
+    return $this;    
+}
+
 
 # ----------------------------------------------------------------------
 # Event handling
@@ -246,6 +315,12 @@ sub do_one_event(;$)
         
     eval {curs_set($this->{-cursor_mode})};
 
+    # gpm mouse?
+    if ($Curses::UI::gpm_mouse) {
+	$this->handle_gpm_mouse_event($object);
+	doupdate();
+    }
+
     # Read a key or use the feeded key.
     my $key = $this->{-feedkey};
     unless (defined $key) {
@@ -254,13 +329,22 @@ sub do_one_event(;$)
     $this->{-feedkey} = undef;
 
     # ncurses sends KEY_RESIZE() key on resize. Ignore this key.
+    # TODO: Try to redraw and layout everything anew
+    # KEY_RESIZE doesn't seem to work right;
     if (Curses->can("KEY_RESIZE")) {
         $key = '-1' if $key eq KEY_RESIZE();
+    }
+    my ($cols,$lines) = GetTerminalSize;
+    if ( ($ENV{COLS} != $cols) || ( $ENV{LINES} != $lines )) {
+	$this->layout_new();
+	$this->draw;
     }
 
     # ncurses sends KEY_MOUSE()
     if ($Curses::UI::ncurses_mouse) {
 	if ($key eq KEY_MOUSE()) {
+	    print STDERR "DEBUG: Got a KEY_MOUSE(), handeling it\n"
+		if $Curses::UI::debug;
 	    $this->handle_mouse_event($object);
 	    doupdate();
 	    return $this;
@@ -284,6 +368,17 @@ sub do_one_event(;$)
     # Execute timer code.
     $this->do_timer;
 
+    # Execute one scheduled event;
+    if (@{$this->{-scheduled_code}}) {
+	my $code = shift @{$this->{-scheduled_code}};
+	$code->($this);
+    }
+
+    # Execute added code
+    foreach my $code (keys %{$this->{-added_code}}) {
+	$code->($this);
+    }
+
     # See if there are pending keys on input. If I do not
     # feed them to the application in this way, the screen
     # hangs in case I do a lot of input on my Solaris
@@ -295,6 +390,51 @@ sub do_one_event(;$)
     doupdate();
 
     return $this;
+}
+
+# TODO: document
+sub schedule_event()
+{
+    my $this = shift;
+    my $code = shift;
+
+    $this->fatalerror(
+        "schedule_event(): callback is no CODE reference"
+    ) unless defined $code and ref $code eq 'CODE';
+
+    push @{$this->{-scheduled_code}}, $code;
+}
+
+# TODO: document
+sub add_callback()
+{
+    my $this = shift;
+    my $id   = shift;
+    my $code = shift;
+
+    $this->fatalerror(
+        "add_callback(): is is not set"
+    ) unless defined $id;
+
+    $this->fatalerror(
+        "add_callback(): callback is no CODE reference"
+    ) unless defined $code and ref $code eq 'CODE';
+
+    $this->{-added_code}->{$id} = $code;
+}
+
+# TODO: document
+sub delete_callback()
+{
+    my $this = shift;
+    my $id   = shift;
+
+    $this->fatalerror(
+      "delete_callback(): id is not set"
+    ) unless defined $id;
+
+    delete $this->{-added_code}->{$id} if
+	defined $this->{-added_code}->{$id};
 }
 
 sub draw()
@@ -498,7 +638,7 @@ sub handle_mouse_event()
 	-id     => $id,
 	-x      => $x,
 	-y      => $y,
-	-bstate => $bstate
+        -bstate => $bstate,
     );
 
     # Get the objects at the mouse event position.
@@ -509,10 +649,45 @@ sub handle_mouse_event()
     {
 	# Send the mouse-event to the object. 
 	# Leave the loop if the object handled the event.
+	print STDERR "Asking $object to handle $MEVENT{-bstate} ...\n";
 	my $return = $object->event_mouse(\%MEVENT);
 	last if defined $return and $return ne 'DELEGATE';
     }
 }
+
+sub handle_gpm_mouse_event()
+{
+    my $this = shift;
+    my $object = shift;
+    $object = $this unless defined $object;
+
+    my $MEVENT = gpm_get_mouse_event();
+    # $MEVENT from C:UI:MH:GPM is identical.
+
+    return unless $MEVENT;
+
+    my ($id, $x, $y, $z, $bstate) = unpack("sx2i3l", $MEVENT);
+    my %MEVENT = (
+	-id     => $id,
+	-x      => $x,
+	-y      => $y,
+	-bstate => $bstate,
+    );
+
+    # Get the objects at the mouse event position.
+    my $tree = $this->object_at_xy($object, $MEVENT{-x}, $MEVENT{-y});
+   
+    # Walk through the object tree, top object first.
+    foreach my $object (reverse @$tree)
+    {
+	# Send the mouse-event to the object. 
+	# Leave the loop if the object handled the event.
+
+	my $return = $object->event_mouse(\%MEVENT);
+	last if defined $return and $return ne 'DELEGATE';
+    }
+}
+
 
 sub object_at_xy($$;$)
 {
@@ -1099,6 +1274,21 @@ Starts a Tk like main loop that will handle input and events.
 =item B<MainLoop> ( )
 
 Same as B<mainloop>, for Tk compatibility.
+
+=item B<schedule_event> ( CODE )
+
+The schedule_event method adds a method to the mainloop. This
+method is executed one time after the input handler has run and
+deleted from the mainloop afterwards.
+
+=item B<add_callback> ( ID, CODE)
+
+This method lets you add a callback into the mainloop permanently.
+The code is executed after the input handler has run.
+
+=item B<delete_callback> ( ID )
+
+This method deletes the CODE specified by ID from the mainloop.
 
 =item B<usemodule> ( CLASSNAME )
 

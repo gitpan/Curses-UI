@@ -21,7 +21,7 @@ Press <CTRL+C> to exit...
 # ----------------------------------------------------------------------
 
 [months]
-Januari Februari March April May June Juli 
+January February March April May June July 
 August September October November December
 
 [days_short] Su Mo Tu We Th Fr Sa

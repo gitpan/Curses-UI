@@ -200,6 +200,7 @@ sub layout_contained_objects()
         my $obj = $this->{-id2object}->{$id};
         $obj->{-parent} = $this;
         $obj->layout();
+	$obj->draw();
     }
 
     return $this;

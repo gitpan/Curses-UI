@@ -76,9 +76,13 @@ my %bindings = (
     KEY_BTAB()     => 'focus-shift',
     KEY_ENTER()    => 'press-button',
     CUI_SPACE()    => 'press-button',
+    KEY_UP()       => 'previous',
+    "k"            => 'previous',
+    KEY_DOWN()     => 'next',
+    "j"            => 'next',
     KEY_LEFT()     => 'previous',
     'h'            => 'previous',
-    KEY_RIGHT()    => 'next',
+    KEY_RIGHT()    => 'next', 
     'l'            => 'next',
     ''             => 'shortcut',
 );
@@ -111,8 +115,8 @@ sub new ()
     );
 
     # The windowscr height should be 1.
-    $args{-height} = height_by_windowscrheight(1,%args);
-
+    $args{-height} = height_by_windowscrheight(scalar @{$args{-buttons}},%args);
+ 
     # Create the widget.
     my $this = $class->SUPER::new( %args );
     
@@ -184,8 +188,9 @@ sub layout()
 
     # Compute the space that is needed for the buttons.
     my $xneed = $this->compute_buttonwidth;
+    my $yneed = $this->compute_buttonheight;
     
-    if ( $xneed > $this->canvaswidth ) 
+    if ( ($xneed > $this->canvaswidth) || ($yneed > $this->canvasheight) ) 
     {
         $Curses::UI::screen_too_small++;
         return $this;
@@ -308,7 +313,9 @@ sub draw(;$)
     # Draw the buttons.
     my $id = 0;
     my $x  = 0;
+    my $y  = 0;
     my $cursor_x = 0;
+
     foreach my $button (@{$this->{-buttons}})
     {
 	    # Let there be color
@@ -327,10 +334,10 @@ sub draw(;$)
              and $id == $this->{-selected}) {
             $this->{-canvasscr}->attron(A_REVERSE);
         }
-
+ 
         # Draw the button.
         $this->{-canvasscr}->addstr(
-            0, $this->{-xpos} + $x, 
+            $y, $this->{-xpos} + $x, 
             $button->{-label}
         );    
 
@@ -344,14 +351,20 @@ sub draw(;$)
                 my $letter = substr($button->{-label}, $pos, 1); 
                 $this->{-canvasscr}->attron(A_UNDERLINE);
                 $this->{-canvasscr}->addch(
-                    0, $this->{-xpos} + $x + $pos,
+                    $y, $this->{-xpos} + $x + $pos,
                     $letter
                 );
                 $this->{-canvasscr}->attroff(A_UNDERLINE);
             }
         }
 
-        $x += 1 + length($button->{-label});
+        # Change the $y value if the buttons are to be drawn vertically and leave $x alone
+        if ( (defined $this->{-vertical}) && ($this->{-vertical}) ) {
+          $y++;
+        } else {
+          $x += 1 + length($button->{-label});
+        }
+
         $this->{-canvasscr}->attroff(A_REVERSE) if $this->{-focus};
         
         $id++;
@@ -394,20 +407,40 @@ sub mouse_button1($$$$;)
     }
 }
 
+sub compute_buttonheight($;) 
+{
+    my $this   = shift;
+    my $height = 1;
+
+    if ( (defined $this->{-vertical}) && ($this->{-vertical}) ) {
+        $height = scalar @{$this->{-buttons}};
+    } 
+    return $height;
+}
+
 sub compute_buttonwidth($;)
 {
     my $this    = shift;
 
     $this->process_buttondefs;
 
-    # Spaces
-    my $width = @{$this->{-buttons}} - 1;
+    my $width=0;
 
-    # Buttons
-    foreach my $button (@{$this->{-buttons}}) {
-        $width += length($button->{-label});
+    if ( (defined $this->{-vertical}) && ($this->{-vertical}) ) {
+        foreach my $button (@{$this->{-buttons}}) {
+            if ($width < length($button->{-label})) {
+                $width = length($button->{-label});
+            }
+        }
+    } else {
+        # Spaces
+        $width = @{$this->{-buttons}} - 1;
+        
+        # Buttons
+        foreach my $button (@{$this->{-buttons}}) {
+            $width += length($button->{-label});
+        }
     }
-
     return $width;
 }
 
@@ -599,6 +632,12 @@ want to make active.
 You can specify how the buttons should be aligned in the 
 widget. Available values for VALUE are 'left', 'middle' 
 and 'right'.
+
+=item * B<-vertical> < BOOLEAN >
+
+When set to a true value, it will cause the buttons to be
+rendered with vertical instead of horizontal alignment.
+
 
 =back
 

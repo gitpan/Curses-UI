@@ -500,6 +500,7 @@ sub loose_focus()
 	}
     }
 
+
     # Focus shifted to another object? Then leave it that way.
     if ($this->root->focus_path(-1) ne $this) {
 	return $this;
@@ -507,11 +508,13 @@ sub loose_focus()
     # Else go back to the previous focused window.
     else
     {
+	$this->{-focus} = 0;
 	my $prev = $this->root->{-draworder}->[-2];
 	if (defined $prev) {
 	    $this->root->focus($prev);
 	}
     }
+
 }
 
 # This calls the default event_onblur() routine of the

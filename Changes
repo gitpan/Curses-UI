@@ -1,5 +1,24 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.90
+============
+		- got an excellent patch by Ralf S. Engelschall 
+		  to enable inline markup in Listbox and other
+		  bugfixes.
+
+		- Patch by Rupert Northcote-Green and Scott Husek
+		  for vertical aligned Buttonboxes
+
+		- Bugfixes for focusing
+		
+		- Mouse hooks for Curses::UI::Mousehandler::GPM
+
+		- At least a little bit of resizing support
+
+		- Hocks for adding events to the mainloop
+
+		- Added insert_at and add_label to Listbox
+
 Version 0.85
 ============
 		- new Widget: Dirbrowser

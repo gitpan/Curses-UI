@@ -27,7 +27,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = '1.22';
+$VERSION = '1.3';
 
 @ISA = qw(
     Curses::UI::Widget Curses::UI::Common 
@@ -146,7 +146,7 @@ sub values(;$)
     my $this = shift;
     my $values = shift;
 
-    # Clear ang go to first item if we get new data
+    # Clear and go to first item if we get new data
     $this->clear_selection();
  
     if (defined $values and ref $values eq 'ARRAY') {
@@ -160,6 +160,58 @@ sub values(;$)
 
     return $this->{-values}
 }
+
+sub insert_at()
+{
+    
+    my $this = shift;
+    my $pos = shift;
+    my $values = shift;
+
+    # Clear and go to first item if we get new data
+    $this->clear_selection();
+
+    if (defined $values ) {
+	if (ref $values eq 'ARRAY') {
+	    my @newdata = (splice(@{$this->{-values}},0,$pos - 1), @{$values},
+			   @{$this->{-values}});
+
+	    $this->{-values} = \@newdata;
+	} else {
+	    my @newdata = (splice (@{$this->{-values}},0,$pos - 1), $values,
+			   @{$this->{-values}});
+
+	    $this->{-values} = \@newdata;
+	}
+    }
+
+    return $this->{-values};
+
+}
+
+sub labels(;$)
+{
+    my $this = shift;
+    my $labels = shift;
+
+    if (defined $labels and ref $labels eq 'HASH') {
+        $this->{-labels} = $labels;
+    }
+    return $this->{-labels}
+}
+
+
+sub add_labels(;$)
+{
+    my $this = shift;
+    my $labels = shift;
+
+    if (defined $labels and ref $labels eq 'HASH') {
+        map $this->{-labels}->{$_} = $labels->{$_}, keys %{$labels};
+    }
+    return $this->{-labels}
+}
+
 
 sub maxlabelwidth(@;)
 {
@@ -303,10 +355,7 @@ sub draw(;$)
                 (($this->{-multi} or $this->{-radio}) ? 4 : 0);
 
             # Chop length if needed.
-            if (($prefix_len + length($label)) > $this->canvaswidth) {    
-                $label = substr($label, 0, ($this->canvaswidth-$prefix_len));
-                $label =~ s/.$/\$/;
-            }
+            $label = $this->text_chop($label, ($this->canvaswidth-$prefix_len));
 
             # Show current entry in reverse mode and 
             # save cursor position.
@@ -318,10 +367,12 @@ sub draw(;$)
             }
 
             # Show selected element bold. 
-            if (not $this->{-multi} and 
-		not $this->{-radio} and 
-		defined $this->{-selected} and 
-		$this->{-selected} == $i) {
+            if (   (    not $this->{-multi}
+                    and defined $this->{-selected}
+                    and $this->{-selected} == $i)
+                or (    $this->{-multi} 
+                    and defined $this->{-selected}
+                    and $this->{-selected}->{$i}) ) {
 		    $this->{-canvasscr}->attron(A_BOLD);
             }
             
@@ -332,10 +383,7 @@ sub draw(;$)
             );
 
             # Show label
-            $this->{-canvasscr}->addstr(
-                $y, $prefix_len,
-                $label
-            );
+            $this->text_draw($y, $prefix_len, $label);
 
             $this->{-canvasscr}->attroff(A_REVERSE);
             $this->{-canvasscr}->attroff(A_BOLD);
@@ -704,10 +752,23 @@ looks somewhat like this:
  |< > Three |
  +----------+
 
+
+=item * B<Listbox Markup>
+
+The listbox supports a primitive markup language to emphasize
+entries: 
+    <reverse>reverse text</reverse>
+    <bold>bold text</bold>
+    <underline>underlined text</underline>
+    <blink>blinking text</blink>
+    <dim>dim text</dim>
+By using this markup tokens in the values array, you can make the
+listbox draw the text in the according way. To enable the parser,
+you have to create the listbox with the -htmltext option.
+
+
 =back
 
-See exampes/demo-Curses::UI::Listbox in the distribution
-for a short demo.
 
 
 
@@ -782,6 +843,10 @@ This sets the onSelectionChange event handler for the listbox widget.
 If a new item is marked as active CODEREF will be executed.
 It will get the widget reference as its argument.
 
+=item * B<-htmltext> < BOOLEAN >
+
+Make the Listbox parse primitive markup to change the items
+appearence. See above.
 
 
 =back
@@ -836,6 +901,19 @@ listbox.
 =item * B<values> ( LIST )
 
 This method sets the values to use. 
+
+=item * B<-insert_at> < POS, ARRAYREF|SCALAR >
+
+This method adds ARRAYREF or SCALAR into the list of values at
+pos.
+
+=item * B<labels> [ HASHREF ]
+
+This method sets the labels to use. 
+
+=item * B<add_labels> [ HASHREF ]
+
+This method adds the given labels to the already defined ones.
 
 =item * B<onChange> ( CODEREF )
 

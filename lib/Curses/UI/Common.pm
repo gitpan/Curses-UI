@@ -35,6 +35,9 @@ $VERSION = '1.10';
 @EXPORT = qw(
     keys_to_lowercase
     text_wrap
+    text_draw
+    text_length
+    text_chop
     scrlength
     split_to_lines
     text_dimension
@@ -213,6 +216,125 @@ sub text_wrap($$;)
     }
         
     return \@wrapped;
+}
+
+sub text_tokenize {
+    my ($text) = @_;
+
+    my @tokens = ();
+    while ($text ne '') {
+        if ($text =~ m/^<\/?[a-zA-Z0-9_]+>/s) {
+            push(@tokens, $&);
+            $text = $';
+        }
+        elsif ($text =~ m/^.+?(?=<\/?[a-zA-Z0-9_]+>)/s) {
+            push(@tokens, $&);
+            $text = $';
+        }
+        else {
+            push(@tokens, $text);
+            last;
+        }
+    }
+    return @tokens;
+}
+
+sub text_draw($$;)
+{
+    my $this = shift;
+    my ($y, $x, $text) = @_;
+
+    if ($this->{-htmltext}) {
+        my @tokens = &text_tokenize($text);
+        foreach my $token (@tokens) {
+            if ($token =~ m/^<(standout|reverse|bold|underline|blink|dim)>$/s) {
+                my $type = $1;
+                if    ($type eq 'standout')  { $this->{-canvasscr}->attron(A_STANDOUT);  }
+                elsif ($type eq 'reverse')   { $this->{-canvasscr}->attron(A_REVERSE);   }
+                elsif ($type eq 'bold')      { $this->{-canvasscr}->attron(A_BOLD);      }
+                elsif ($type eq 'underline') { $this->{-canvasscr}->attron(A_UNDERLINE); }
+                elsif ($type eq 'blink')     { $this->{-canvasscr}->attron(A_BLINK);     }
+                elsif ($type eq 'dim')       { $this->{-canvasscr}->attron(A_DIM);       }
+            }
+            elsif ($token =~ m/^<\/(standout|reverse|bold|underline|blink|dim)>$/s) {
+                my $type = $1;
+                if    ($type eq 'standout')  { $this->{-canvasscr}->attroff(A_STANDOUT);  }
+                elsif ($type eq 'reverse')   { $this->{-canvasscr}->attroff(A_REVERSE);   }
+                elsif ($type eq 'bold')      { $this->{-canvasscr}->attroff(A_BOLD);      }
+                elsif ($type eq 'underline') { $this->{-canvasscr}->attroff(A_UNDERLINE); }
+                elsif ($type eq 'blink')     { $this->{-canvasscr}->attroff(A_BLINK);     }
+                elsif ($type eq 'dim')       { $this->{-canvasscr}->attroff(A_DIM);       }
+            }
+            else {
+                $this->{-canvasscr}->addstr($y, $x, $token);
+                $x += length($token);
+            }
+        }
+    }
+    else {
+        $this->{-canvasscr}->addstr($y, $x, $text);
+    }
+}
+
+sub text_length {
+    my $this = shift;
+    my ($text) = @_;
+    
+    my $length = 0;
+    if ($this->{-htmltext}) {
+        my @tokens = &text_tokenize($text);
+        foreach my $token (@tokens) {
+            if ($token !~ m/^<\/?(reverse|bold|underline|blink|dim)>$/s) {
+                $length += length($token);
+            }
+        }
+    }
+    else {
+        $length = length($text);
+    }
+    return $length;
+}
+
+sub text_chop {
+    my $this = shift;
+    my ($text, $max_length) = @_;
+
+    if ($this->{-htmltext}) {
+        my @open = ();
+        my @tokens = &text_tokenize($text);
+        my $length = 0;
+        $text = '';
+        foreach my $token (@tokens) {
+            if ($token =~ m/^<(\/?)(reverse|bold|underline|blink|dim)>/s) {
+                my ($type, $name) = ($1, $2);
+                if (defined($type) and $type eq '/') {
+                    pop(@open);
+                }
+                else {
+                    push(@open, $name);
+                }
+                $text .= $token;
+            }
+            else {
+                $text .= $token;
+                $length += length($token);
+                if ($length > $max_length) {
+                    $text = substr($text, 0, $max_length);
+                    $text =~ s/.$/\$/;
+                    while (defined($token = pop(@open))) {
+                        $text .= "</$token>";
+                    }
+                    last;
+                }
+            }
+        }
+    }
+    else {
+        if (length($text) > $max_length) {    
+            $text = substr($text, 0, $max_length);
+        }
+    }
+    return $text;
 }
 
 sub text_dimension ($;)

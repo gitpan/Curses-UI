@@ -1,6 +1,11 @@
 #!/usr/bin/perl -w
 use strict;
 use File::Temp qw( :POSIX );
+use lib "../lib";
+
+#   make KEY_BTAB (shift-tab) working in XTerm
+#   and also at the same time enable colors
+#$ENV{TERM} = "xterm-vt220" if ($ENV{TERM} eq 'xterm');
 
 my $debug = 0;
 if (@ARGV and $ARGV[0] eq '-d') {
@@ -150,7 +155,7 @@ $w{1}->add(
 
 $w{1}->add(undef,'Label',-text=>"dim font",-y=>5,-dim=>1 );
 $w{1}->add(undef,'Label',-text=>"bold font",-y=>7,-bold=>1 );
-$w{1}->add(undef,'Label',-text=>"reversed font",-y=>9,-reversed => 1 );
+$w{1}->add(undef,'Label',-text=>"reversed font",-y=>9,-reverse => 1 );
 $w{1}->add(undef,'Label',-text=>"underlined font",-x=>15,-y=>5,-underline=>1 );
 $w{1}->add(undef,'Label',-text=>"blinking font",-x=>15,-y=>7,-blink=>1 );
 

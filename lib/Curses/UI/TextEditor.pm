@@ -25,7 +25,7 @@ use vars qw(
     @ISA
 );
 
-$VERSION = '1.11';
+$VERSION = '1.5';
 
 @ISA = qw(
     Curses::UI::Widget 
@@ -151,6 +151,7 @@ sub new ()
         -vscrollbar      => 0,           # show vertical scrollbar
         -hscrollbar      => 0,           # show horizontal scrollbar
         -readonly        => 0,           # only used as viewer?
+        -reverse         => 0,           # show in reverse
 
         # Single line options
         -password        => undef,       # masquerade chars with given char
@@ -456,9 +457,10 @@ sub draw_text(;$)
 
     # Turn on underlines and fill the screen with lines
     # if neccessary.
-    if ($this->{-showlines})
+    if ($this->{-showlines} or $this->{-reverse})
     {
-        $this->{-canvasscr}->attron(A_UNDERLINE);
+        $this->{-canvasscr}->attron(A_UNDERLINE) if ($this->{-showlines});;
+        $this->{-canvasscr}->attron(A_REVERSE) if ($this->{-reverse});
         for my $y (0..$this->canvasheight-1) {
             $this->{-canvasscr}->addstr($y, 0, " "x($this->canvaswidth));
         }
@@ -480,9 +482,11 @@ sub draw_text(;$)
 
         if (defined $this->{-search_highlight} 
             and $this->{-search_highlight} == ($id+$this->{-yscrpos})) {
-            $this->{-canvasscr}->attron(A_REVERSE);
+            $this->{-canvasscr}->attron(A_REVERSE) if (not $this->{-reverse});
+            $this->{-canvasscr}->attroff(A_REVERSE) if ($this->{-reverse});
         } else {
-            $this->{-canvasscr}->attroff(A_REVERSE);
+            $this->{-canvasscr}->attroff(A_REVERSE) if (not $this->{-reverse});
+            $this->{-canvasscr}->attron(A_REVERSE) if ($this->{-reverse});
         }
 
         my $l = $this->{-scr_lines}->[$id + $this->{-yscrpos}];
@@ -576,6 +580,7 @@ sub draw_text(;$)
     }
     
     $this->{-canvasscr}->attroff(A_UNDERLINE) if $this->{-showlines};
+    $this->{-canvasscr}->attroff(A_REVERSE) if $this->{-reverse};
     $this->{-canvasscr}->noutrefresh();
     doupdate() unless $no_doupdate;
     return $this;
@@ -1479,6 +1484,9 @@ This sets the onChange event handler for the texteditor widget.
 If the text is changed by typing, the code in CODEREF will 
 be executed.  It will get the widget reference as its argument.
 
+=item * B<-reverse> < BOOLEAN >
+
+Makes the text drawn in reverse font.
 
 =back
 

@@ -1,3 +1,4 @@
+# -*- perl -*-
 use Test::More tests => 5;
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";

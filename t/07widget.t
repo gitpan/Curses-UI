@@ -1,3 +1,4 @@
+# -*- perl -*-
 use strict;
 use Test::More tests => 6;
 use FindBin;

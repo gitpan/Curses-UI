@@ -37,6 +37,7 @@ $VERSION = '1.12';
     width_by_windowscrwidth
     process_padding
     loose_focus
+    lose_focus
 );
 
 sub new ()
@@ -85,6 +86,7 @@ sub new ()
         -onblur         => undef,    # onBlur event handler
         -intellidraw    => 1,        # Support intellidraw()?
         -focusable      => 1,        # This widget can get focus
+        -htmltext       => 1,        # Recognize HTML tags in drawn text
 
 	#user data
 	-userdata	=> undef,    #user internal data
@@ -437,6 +439,17 @@ sub windowparameters()
     };
 }
 
+#
+# Actually, the focus is not loose but the widget should
+# lose the focus:
+
+sub lose_focus() 
+{
+    my $this = shift;
+    $this->loose_focus(@_);
+}
+
+
 sub loose_focus()
 {
     my $this = shift;
@@ -482,7 +495,7 @@ sub focus()
     my $parent = $this->parent;
     $parent->focus($this) if defined $parent;
 
-    $this->draw(1);
+    $this->draw(1) if ($this->root->overlapping);
     return $this;
 }
 
@@ -501,6 +514,7 @@ sub modalfocus ()
     }
 
     $this->{-focus} = 0;
+    $this->{-has_modal_focus} = 0;
 
     return $this;
 }
@@ -961,7 +975,7 @@ sub process_bindings($;$@)
             $binding = $this->{-bindings}->{''}; 
         }
     }
-    
+
     if (defined $binding) {
         my $return = $this->do_routine($binding, $key, @extra);
         # Redraw if draw schedule is set.
@@ -1017,6 +1031,8 @@ sub event_onfocus()
     my $show_cursor = $this->{-nocursor} ? 0 : 1;
     $this->root->cursor_mode($show_cursor);
 
+    $this->draw(1) if (not $this->root->overlapping);
+
     return $this;
 }
 
@@ -1025,6 +1041,7 @@ sub event_onblur()
     my $this = shift;
     $this->{-focus} = 0;
     $this->run_event('-onblur');
+    $this->draw(1) if (not $this->root->overlapping);
     return $this;
 }
 
@@ -1457,7 +1474,7 @@ argument.
 =item * B<-onblur> < CODEREF >
 
 This sets the onBlur event handler for the widget.
-If the widget looses the focus, the code in CODEREF will 
+If the widget loses the focus, the code in CODEREF will 
 be executed. It will get the widget reference as its 
 argument.
 
@@ -1512,9 +1529,9 @@ If BOOLEAN is set to a true value the widget will be focusable,
 false will make it unfocusable. If not argument is given,
 it will return the current state.
 
-=item * B<loose_focus> ( )
+=item * B<lose_focus> ( )
 
-This method makes the current widget loose it's focus.
+This method makes the current widget lose it's focus.
 It returns the current widget.
 
 =item * B<modalfocus> ( )
@@ -1601,13 +1618,13 @@ The <key> is extracted from RETURN. The loop is restarted and
 * B<RETURN is a CODE reference>
 
 RETURN will be returned to the caller of B<generic_focus>. 
-This will have the widget loose its focus. The caller then can 
+This will have the widget lose its focus. The caller then can 
 execute the code.
 
 * B<RETURN is a SCALAR value>
 
 RETURN will be returned to the caller of B<generic_focus>. 
-This will have the widget loose its focus. 
+This will have the widget lose its focus. 
 
 * B<anything else>
 
@@ -1739,7 +1756,7 @@ new(), layout(), draw() and focus(), it can be used in Curses::UI.
     # A string will make the widget return from focus.
     #
     my %routines = (
-        'return'    => 'LOOSE_FOCUS',
+        'return'    => 'LOSE_FOCUS',
         'key-a'     => \&key_a,
         'key-other' => \&other_key
     );
@@ -1752,7 +1769,7 @@ new(), layout(), draw() and focus(), it can be used in Curses::UI.
     #
     my %bindings = (
         KEY_DOWN()  => 'return',   # down arrow will make the 
-                                   # widget loose it's focus
+                                   # widget lose it's focus
         'a'         => 'key-a',    # a-key will trigger key_a()
         ''          => 'key-other' # any other key will trigger other_key()
     );

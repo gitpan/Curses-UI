@@ -1,12 +1,6 @@
 TODO list for Curses::UI:
 =========================
 
-- More tests.... every widget needs its own test!
-
-- Listbox, Popupmenu don't have something like a addItem function
-  you always have to reset all values (Listbox) or no chance at
-  all (Popmenu, Menubar?).
-
 - The documentation is still very outdated, patches welcome !
 
 - The TODO List for the color support is in COLOR_TODO
