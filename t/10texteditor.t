@@ -1,5 +1,5 @@
 # -*- perl -*-
-use Test::More qw(no_plan);
+use Test::More tests => 5;
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";
 use lib "$FindBin::RealBin/../lib";

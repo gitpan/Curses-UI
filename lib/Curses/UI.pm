@@ -1,4 +1,4 @@
-# ----------------------------------------------------------------------
+## ----------------------------------------------------------------------
 # Curses::UI
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
@@ -30,7 +30,7 @@ use vars qw(
     @EXPORT
 );
 
-$VERSION = "0.91";
+$VERSION = "0.92";
 
 @EXPORT = qw(
     MainLoop
@@ -203,20 +203,20 @@ sub layout()
     }
 
     # Mouse events if possible
-#    my $old = 0;
-#    my $mmreturn;
-#    if ( $Curses::UI::ncurses_mouse ) 
-#    {
-#	print STDERR "DEBUG: ncurses mouse events are enabled\n"
-#	    if $Curses::UI::debug;
-#        # In case of gpm, mousemask fails. (MT: Not for me, maybe GPM changed?)
-#	eval { $mmreturn = mousemask( ALL_MOUSE_EVENTS(), $old ) };
-#	if ($Curses::UI::debug) {
-#	    print STDERR "DEBUG: mousemak returned $mmreturn\n";
-#	    print STDERR "DEBUG: Old is now $old\n";
-#	    print STDERR "DEBUG: mousemask() failed: $@\n" if $@; 
-#	}
-#    }   
+    my $old = 0;
+    my $mmreturn;
+    if ( $Curses::UI::ncurses_mouse ) 
+    {
+	print STDERR "DEBUG: ncurses mouse events are enabled\n"
+	    if $Curses::UI::debug;
+        # In case of gpm, mousemask fails. (MT: Not for me, maybe GPM changed?)
+	eval { $mmreturn = mousemask( ALL_MOUSE_EVENTS(), $old ) };
+	if ($Curses::UI::debug) {
+	    print STDERR "DEBUG: mousemak returned $mmreturn\n";
+	    print STDERR "DEBUG: Old is now $old\n";
+	    print STDERR "DEBUG: mousemask() failed: $@\n" if $@; 
+	}
+    }   
 
     # find the terminal size.
     my ($cols,$lines) = GetTerminalSize;
@@ -648,7 +648,8 @@ sub handle_mouse_event()
     {
 	# Send the mouse-event to the object. 
 	# Leave the loop if the object handled the event.
-	print STDERR "Asking $object to handle $MEVENT{-bstate} ...\n";
+	print STDERR "Asking $object to handle $MEVENT{-bstate} ...\n" if
+	    $Curses::UI::debug;
 	my $return = $object->event_mouse(\%MEVENT);
 	last if defined $return and $return ne 'DELEGATE';
     }

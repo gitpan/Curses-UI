@@ -165,12 +165,13 @@ sub getch{
 # ok, I got a problem here ... mess with the internals
     my $badboy = caller();
     no strict 'refs';
+    #    print STDERR "getch called for $badboy\n";
     *{$badboy . "::get_key"} = sub(;$) { 
 	$foo = rand 2; #there is a deep dispute in curses UI
 	               #about if get_key returns a string or
 	               #a number --- so make it random :-)
         return "-1" if $foo >= 1; };
-        return -1;
+    return -1;
 }
 
 sub AUTOLOAD {
@@ -180,6 +181,13 @@ sub AUTOLOAD {
     #print "Autoload: $N\n";
     # export this?
     if (grep /$N/, @EXPORT) {
+	# Mouse needs an extra handler (actually, it must return
+	# something other than the other
+	if ($N eq "KEY_MOUSE") {
+	    *{"Curses::$N"} = sub { return "no key mouse"; }; #cache++
+	    return "no key mouse";
+	}
+
 	*{"Curses::$N"} = sub { return -1; }; #cache++
 	return -1;
     }

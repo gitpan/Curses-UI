@@ -1,5 +1,16 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.92
+============
+		- Ok, blame me, I'll never ever release some
+		big changes again at "Karneval". I commented
+		out Xterm/Curses mouse support in 0.91. Should	
+		work again
+
+		- Changes to the tests, added test to make 0.90
+		never happen again and fixed failing tests on
+		no screen platforms
+
 Version 0.91
 ============
 		- fixed critical bug with call to a missing sub 

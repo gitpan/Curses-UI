@@ -65,6 +65,7 @@ t/08common.t
 t/09label.t
 t/10texteditor.t
 t/11listbox.t
+t/12gpm_handler.t
 t/99template.t
 test.pl
 t/fakelib/Curses.pm

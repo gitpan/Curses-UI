@@ -1,3 +1,4 @@
+# -*- perl -*-
 use strict;
 use Test::Simple tests => 9;
 use File::Spec;

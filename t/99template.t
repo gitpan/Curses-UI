@@ -1,3 +1,4 @@
+# -*- perl -*-
 use strict;
 use Test::More qw(no_plan);
 use FindBin;
@@ -6,6 +7,9 @@ use lib "$FindBin::RealBin/../lib";
 
 #### REMOVE ####
 exit 1;
+
+$ENV{LINES} = 25;
+$ENV{COLUMNS} = 80;
 
 BEGIN { use_ok( "Curses::UI"); }
 

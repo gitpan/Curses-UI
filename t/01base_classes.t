@@ -1,3 +1,4 @@
+# -*- perl -*-
 use strict;
 use Test;
 use FindBin;

@@ -5,6 +5,9 @@ use lib "$FindBin::RealBin/fakelib";
 use lib "$FindBin::RealBin/../lib";
 require ("$FindBin::RealBin/lorem.pl");
 
+$ENV{LINES} = 25;
+$ENV{COLUMNS} = 80;
+
 BEGIN { use_ok( "Curses::UI"); }
 
 my $cui = new Curses::UI("-clear_on_exit" => 0);
