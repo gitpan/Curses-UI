@@ -1,0 +1,262 @@
+#!/usr/bin/perl -w
+use strict;
+use Curses;
+
+$ENV{PATH} = "/bin:/usr/bin"; # for "clear" command.
+
+# Use the libraries from the distribution, instead of 
+# system wide libraries.
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+
+# Load an initial file if an argument given on the command line.
+# If the file can't be found, assume that this is a new file.
+my $text = "";
+my $currentfile = shift;
+if (defined $currentfile and -f $currentfile) 
+{
+	open F, "<$currentfile" or die "Can't read $currentfile: $!\n";
+	while (<F>) { $text .= $_ }
+	$currentfile = $currentfile;
+	close F;
+}
+
+# We don't want STDERR output to clutter the screen.
+#
+# Hint: If you need STDERR, write it out to a file and put 
+# a tail on that file to see the STDERR output. Example:
+# open STDERR, ">>/tmp/editor_errors.$$";
+open STDERR, ">/dev/null" or die "Can't redirect STDERR to /dev/null";
+
+# ----------------------------------------------------------------------
+# Menu definition
+# ----------------------------------------------------------------------
+
+my @file_menu = (
+    { -label => 'Open file ^O', -callback => \&open_dialog },
+    { -label => 'Save file ^S', -callback => \&save_dialog },
+    { -label => 'Exit      ^Q', -callback => \&exit_dialog   }
+);
+
+
+my @help_menu = (
+    { -label => 'About',     -callback => \&about_dialog }
+);
+
+my @menu = (
+    { -label => 'File',      -submenu => \@file_menu },
+    { -label => 'Help',      -submenu => \@help_menu }
+);
+
+# ----------------------------------------------------------------------
+# Create widgets
+# ----------------------------------------------------------------------
+
+# Create the RootWindow. Everything else will be built
+# up from here.
+use Curses::UI::RootWindow;
+my $root = new Curses::UI::RootWindow;
+
+# Add the menu to the RootWindow.
+my $menu = $root->add(
+	'menu','Curses::UI::MenuBar', 
+	-menu => \@menu,
+);
+
+# First we create the screen for the editor.
+my $screen = $root->add(
+	'screen', 'Curses::UI::Window',
+	-border		 => 0,
+	-ipad		 => 0,
+);
+
+# We add the editor widget to this screen.
+my $editor = $screen->add(
+	'editor', 'Curses::UI::TextEditor',
+	-border 	 => 1,
+	-padtop		 => 0,	
+	-padbottom 	 => 3,
+	-showlines	 => 0,
+	-sbborder	 => 0,
+	-vscrollbar	 => 1,
+	-hscrollbar	 => 1,
+	-showhardreturns => 1,
+	-wrapping        => 0, # wrapping slows down the editor :-(
+	-text		 => $text,
+);
+
+# There is no need for the editor widget to loose focus, so
+# the "return" binding is disabled here. This also enables the
+# use of the "TAB" key in the editor, which is nice to have.
+$editor->clear_binding('return');
+
+# Help information for the user. 
+$screen->add(
+	'help_1', 'Curses::UI::Label',
+	-y 	 	 => -2,
+	-width		 => -1,
+	-reverse 	 => 1,
+	-text 	 	 => " ^Q Quit from the program "
+		  	  . " ^S save file "
+		  	  . " ^W toggle wrapping",
+);
+$screen->add(
+	'help_2', 'Curses::UI::Label',
+	-y 	 	 => -1,
+	-reverse 	 => 1,
+	-width		 => -1,
+	-text 	 	 => " ^X Open the menu         "
+                  	  . " ^O open file "
+		  	  . " ^R toggle hard returns viewing",
+);
+
+# The screen will loose focus if one of the 
+# returnkeys is pressed. \cX is just a fallback key
+# in case F10 does not work on a particular system.
+$screen->returnkeys(
+	"\cX", KEY_F(10), "\cQ", 
+	"\cC", "\cO", "\cS", "\cL"
+);
+
+# ----------------------------------------------------------------------
+# Callback routines
+# ----------------------------------------------------------------------
+	
+sub split_currentfile()
+{
+	my $c_file = "";
+	my $c_path = "/";
+	if (defined $currentfile)
+	{
+		my @path = split /\//, $currentfile;
+		$c_file = pop @path;
+		$c_path = join "/", @path;
+	}
+	return ($c_path, $c_file);
+}
+
+sub open_dialog()
+{
+	my ($c_path, $c_file) = split_currentfile();
+	my $file = $root->filebrowser( 
+		-editfilename => 0,
+		-path	      => $c_path,
+		-file         => $c_file,
+	);
+	if (defined $file) 
+	{
+		if (open F, "<$file") {
+		    my $text = "";
+		    while (<F>) { $text .= $_ }
+		    close F;
+		    $editor->text($text);
+		    $editor->cursor_to_home;
+	 	    $currentfile = $file;
+		} else { 
+		    $root->error(-message => "Can't read file \"$file\":\n$!");
+		}
+	}
+}
+
+sub save_dialog()
+{
+
+	my ($c_path, $c_file) = split_currentfile();
+	
+	my $file = $root->filebrowser(
+		-editfilename => 1,
+		-path	      => $c_path,
+		-file         => $c_file,
+	);
+
+	if (defined $file) 
+	{
+		# Overwrite existing file?
+	    	if (-e $file) 
+		{
+	            my $overwrite = $root->dialog(
+			-title     => "Confirm",
+			-buttons   => ['< Yes >' , '< No >'],
+			-values    => [1         , 0       ],
+			-shortcuts => ['y'       , 'n'     ],
+			-message => "Do you really want to overwrite\n"
+				  . "the file \"$file\"?"
+	            );
+		    return unless $overwrite;
+	    	}
+		
+		if (open F, ">$file") {
+		    print F $editor->text;
+		    if (close F) {
+		        $root->dialog(-message => "File \"$file\"\nsuccessfully saved");
+			$currentfile = $file;
+		    } else {
+		        $root->error(-message => "Error on closing file \"$file\":\n$!");
+		    }
+		} else {
+		    $root->error(-message => "Can't write to $file:\n$!");
+		}
+	}
+}
+
+sub about_dialog()
+{
+	$root->dialog(
+		-title => 'About editor',
+		-message => "Program : Curses::UI Editor\n"
+	 		  . "Author  : Maurice Makaay\n"
+			  . "\n"
+			  . "The sole purpose of this editor\n"
+			  . "is the demonstration of my perl\n"
+		 	  . "Curses::UI widget set."
+	);
+}
+		
+sub exit_dialog()
+{
+	my $return = $root->dialog(
+			-title     => "Are you sure???", 
+			-buttons   => ['< Yes >' , '< No >'],
+			-values    => [1         , 0       ],
+			-shortcuts => ['y'       , 'n'     ],
+			-message => "Do you really want to quit?"
+	);
+
+	if ($return)
+	{
+		endwin();
+		system "clear";
+		exit(0);
+	}
+}
+
+
+# ----------------------------------------------------------------------
+# The main loop of the program
+# ----------------------------------------------------------------------
+
+# Draw the screen.
+$root->draw;
+
+for (;;)
+{
+	# Focus on the screen, so the editor can be used.
+	my ($ret,$key) = $screen->focus;
+
+	# If CTRL+Q or CTRL+C was pressed, show the exit dialog.
+	if ($key eq "\cQ" or $key eq "\cC") {
+		exit_dialog();	
+	# Else bring the focus to the menu.
+	} elsif ($key eq "\cS") {
+		save_dialog();
+	} elsif ($key eq "\cO") {
+		open_dialog();
+	} elsif ($key eq "\cL") {
+                $root->layout_from_scratch;
+                $root->rebuild_from_scratch;
+	} else {
+		$menu->focus;
+	}
+}
+
+

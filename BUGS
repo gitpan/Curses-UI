@@ -1,0 +1,8 @@
+TextEditor:
+
+- Pasting a lot of data repeatingly and fast can
+  cause some recursion error (seen on Linux but 
+  I have been unable to reproduce this error).
+  It is for sure somewhere in the pasting routine. 
+
+

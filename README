@@ -1,0 +1,81 @@
+Curses::UI::*
+
+A UI framework based on the curses library. Curses::UI::* contains
+several widgets which can be used to build a user interface:
+
+- Frame (base element)
+- Container (base element)
+- RootWindow 
+- Window
+- Label
+- Listbox 
+- Radiobuttonbox
+- Popupbox (a.k.a. pulldown- or dropdown menu)
+- Progressbar
+- Buttons 
+- Checkbox
+- Dialog window
+- Error dialog window
+- Filebrowser window
+- MenuBar (uses MenuListbox)
+- Texteditor (has features like word wrapping and undo)
+- Textviewer
+- Textentry
+
+Some random features:
+
+- Only basic curses library calls are used, so the Curses::UI::* 
+  modules will work on non-ncurses systems (they were developed on 
+  a Solaris 5.8 system without ncurses);
+
+- Applications that are built using these modules will guard for
+  the WINCH signal (window resize) and resize the used widgets
+  if the window resizes. I haven't figured out what to do
+  if the screen is too smal to show one or more of the widgets. 
+  Right now, the application will die. But that, of course, isn't 
+  the most elegant way to handle this exception ;-) 
+
+- The Curses::UI::ListBox widget is searchable using a "less"-like
+  system. So if a listbox widget has focus, pressing "/" or "?"
+  will invoke a search on the contents of the listbox. Since the
+  listbox is also used for RadioButtons, PopupBoxes and MenuListboxes,
+  all these are automatically searschable as well;
+
+- The texteditor supports word wrapping, but the word wrapping can
+  also be disabled (using CTRL+W). If word wrapping is enabled, 
+  hard returns can be enabled or disabled using CTRL+R. If hard
+  returns are enabled, a diamond character will show the positions
+  of hard returns. Some emacs bindings are supported (CTRL+B =
+  cursor back, CTRL+F = cursor forward, CTRL+P = cursor up, 
+  CTRL+N = cursor down, CTRL+A = beginning of line, CTRL+E = end
+  of line, CTRL+D = delete character, CTRL+K = delete till end of line).
+  Made an error? No problem. CTRL+Z will undo up to 20 steps (can 
+  be configured to go further back). A maximum length for the
+  text? No problem! The TextEntry widget is a texteditor which has
+  been told that it only contains a single line. So all texteditor
+  features are available in the TextEntry (as far as applicable);
+
+- The base element of most widgets (Curses::UI::Frame) has the 
+  ability of showing "scrollbars" for both the x- and y-direction. 
+  These scrollbars can be drawn on all sides of the widget
+  (left, right, top and bottom). The scrollbar is not really a 
+  scrollbar but more a document location indicator, but since it 
+  mimics a scrollbar I decided to call it a scrollbar (sounds 
+  simple eh? :-). This ability makes it easy to create widgets
+  with scrollbars on them.
+  
+  
+
+There aren't many examples yet, but the widgets are pretty much
+finished and functional. So far I only built some small example
+applications using the Curses::UI::* widget-set, so interfacing with 
+them might miss out on some aspects, but as soon as I am going to
+build the project for which I created these widgets, this might
+change. If you want me to add a particular functionality or 
+widget type, please feel free to send me an e-mail 
+(maurice@gitaar.net) and I'll see what I can do for you.
+Patches are even better :-)
+
+Author: Maurice Makaay
+E-mail: maurice@gitaar.net
+

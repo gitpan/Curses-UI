@@ -1,0 +1,329 @@
+#!/usr/bin/perl -w
+use strict;
+
+# Safe path (for cat /etc/passwd and "clear").
+$ENV{PATH} = "/bin:/usr/bin";
+
+# Deny STDERR
+open STDERR, ">/dev/null";
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+
+use Curses::UI::RootWindow;
+my $root = new Curses::UI::RootWindow;
+
+my $page1 = $root->add('page1', 'Curses::UI::Window',
+	-x => 0, -y => 0,
+	-padright	=> 0,
+	-padbottom	=> 0,
+	-title 		=> 'First page',
+	-border 	=> 1,
+	-ipad 		=> 1,
+);
+
+$page1->add('password_label', 'Curses::UI::Label',
+	-width=>15, -textalignment=>'right', -y=>1,
+	-text => "Password: ",
+);
+
+$page1->add('password_entry', 'Curses::UI::TextEntry',
+	-x=>15, -y=>1,
+	-width=>11,
+	-maxlength=>8,
+	-password=>'*',
+	-border=>0,
+	-showlines=>0,
+);
+
+$page1->add('foo_label', 'Curses::UI::Label',
+	-width=>15, -textalignment=>'right', -y=>2, 
+	-text => "Digits only: ",
+);
+$page1->add('foo_entry', 'Curses::UI::TextEntry', 
+	-x=>15, -y=>2, -width=>11, -sbborder=>1, 
+	-regexp => '/^\d*$/',
+	-showlines=>0, -border=>0,
+);
+
+$page1->add('limit_label', 'Curses::UI::Label',
+	-width=>15, -textalignment=>'right', -y=>3, 
+	-text => "limited entry: ",
+);
+
+$page1->add('limit_entry', 'Curses::UI::TextEntry', 
+	-x=>15, -y=>3, -width=>11, -maxlength=>8,
+	-sbborder=>1, -showlines=>0, -border=>0,
+);
+
+$page1->add('pulldown1_label', 'Curses::UI::Label',
+	-width=>15, -textalignment=>'right', -y=>4, 
+	-text => "pulldown 1 : ",
+);
+
+$page1->add('pulldown1', 'Curses::UI::PopupBox',
+	-x => 15, -y => 4, -width=>11,
+	-sbborder=>1, -selected => undef,
+	-values => [1,2,3,4,5,6,7,8,9,10,11,12,
+	            13,14,15,16,17,18,19,20],
+	-labels => {
+		1	=> 'One',
+		2	=> 'Two',
+		3	=> 'Three',
+		4	=> 'Four',
+		5	=> 'Five',
+		6	=> 'Six',
+		7	=> 'Seven',
+		8	=> 'Eight',
+		9	=> 'Nine',
+		10	=> 'Ten',
+		11	=> 'Eleven',
+		12	=> 'Twelve',
+		13	=> 'Thirteen',
+		14	=> 'Fourteen',
+		15	=> 'Fifteen',
+		16	=> 'Sixteen',
+		17	=> 'Seventeen',
+		18	=> 'Eighteen',
+		19	=> 'Nineteen',
+		20	=> 'Twenty',
+	},
+);
+	
+
+
+$page1->add('barbapapas', 'Curses::UI::ListBox',
+	-x => 1, -y => 7, -width => 18, -multi => 1,
+	-padbottom => 3, -border => 0, -vscrollbar=>'right',
+	-values => [
+		'barbapapa',
+		'barbamama',
+		'barbaborre',
+		'barbabenno',
+		'barbabee',
+		'barbabob',
+		'barbabella',
+		'barbalala',
+		'barbabientje'
+	],
+);
+
+$page1->add('listbox2', 'Curses::UI::ListBox',
+	-x => 20, -y => 7, -width => 5,
+	-border => 1, -padbottom => 3, -vscrollbar => 'right',
+	-values => [
+		'a','b','c','d','e','f','g','h','i','j','k','l','m','n',
+		'o','p','q','r','s','t','u','v','w','x','y','z'	
+	]
+);
+
+
+
+$page1->add('texteditor', 'Curses::UI::TextEditor', 
+	-x=>27, -y=>0, -padbottom => 3,
+	-title => "editor",
+	-border=>1, -vscrollbar => 1, -hscrollbar=>1,
+);
+
+$page1->add('explain_label1', 'Curses::UI::Label', 
+	-y => -2,
+	-x => 0,
+	-width => -1,
+	-border => 0,
+	-reverse => 1,
+	-text => " ^F : Show filebrowser dialog",
+);
+$page1->add('explain_label2', 'Curses::UI::Label', 
+	-y => -1,
+	-x => 0,
+	-width => -1,
+	-border => 0,
+	-reverse => 1,
+	-text => " ^Q : Quit program  ^N : Goto the next screen",
+);
+
+my $page2 = $root->add('page2', 'Curses::UI::Window',
+	-x => 0, -y => 0,
+	-padright	=> 0,
+	-padbottom	=> 0,
+	-title 		=> 'Second page',
+	-border 	=> 1,
+	-ipad 		=> 1
+);
+
+$page2->add('checkbox', 'Curses::UI::CheckBox',
+	-x => 0, -y => 0,
+	-label => 'This is just a very simple page... ',
+);
+
+$page2->add('radiobox', 'Curses::UI::RadioButtonBox',
+	-x => 0, -y => 3,
+	-selected => 0,
+	-values => ['first option','second option','third option'],
+);
+
+$page2->add('pulldown_label', 'Curses::UI::Label',
+	-x=>20, -textalignment=>'right', -y=>3, 
+	-text => "pulldown: ",
+);
+
+$page2->add('pulldown', 'Curses::UI::PopupBox',
+	-x => 30, -y => 3,
+	-width=>11,
+	-sbborder=>1,
+	-selected => undef,
+	-values => [1,2,3,4,5,6,7,8,9,10,11,12],
+	-labels => {
+		1	=> 'One',
+		2	=> 'Two',
+		3	=> 'Three',
+		4	=> 'Four',
+		5	=> 'Five',
+		6	=> 'Six',
+		7	=> 'Seven',
+		8	=> 'Eight',
+		9	=> 'Nine',
+		10	=> 'Ten',
+		11	=> 'Eleven',
+		12	=> 'Twelve',
+	},
+);
+
+my $text = `cat /etc/passwd`;
+$text .= $text; $text .= $text; 
+$page2->add('textviewer', 'Curses::UI::TextViewer', 
+	-x=>0, -y=>7, -border=>1,
+	-vscrollbar => 1, -hscrollbar=>1,
+	-title => "viewer",
+	-text => $text,
+);
+
+my $page3 = $root->add('page3', 'Curses::UI::Window',
+	-x => 0, -y => 0,
+	-padright	=> 0,
+	-padbottom	=> 0,
+	-title 		=> 'Third page',
+	-border 	=> 1,
+	-ipad 		=> 1
+);
+
+$page3->add('checkbox', 'Curses::UI::CheckBox',
+	-x => 0, -y => 0,
+	-callback => sub {
+		my $this = shift()->parent;
+		my $p1 = $this->getobj('progress1');
+		my $p2 = $this->getobj('progress2');
+		my $p3 = $this->getobj('progress3');
+		my $p4 = $this->getobj('progress4');
+		$p1->setpos($p1->get + 1);
+		$p2->setpos($p2->get - 1);
+		$p3->setpos($p3->get + 0.5);
+		$p4->setpos($p4->get + 0.2);
+	},
+	-label => 'This is just _another_ very simple page... ',
+);
+
+$page3->add('progress1', 'Curses::UI::ProgressBar',
+	-x => 0, -y => 2,
+	-min => 0,
+	-max => 100,
+	-pos => 0,	
+);
+
+$page3->add('progress2', 'Curses::UI::ProgressBar',
+	-x => 0, -y => 5,
+	-min => 0,
+	-max => 100,
+	-pos => 100,	
+	-showpercentage => 0,
+);
+
+$page3->add('progress3', 'Curses::UI::ProgressBar',
+	-x => 0, -y => 8,
+	-min => 0,
+	-max => 100,
+	-pos => 50,	
+	-showpercentage => 0,
+	-showcenterline => 0,
+);
+
+
+$page3->add('progress4', 'Curses::UI::ProgressBar',
+	-x => 0, -y => 12,
+	-min => 10,
+	-max => 160,
+	-pos => 32,	
+	-border => 0,
+);
+$page1->returnkeys("\cQ", "\cN", "\cL","\cF");
+$page2->returnkeys("\cQ", "\cN", "\cL","\cF");
+$page3->returnkeys("\cQ", "\cN", "\cL","\cF");
+
+		
+my $curpage = 'page1';
+FOCUS_CHANGE: for (;;)
+{
+	$root->ontop($curpage);
+	my ($ret,$key) = $root->getobj($curpage)->focus;
+
+	# CTRL+X => exit
+	if ($key eq "\cQ")
+	{
+		my $return = $root->dialog(
+			-title     => "Are you sure???", 
+			-buttons   => ['< Yes >' , '< No >'],
+			-values    => [1         , 0       ],
+			-shortcuts => ['y'       , 'n'     ],
+			-message => "Do you really want to quit\n"
+				  . "from this marvelous program\n"
+				  . "and miss out on all it's great "
+				  . "features?"
+		);
+		last FOCUS_CHANGE if $return;
+	}
+
+	elsif ($key eq "\cF")
+	{
+		my $file = $root->filebrowser(
+			-path => "/tmp",
+			-file => "example.txt",
+			-editfilename => 1,
+			-mask_values => [
+				'.',
+				'\.txt$',
+				'\.doc$',
+				'\.gif$',
+				'\.jpe?g$',
+			],
+			-mask_labels => {
+				'.'     => 'All files (*)',
+				'\.txt$' => 'Text files (*.txt)',
+				'\.doc$' => 'MS Word files (*.doc)',
+				'\.gif$' => 'GIF images (*.gif)',
+				'\.jpe?g$' => 'JPEG images (*.jpg/*.jpeg)',
+			},
+			-mask_selected => 1,
+		);
+		print STDERR "Selected $file\n" if defined $file;
+	}
+
+	elsif ($key eq "\cL") 
+	{
+		$root->layout_from_scratch;
+		$root->rebuild_from_scratch;
+	}
+
+	elsif ($key eq "\cN") 
+	{ 
+		my $new;
+		$new = 'page1' if $curpage eq 'page3'; 
+		$new = 'page2' if $curpage eq 'page1'; 
+		$new = 'page3' if $curpage eq 'page2'; 
+		$curpage = $new;
+	}
+}
+
+system "clear";
+
+
+
