@@ -1,0 +1,73 @@
+#!/usr/bin/perl -w
+use strict;
+
+# We do not want STDERR to clutter our screen.
+open STDERR, ">/dev/null";
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI;
+
+my $win = $cui->add('window_id', 'Window');
+
+$win->add(
+	'1', 'ProgressBar',
+	-y 	    => 1,
+	-width	    => 40,
+	-max        => 100,
+);
+
+$win->add(
+	'2', 'ProgressBar',
+	-y 	    => 4,
+	-width	    => 40,
+	-max        => 200,
+);
+
+$win->add(
+	'3', 'ProgressBar',
+	-y 	    => 7,
+	-width	    => 20,
+	-max        => 200,
+);
+
+$win->add(
+	'4', 'ProgressBar',
+	-y 	    => 11,
+	-width	    => 40,
+	-max        => 80,
+	-nopercentage => 1,
+	-border => 0,
+	-nocenterline => 1,
+);
+
+$win->add(
+	'5', 'ProgressBar',
+	-y 	    => 13,
+	-width	    => 40,
+	-max        => 60,
+	-border => 0,
+	-showcenterline => 0,
+);
+
+$win->add(
+	'6', 'ProgressBar',
+	-y 	    => 15,
+	-width	    => 40,
+	-max        => 40,
+	-border => 0,
+);
+
+foreach my $pos (0..200)
+{
+	for (1..6) {
+		$win->getobj($_)->pos($pos);
+	}
+	select(undef,undef,undef,0.05);
+	$win->draw;
+}
+
+
+sleep 1;
+

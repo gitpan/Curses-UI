@@ -51,3 +51,58 @@ sub new ()
 
 1;
 
+__END__
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::TextEntry - Create and manipulate textentry widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    my $textentry = $win->add( 
+        'mytextentry', 'TextEntry',
+        -password => '*',
+    );
+
+    $textentry->focus();
+    my $text = $textentry->get();
+
+
+=head1 DESCRIPTION
+
+Curses::UI::TextEntry is a widget that can be used 
+to create a textentry widget. This class is
+derived from Curses::UI::TextEditor. The
+only special thing about this class is that the 
+B<-singleline> option is forced to a true value. 
+So for the usage of Curses::UI::TextEntry see
+L<Curses::UI::TextEditor|Curses::UI::TextEditor>).
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::TextEditor|Curses::UI::TextEditor>, 
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+

@@ -53,6 +53,8 @@ sub new ()
 		-values		 => [],		# values
 		-labels		 => {},		# labels for the values
 		-selected	 => undef,	# the current selected value
+		-wraparound      => undef,      # wraparound? 
+		-sbborder	 => 1,		# square bracket border
 
 		-bindings	 => {%bindings},
 		-routines	 => {%routines},
@@ -75,14 +77,19 @@ sub new ()
 
 	# Create the ListBox. Layouting will be done
 	# in the layout routine.
+
+	my %listbox_options = ();
+	foreach my $option (qw(-values -labels -selected -wraparound)) {	
+		$listbox_options{$option} = $this->{$option}
+			if defined $this->{$option};
+	}
+
 	my $listbox = new Curses::UI::ListBox(
 		-parent		=> $this,
 		-assubwin 	=> 0,
 		-border   	=> 1,
-		-values	   	=> $this->{-values},
-		-labels 	=> $this->{-labels},
-		-selected	=> $this->{-selected},
 		-vscrollbar 	=> 1,
+		%listbox_options
 	);
 	$this->{-listboxobject} = $listbox;
 	
@@ -96,8 +103,8 @@ sub layout()
 	my $this = shift;
 
 	$this->delallwin();
-
 	$this->SUPER::layout();
+	return $this if $Curses::UI::screen_too_small;
 
 	# Create the label on the widget.
 	my $label = new Curses::UI::Label(
@@ -240,4 +247,187 @@ sub set_routine()
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Curses::UI::PopupBox - Create and manipulate popupbox widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    my $popupbox = $win->add(
+        'mypopupbox', 'PopupBox',
+        -values    => [1, 2, 3],
+        -labels    => { 1 => 'One', 
+                        2 => 'Two', 
+                        3 => 'Three' },
+    );
+
+    $popupbox->focus();
+    my $value = $popupbox->get();
+
+
+=head1 DESCRIPTION
+
+Curses::UI::Popupbox is a widget that can be used to create 
+something very similar to a basic L<Curses::UI::ListBox|Curses::UI::ListBox>.
+The difference is that the widget will show only the
+currently selected value (or "-------" if no value is yet
+selected). The list of possible values will be shown as a 
+separate popup window if requested. 
+
+Normally the widget will look something like this:
+
+ [Current value ]
+
+If the popup window is opened, it looks something like this:
+ 
+
+ [Current value ]
+ +--------------+
+ |Other value   |
+ |Current value | 
+ |Third value   |
+ +--------------+
+
+
+See exampes/demo-Curses::UI::PopupBox in the distribution
+for a short demo.
+
+
+
+=head1 STANDARD OPTIONS
+
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
+B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
+B<-title>, B<-titlefullwidth>, B<-titlereverse>
+
+For an explanation of these standard options, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
+
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item * B<-values> < LIST >
+
+=item * B<-labels> < HASHREF >
+
+=item * B<-selected> < VALUE >
+
+=item * B<-wraparound> < BOOLEAN >
+
+These options are exactly the same as the options for
+the ListBox widget. So for an explanation of these,
+take a look at L<Curses::UI::ListBox|Curses::UI::ListBox>.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( HASH )
+
+=item * B<layout> ( )
+
+=item * B<draw> ( BOOLEAN )
+
+=item * B<focus> ( )
+
+These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
+for an explanation of these.
+
+=item * B<get> ( )
+
+This method will return the currently selected value.
+
+=back
+
+
+
+
+=head1 DEFAULT BINDINGS
+
+There are bindings for the widget itself and bindings
+for the popup listbox that can be opened by this widget.
+
+=head2 The widget itself
+
+=over 4
+
+=item * <B<tab>>
+
+Call the 'return' routine. This will have the widget 
+loose its focus.
+
+=item * <B<enter>>, <B<cursor-right>, <B<l>>, <B<space>>
+
+Call the 'open-popup' routine. This will show the 
+popup listbox and bring the focus to this listbox. See
+B<The popup listbox> below for a description of the bindings 
+for this listbox.
+
+=item * <B<cursor-down>>, <B<j>>
+
+Call the 'select-next' routine. This will select the 
+item in the list that is after the currently selected
+item (unless the last item is already selected). If 
+no item is selected, the first item in the list will
+get selected. 
+
+=item * <B<cursor-up>>, <B<k>>
+
+Call the 'select-prev' routine. This will select the 
+item in the list that is before the currently selected
+item (unless the first item is already selected). If 
+no item is selected, the first item in the list will
+get selected. 
+
+=back 
+
+=head2 The popup listbox
+
+The bindings for the popup listbox are the same as the bindings
+for the ListBox widget. So take a look at 
+L<Curses::UI::ListBox|Curses::UI::Listbox> for a description
+of these. The difference is that the 'return' and 'option-select'
+routine will have the popup listbox to close. If the routine
+'option-select' is called, the active item will get selected.
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::ListBox|Curses::UI:ListBox>
+L<Curses::UI::Widget|Curses::UI::Widget>, 
+L<Curses::UI::Common|Curses::UI:Common>
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+
 

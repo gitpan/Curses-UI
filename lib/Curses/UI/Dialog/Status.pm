@@ -82,4 +82,10 @@ sub message($;)
 	return $this;
 }
 
+sub focus()
+{
+	my $this = shift;
+	return $this;
+}
+
 1;

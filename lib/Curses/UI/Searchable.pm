@@ -197,3 +197,162 @@ sub search_get($$;)
 
 1;
 
+
+__END__
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Searchable - Add 'less'-like search abilities to a widget
+
+=head1 SYNOPSIS
+
+    package MyWidget;
+
+    use Curses::UI::Searchable;
+    use vars qw(@ISA);
+    @ISA = qw(Curses::UI::Searchable);
+
+    ....
+
+    sub new () {
+        # Create class instance $this.
+        ....
+
+        $this->set_routine('search-forward', \&search_forward);
+        $this->set_binding('search-forward', '/');
+        $this->set_routine('search-backward', \&search_backward);
+        $this->set_binding('search-backward', '?');
+    }
+
+    sub layout_content() {
+        my $this = shift;
+
+        # Layout your widget's content.
+        ....
+
+        return $this;
+    }
+
+    sub number_of_lines() {
+        my $this = shift;
+        
+        # Return the number of lines in
+        # the widget's content.
+        return ....
+    }
+
+    sub getline_at_ypos($;) {
+        my $this = shift;
+        my $ypos = shift; 
+        
+        # Return the content on the line 
+        # where ypos = $ypos
+        return ....
+    }
+
+
+=head1 DESCRIPTION
+
+Using Curses::UI::Searchable, you can add 'less'-like
+search capabilities to your widget. 
+
+To make your widget searchable using this class,
+your widget should meet the following requirements:
+
+=over 4
+
+=item * B<make it a descendant of Curses::UI::Searchable>
+
+All methods for searching are in Curses::UI::Searchable.
+By making your class a descendant of this class, these
+methods are automatically inherited.
+
+=item * B<-ypos data member>
+
+The current vertical position in the widget should be
+identified by $this->{-ypos}. This y-position is the
+index of the line of content. Here's an example for 
+a ListBox widget.
+   
+ -ypos
+   |
+   v
+       +------+
+   0   |One   |
+   1   |Two   |
+   2   |Three |
+       +------+
+
+=item * B<method: number_of_lines ( )>
+
+Your widget class should have a method B<number_of_lines>,
+which returns the total number of lines in the widget's 
+content. So in the example above, this method would
+return the value 3.
+
+=item * B<method: getline_at_ypos ( YPOS )>
+
+Your widget class should have a method B<getline_at_ypos>,
+which returns the line of content at -ypos YPOS.
+So in the example above, this method would return
+the value "Two" for YPOS = 1.
+
+=item * B<method: layout_content ( )>
+
+The search routines will set the -ypos of your widget if a
+match is found for the given search string. Your B<layout_content>
+routine should make sure that the line of content at -ypos
+will be made visible if the B<draw> method is called.
+
+=item * B<method: draw ( )> 
+
+If the search routines find a match, $this->{-search_highlight}
+will be set to the -ypos for the line on which the match
+was found. If no match was found $this->{-search_highlight}
+will be undefined. If you want a matching line to be highlighted, 
+in your widget, you can use this data member to do so
+(an example of a widget that uses this option is the 
+L<Curses::UI::TextViewer|Curses::UI::TextViewer> widget).
+
+=item * B<bindings for searchroutines>
+
+There are two search routines. These are B<search_forward> and
+B<search_backward>. These have to be called in order to 
+display the search prompt. The best way to do this is by
+creating bindings for them. Here's an example which will
+make '/' a forward search and '?' a backward search:
+
+    $this->set_routine('search-forward'  , \&search_forward);
+    $this->set_binding('search-forward'  , '/');
+    $this->set_routine('search-backward' , \&search_backward);
+    $this->set_binding('search-backward' , '?');
+
+=back
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::SearchEntry|Curses::UI::SearchEntry>, 
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+
+
+
+
+

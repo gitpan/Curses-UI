@@ -89,7 +89,7 @@ sub layout()
 	# Break up the message in separate lines if neccessary.
 	my @lines = ();
 	foreach (split (/\n/,  $this->{-message})) {
-		push @lines, mws_wrap($_, $avail_textwidth);
+		push @lines, @{text_wrap($_, $avail_textwidth)};
 	}
 
 	# Compute the longest line in the message / buttons.

@@ -1,15 +1,84 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.57
+============
+
+2001-01-11:     - Wrote documentation for:
+                  - Curses::UI::MenuListBox 
+                  - Curses::UI::MenuBar 
+
+                - Added new example application:
+                  - demo-Curses::UI::MenuBar
+
+2001-01-10:     - Wrote documentation for:
+                  - Curses::UI::TextEditor 
+                  - Curses::UI::TextEntry 
+                  - Curses::UI::TextViewer 
+                  - Curses::UI::Common 
+                  - Curses::UI::Container 
+                  
+                - Added new example applications:
+                  - demo-Curses::UI::Dialog::Basic
+                  - demo-Curses::UI::TextEditor
+
+                - New option for Curses::UI::Label: -paddingspaces
+
+
+2001-01-09:     - If the screen is too small for the application
+                  to show, the program will no longer die.
+                  Now it will show a message telling the user
+                  that the screen should be bigger. 
+
+                - Added the -compat option and compat() method
+                  to Curses::UI. If -compat is set to a true
+                  value, the Curses::UI widgets will be draw
+                  using only basic characters, which should be
+                  available on all terminals. This might be 
+                  a good option for terminals which do not 
+                  have characters like ACS_VLINE and ACS_HLINE.
+
+                - Changed the -viewmode of Curses::UI::TextEditor
+                  to -readonly.
+
+                - The setpos() method of Curses::UI::ProgressBar
+                  has been renamed to pos(). The options 
+                  -showpercentage and -showcenterline have been
+                  changed to -nopercentage and -nocenterline.
+
+                - Wrote documentation for:
+                  - Curses::UI::PopupBox
+                  - Curses::UI::ProgressBar
+                  - Curses::UI::SearchEntry 
+                  - Curses::UI::Searchable 
+                
+                - Added new example applications:
+                  - demo-Curses::UI::PopupBox
+                  - demo-Curses::UI::ProgressBar
+
+2001-01-08:     - Deleted last references to the old mws (Maurice's
+                  Widget Set) namespace from the modules.
+
+                - Wrote documentation for:
+                  - Curses::UI::CheckBox
+                  - Curses::UI::Label
+                  - Curses::UI::ListBox
+
+                - Added new example applications:
+                  - demo-Curses::UI::CheckBox
+                  - demo-Curses::UI::Label
+                  - demo-Curses::UI::Listbox
+
+
 Version 0.56
 ============
 
 2001-01-07:     - Added new example applications: 
                   - hello_world
-                  - tutorial-Curses::UI::Buttons
-                  - tutorial-Curses::UI::Dialog::Progress
+                  - demo-Curses::UI::Buttons
+                  - demo-Curses::UI::Dialog::Progress
                   - pop3_reader: a simple POP3 mail reader
 
-		- Made documentation for Curses::UI::Buttons
+		- Wrote documentation for Curses::UI::Buttons
 
 		- New constants in Common.pm: KEY_TAB, KEY_SPACE
 
@@ -63,7 +132,7 @@ Version 0.55
                   If there are no double colons in the class name,
                   the sofware assumes the class is in Curses::UI.
 
-                - Made documentation for Curses::UI.
+                - Wrote documentation for Curses::UI.
 
                 - Fixed some small bugs and did some code cleanup.
 

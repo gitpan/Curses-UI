@@ -77,8 +77,8 @@ sub layout()
 	my $this = shift;
 
 	$this->delallwin;
-
 	$this->SUPER::layout;
+	return $this if $Curses::UI::screen_too_small;
 
 	# Create the label on the widget.
 	my $label = new Curses::UI::Label(
@@ -150,5 +150,175 @@ sub toggle()
 	$this->draw;
 }
 
+sub get()
+{
+	my $this = shift;
+	return $this->{-checked};
+}
+
 1;
+
+__END__
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::CheckBox - Create and manipulate checkbox widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    my $checkbox = $win->add(
+        'mycheckbox', 'Checkbox',
+        -label     => 'Say hello to the world',
+        -checked   => 1,
+    );
+
+    $checkbox->focus();
+    my $checked = $checkbox->get();
+
+
+=head1 DESCRIPTION
+
+Curses::UI::CheckBox is a widget that can be used to create 
+a checkbox. A checkbox has a label which says what the 
+checkbox is about and in front of the label there is a
+box which can have an "X" in it. If the "X" is there, the
+checkbox is checked (B<get> will return a true value). If
+the box is empty, the checkbox is not checked (B<get> will
+return a false value). A checkbox looks like this:
+
+    [X] Say hello to the world
+
+See exampes/demo-Curses::UI::CheckBox in the distribution
+for a short demo.
+
+
+
+=head1 STANDARD OPTIONS
+
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
+B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
+B<-title>, B<-titlefullwidth>, B<-titlereverse>
+
+For an explanation of these standard options, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
+
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item * B<-label> < VALUE >
+
+This will set the text label for the checkbox widget 
+to VALUE.
+
+=item * B<-checked> < BOOLEAN >
+
+This option determines if at creation time the checkbox
+should be checked or not. By default this option is
+set to false, so the checkbox is not checked.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( HASH )
+
+=item * B<layout> ( )
+
+=item * B<draw> ( BOOLEAN )
+
+=item * B<focus> ( )
+
+These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
+for an explanation of these.
+
+=item * B<get> ( )
+
+This method will return the current state of the checkbox
+(0 = not checked, 1 = checked).
+
+=item * B<check> ( )
+
+This method can be used to set the checkbox to its checked state.
+
+=item * B<uncheck> ( )
+
+This method can be used to set the checkbox to its unchecked state.
+
+=item * B<toggle> ( )
+
+This method will set the checkbox in "the other state". This means
+that the checkbox will get checked if it is not and vice versa.
+
+
+=back
+
+
+
+
+=head1 DEFAULT BINDINGS
+
+=over 4
+
+=item * <B<tab>>, <B<enter>>
+
+Call the 'return' routine. This will have the widget 
+loose its focus.
+
+=item * <B<space>>
+
+Call the 'toggle' routine (see the B<toggle> method). 
+
+=item * <B<0>>, <B<n>>
+
+Call the 'uncheck' routine (see the B<uncheck> method).
+
+=item * <B<1>>, <B<y>>
+
+Call the 'check' routine (see the B<check> method).
+
+=back 
+
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::Widget|Curses::UI::Widget>, 
+L<Curses::UI::Common|Curses::UI:Common>
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+
+
+
+
 

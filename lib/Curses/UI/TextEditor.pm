@@ -15,7 +15,6 @@ use strict;
 use Curses;
 use Curses::UI::Common;
 use Curses::UI::Widget;
-use Curses::UI::Dialog;
 use Curses::UI::Searchable;
 
 use vars qw($VERSION @ISA);
@@ -110,8 +109,8 @@ sub new ()
 
 	my %args = ( 
 		# Parent info
-		-parent		=> undef,	# the parent object
-		-callback	=> undef,	# callback on parent object
+		-parent		=> undef,	  # the parent object
+		-callback	=> undef,	  # callback on parent object
 
 		# Position and size
 		-x		=> 0,		  # horizontal position (rel. to -window)
@@ -137,10 +136,11 @@ sub new ()
 		-homeonreturn   => 0,		  # cursor to homepos on return?
 		-vscrollbar	=> 0,		  # show vertical scrollbar
 		-hscrollbar	=> 0,		  # show horizontal scrollbar
-		-viewmode	=> 0,		  # only used as viewer?
+		-readonly	=> 0,		  # only used as viewer?
 
 		# Single line options
 		-password	=> undef,	  # masquerade chars with given char
+
 		# Multiple line options
 		-showhardreturns => 0,		  # show hard returns with diamond char?
 		-wrapping	 => 0,		  # do wrap?
@@ -148,7 +148,7 @@ sub new ()
 		
 		# Bindings
 		-routines 	 => {%routines},  # binding routines
-		-bindings 	 => {},		  # these are set by viewmode()
+		-bindings 	 => {},		  # these are set by readonly()
 		
 		@_,
 
@@ -160,10 +160,6 @@ sub new ()
 		-xpos		 => 0,
 	);
 
-	$args{-border} = 1
-		unless defined $args{-sbborder} or defined $args{-border};
-	$args{-showlines} = 1 unless (($args{-border} or $args{-sbborder}) or defined $args{-showlines});
-	$args{-sbborder} = 1 unless ($args{-border} or defined $args{-sbborder});
 	# If initially wrapping is on, then we do not use
 	# overflow chars.
 	$args{-showoverflow} = 0 if $args{-wrapping};
@@ -196,11 +192,11 @@ sub new ()
 	# Single line? Then initial text may only be singleline.
 	if ($this->{-singleline} and $this->{-text} =~ /\n/)
 	{
-		my @lines = $this->split_to_lines($this->{-text});
-		$this->{-text} = $lines[0];
+		my $lines = $this->split_to_lines($this->{-text});
+		$this->{-text} = $lines->[0];
 	}
 
-	$this->viewmode($this->{-viewmode});
+	$this->readonly($this->{-readonly});
 	$this->layout_content;
 
 	return $this;
@@ -230,6 +226,7 @@ sub layout()
 {
 	my $this = shift;
 	$this->SUPER::layout();
+	return $this if $Curses::UI::screen_too_small;
 
 	# Scroll up if we can and the number of visible lines
 	# is smaller than the number of available lines in the screen.
@@ -265,12 +262,12 @@ sub layout_content()
 	# Build an array of lines to display and determine the cursor position
 	# ----------------------------------------------------------------------
 
-	my @lines_src = $this->split_to_lines($this->{-text});
-	foreach (@lines_src) {$_ .= "\n"}
-	$lines_src[-1] =~ s/\n$/ /;
+	my $lines_src = $this->split_to_lines($this->{-text});
+	foreach (@$lines_src) {$_ .= "\n"}
+	$lines_src->[-1] =~ s/\n$/ /;
 	
 	# No lines available? Then create an array.
-	@lines_src = ("") unless @lines_src;
+	$lines_src = [""] unless @$lines_src;
 
 	# No out of bound values for -pos.
 	$this->{-pos} = 0 unless defined $this->{-pos};
@@ -283,19 +280,19 @@ sub layout_content()
 	# y-position of the cursor in the text.
 	my $lines = [];
 	my ($xpos, $ypos, $trackpos) = (undef, 0, 0);
-	foreach my $line (@lines_src) 
+	foreach my $line (@$lines_src) 
 	{
-  	    my @add = ();
+  	    my $add = [];
 	    if ($this->{-wrapping}) {
-		@add = $this->mws_wrap($line, $this->screenwidth, WORDWRAP);
+		$add = $this->text_wrap($line, $this->screenwidth, WORDWRAP);
 	    } else {
-		@add = ($line);
+		$add = [$line];
 	    }
-	    push @$lines, @add;
+	    push @$lines, @$add;
 		
 	    unless (defined $xpos) 
 	    {
-	    	foreach (@add)
+	    	foreach (@$add)
 	    	{
 		    my $newtrackpos = $trackpos + length($_);
 		    if ( $this->{-pos} < $newtrackpos )
@@ -310,7 +307,7 @@ sub layout_content()
         }
 	
 	$this->{-scr_lines} 	= $lines;
-	unless ($this->{-viewmode})
+	unless ($this->{-readonly})
 	{
 		$this->{-xpos}		= $xpos;
 		$this->{-ypos}		= $ypos;
@@ -341,7 +338,7 @@ sub layout_content()
 
 	# If wrapping is enabled, then check for horizontal scrolling.
 	# Else make the -xscrpos fixed to 0.
-	unless ($this->{-viewmode})
+	unless ($this->{-readonly})
 	{
 	    unless ($this->{-wrapping})
 	    {
@@ -385,7 +382,7 @@ sub layout_content()
 	# Layout horizontal scrollbar.
 	# ----------------------------------------------------------------------
 
-	if (($this->{-hscrollbar} and not $this->{-wrapping}) or $this->{-viewmode})
+	if (($this->{-hscrollbar} and not $this->{-wrapping}) or $this->{-readonly})
 	{
 		my $longest_line = $this->number_of_columns;
 		$this->{-hscrolllen} = $longest_line + 1;
@@ -401,7 +398,7 @@ sub layout_content()
 	# Layout vertical scrollbar
 	# ----------------------------------------------------------------------
 
-	if ($this->{-vscrollbar} or $this->{-viewmode})	
+	if ($this->{-vscrollbar} or $this->{-readonly})	
 	{
 		$this->{-vscrolllen} = @{$this->{-scr_lines}};
 		$this->{-vscrollpos} = $this->{-yscrpos};
@@ -450,7 +447,7 @@ sub draw_text(;$)
 			if ($this->{-xscrpos} < length($l))
 			{
 				$fromxscr = substr($l, $this->{-xscrpos}, length($l));
-				$inscreen = ($this->mws_wrap($fromxscr, $this->screenwidth, NO_WORDWRAP))[0];
+				$inscreen = ($this->text_wrap($fromxscr, $this->screenwidth, NO_WORDWRAP))->[0];
 			}
 
 			# Masquerading of password fields.
@@ -475,9 +472,14 @@ sub draw_text(;$)
 				$this->{-windowscr}->addstr($id, 0, $inscreen);
 				if ($this->{-showhardreturns})
 				{
+				    if ($this->root->compat)
+				    {
+					$this->{-windowscr}->addch($id, scrlength($inscreen),'@');
+				    } else {
 					$this->{-windowscr}->attron(A_ALTCHARSET);
 					$this->{-windowscr}->addch($id, scrlength($inscreen),'`');
 					$this->{-windowscr}->attroff(A_ALTCHARSET);
+				    }
 				}
 			} else {
 				$this->{-windowscr}->addstr($id, 0, $inscreen);
@@ -499,7 +501,7 @@ sub draw_text(;$)
 
 	# Move the cursor.
 	# Take care of TAB's	
-	if ($this->{-viewmode}) 
+	if ($this->{-readonly}) 
 	{
 		$this->{-windowscr}->move(
 			$this->screenheight-1,
@@ -554,7 +556,7 @@ sub focus()
 		     ? $do_key
 		     : $this->get_key(
 			5, NO_CONTROLKEYS, 
-			($this->{-viewmode} ? CURSOR_INVISIBLE : CURSOR_VISIBLE)
+			($this->{-readonly} ? CURSOR_INVISIBLE : CURSOR_VISIBLE)
 		       );
 		undef $do_key;
 
@@ -614,8 +616,8 @@ sub focus()
 		    $is_illegal = 1 if length($this->{-text}) > $this->{-maxlength};
 		}	
 		if (not $is_illegal and defined $this->{-maxlines}) {
-		    my @l = $this->split_to_lines($this->{-text});
-		    $is_illegal = 1 if @l > $this->{-maxlines};
+		    my $lines = $this->split_to_lines($this->{-text});
+		    $is_illegal = 1 if @$lines > $this->{-maxlines};
 		}
 		if (not $is_illegal and defined $this->{-regexp}) {
 		    my $e = '$is_illegal = (not $this->{-text} =~ ' . $this->{-regexp} . ')';
@@ -697,8 +699,8 @@ sub cursor_right()
 {
 	my $this = shift;
 	
-	# Handle cursor_right for view only mode. 
-	if ($this->{-viewmode})
+	# Handle cursor_right for read only mode. 
+	if ($this->{-readonly})
 	{
 		return $this->dobeep
 			unless defined $this->{-hscrolllen};
@@ -728,8 +730,8 @@ sub cursor_left()
 {
 	my $this = shift;
 	
-	# Handle cursor_left for view only mode. 
-	if ($this->{-viewmode})
+	# Handle cursor_left for read only mode. 
+	if ($this->{-readonly})
 	{
 		return $this->dobeep if $this->{-xscrpos} <= 0;
 		$this->{-xscrpos} -= 1;
@@ -762,8 +764,8 @@ sub cursor_up(;$)
 	
 	return $this->dobeep if $this->{-singleline};
 	
-	# Handle cursor_up for view only mode. 
-	if ($this->{-viewmode})
+	# Handle cursor_up for read only mode. 
+	if ($this->{-readonly})
 	{
 		return $this->dobeep if $this->{-yscrpos} <= 0;
 		$this->{-yscrpos} -= $amount;		
@@ -811,8 +813,8 @@ sub cursor_down($;)
 	
 	return $this->dobeep if $this->{-singleline};
 	
-	# Handle cursor_down for view only mode. 
-	if ($this->{-viewmode})
+	# Handle cursor_down for read only mode. 
+	if ($this->{-readonly})
 	{
 		my $max = @{$this->{-scr_lines}} - $this->screenheight;
 		return $this->dobeep 
@@ -858,7 +860,7 @@ sub cursor_to_home()
 {
 	my $this = shift;
 		
-	if ($this->{-viewmode})
+	if ($this->{-readonly})
 	{
 		$this->{-xscrpos} = $this->{-xpos} = 0;
 		$this->{-yscrpos} = $this->{-ypos} = 0;
@@ -874,7 +876,7 @@ sub cursor_to_end()
 {
 	my $this = shift;
 
-	if ($this->{-viewmode})
+	if ($this->{-readonly})
 	{
 		$this->{-xscrpos} = $this->{-xpos} = 0;
 		$this->{-yscrpos} = $this->{-ypos} =
@@ -893,7 +895,7 @@ sub cursor_to_scrlinestart()
 	# Key argument is set if called from binding.
 	my $from_binding = shift; 
 	
-	if ($this->{-viewmode})
+	if ($this->{-readonly})
 	{
 		$this->{-xscrpos} = $this->{-xpos} = 0;
 		return $this;
@@ -910,7 +912,7 @@ sub cursor_to_scrlineend()
 	my $this = shift;
 	my $from_binding = shift;
 	
-	if ($this->{-viewmode})
+	if ($this->{-readonly})
 	{
 		$this->{-xscrpos} = $this->{-xpos} = 
 			$this->{-hscrolllen} - $this->screenwidth ;
@@ -1136,14 +1138,14 @@ sub paste()
 	return $this;
 }
 
-sub viewmode($;)
+sub readonly($;)
 {
 	my $this = shift;
-	my $viewmode = shift;
+	my $readonly = shift;
 
-	$this->{-viewmode} = $viewmode;
+	$this->{-readonly} = $readonly;
 	
-	if ($viewmode)
+	if ($readonly)
 	{
 		my %mybindings = (
 			%basebindings,
@@ -1194,3 +1196,434 @@ sub number_of_columns()
 sub getline_at_ypos($;) { shift()->{-scr_lines}->[shift()] }
 
 1;
+
+__END__
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::TextEditor - Create and manipulate texteditor widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    my $editor = $win->add(
+        'myeditor', 'Editor',
+        -vscrollbar => 1,
+        -wrapping   => 1,
+    );
+
+    $editor->focus();
+    my $text = $editor->get();
+
+
+=head1 DESCRIPTION
+
+Curses::UI::TextEditor is a widget that can be used to create 
+a couple of different kinds of texteditors. These are:
+
+=over 4
+
+=item * B<multi-line texteditor>
+
+This is a multi-line text editor with features like word-wrapping,
+maximum textlength and undo.
+
+=item * B<single-line texteditor>
+
+The texteditor can be created as a single-line editor. 
+Most of the features of the default texteditor will remain.
+Only the multi-line specific options will not be
+available (like moving up and down in the text).
+
+=item * B<read only texteditor>
+
+The texteditor can also be used in read only mode.
+In this mode, the texteditor will function as a text
+viewer. The user can walk through the text and 
+search trough it.
+
+=back
+
+See exampes/demo-Curses::UI::TextEditor in the distribution
+for a short demo of these.
+
+
+
+=head1 STANDARD OPTIONS
+
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
+B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
+B<-title>, B<-titlefullwidth>, B<-titlereverse>
+
+For an explanation of these standard options, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
+
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item * B<-text> < SCALAR>
+
+This sets the initial text for the widget to SCALAR.
+
+=item * B<-pos> < SCALAR >
+
+This sets the initial cursor position for the widget
+to SCALAR. BB<-pos> represents the character index within
+B<-text>. By default this option is set to 0.
+
+=item * B<-readonly> < BOOLEAN >
+
+The texteditor widget will be created as a read only 
+texteditor (which is also called a textviewer) if 
+BOOLEAN is true. By default BOOLEAN is false.
+
+=item * B<-singleline> < BOOLEAN >
+
+The texteditor widget will be created as a single line
+texteditor (which is also called a textentry) if 
+BOOLEAN is true. By default BOOLEAN is false.
+
+=item * B<-wrapping> < BOOLEAN >
+
+If BOOLEAN is true, the texteditor will have text wrapping
+enabled. By default BOOLEAN is false.
+
+=item * B<-showlines> < BOOLEAN >
+
+If BOOLEAN is set to a true value, each editable line
+in the editor will show a line to type on. By default
+BOOLEAN is set to false.
+
+=item * B<-maxlength> < SCALAR >
+
+This sets the maximum allowed length of the text to SCALAR.
+By default SCALAR is set to 0, which means that the text
+may be infinitely long.
+
+=item * B<-maxlines> < SCALAR >
+
+This sets the maximum allowed number of lines for the text 
+to SCALAR. By default SCALAR is set to 0, which means that 
+the text may contain an infinite number of lines.
+
+=item * B<-password> < CHARACTER >
+
+Instead of showing the real text in the widget, every
+character of the text will (on the screen) be replaced
+by CHARACTER. So creating a standard password field
+can be done by setting:
+
+    -password => '*'
+
+=item * B<-maxlength> < SCALAR >
+
+This sets the maximum allowed length of the text to SCALAR.
+By default SCALAR is set to 0, which means that the text
+may be infinitely long.
+
+=item * B<-regexp> < REGEXP >
+
+If characters are added to the texteditor, the new text
+will be matched against REGEXP. If the text does not match,
+the change will be denied. This can for example be used to
+force digit-only input on the texteditor:
+
+    -regexp => '/^\d*$/'
+
+=item * B<-undolevels> < SCALAR >
+
+This option determines how many undolevels should be kept
+in memory for the texteditor widget. By default 10 levels
+are kept. If this value is set to 0, the number of levels
+is infinite.
+
+=item * B<-showoverflow> < BOOLEAN >
+
+If BOOLEAN is true, the text in the texteditor will be
+padded by an overflow character ($) if there is text
+outside the screen (like 'pico' does). By default 
+BOOLEAN is true.
+
+=item * B<-showhardreturns> < BOOLEAN >
+
+If BOOLEAN is true, hard returns will be made visible
+by a diamond character. By default BOOLEAN is false.
+
+=item * B<-homeonreturn> < BOOLEAN >
+
+If BOOLEAN is set to a true value, the cursor will move
+to the start of the text if the widget loses focus.
+
+=item * B<-toupper> < BOOLEAN >
+
+If BOOLEAN is true, all entered text will be converted
+to uppercase. By default BOOLEAN is false.
+
+=item * B<-tolower> < BOOLEAN >
+
+If BOOLEAN is true, all entered text will be converted
+to lowercase. By default BOOLEAN is false.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( HASH )
+
+=item * B<layout> ( )
+
+=item * B<draw> ( BOOLEAN )
+
+=item * B<focus> ( )
+
+These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
+for an explanation of these.
+
+=item * B<text> ( [SCALAR] )
+
+If SCALAR is defined, this will set the text of the widget to SCALAR.
+To see the change, the widget needs to be redrawn by the B<draw> method.
+If SCALAR is not defined, this method will return the current contents
+of the texteditor.
+
+=item * B<get> ( )
+
+This method will call B<text> without any arguments, so it
+will return the contents of the texteditor.
+
+=back
+
+
+
+
+=head1 DEFAULT BINDINGS
+
+There are different sets of bindings for each mode in which
+this widget can be used. 
+
+
+
+=head2 All modes (editor, single line and read only)
+
+
+
+=over 4
+
+=item * <B<tab>>
+
+Call the 'return' routine. This will have the widget 
+loose its focus.
+
+=item * <B<cursor-left>, <B<CTRL+B>>
+
+Call the 'cursor-left' routine: move the
+cursor one position to the left.
+
+=item * <B<cursor-right>, <B<CTRL+F>>
+
+Call the 'cursor-right' routine: move the
+cursor one position to the right.
+
+=item * <B<cursor-down>, <B<CTRL+N>>
+
+Call the 'cursor-down' routine: move the
+cursor one line down.
+
+=item * <B<cursor-up>, <B<CTRL+P>>
+
+Call the 'cursor-up' routine: move the
+cursor one line up.
+
+=item * <B<page-up>>
+
+Call the 'cursor-pageup' routine: move the
+cursor to the previous page.
+
+=item * <B<page-down>>
+
+Call the 'cursor-pagedown' routine: move
+the cursor to the next page.
+
+=item * <B<home>>
+
+Call the 'cursor-home' routine: go to the
+start of the text. 
+
+=item * <B<end>>
+
+Call the 'cursor-end' routine: go to the
+end of the text. 
+
+=item * <B<CTRL+A>>
+
+Call the 'cursor-scrlinestart' routine: move the
+cursor to the start of the current line.
+
+=item * <B<CTRL+E>>
+
+Call the 'cursor-scrlineend' routine: move the
+cursor to the end of the current line.
+
+=item * <B<CTRL+W>>
+
+Call the 'toggle-wrapping' routine: toggle the
+-wrapping option of the texteditor.
+
+=item * <B<CTRL+R>>
+
+Call the 'toggle-showhardreturns' routine: toggle the
+-showhardreturns option of the texteditor.
+
+=item * <B<CTRL+T>>
+
+Call the 'toggle-showoverflow' routine: toggle the
+-showoverflow option of the texteditor.
+
+=back 
+
+
+
+=head2 All edit modes (all but read only mode)
+
+
+
+=over 4
+
+=item * <B<CTRL+Y>>, <B<CTRL+X>>
+
+Call the 'delete-line' routine: Delete the current
+line.
+
+=item * <B<CTRL+K>>
+
+Call the 'delete-till-eol' routine: delete the text
+from the current cursor position up to the end of
+the current line.
+
+=item * <B<CTRL+U>>
+
+Call the 'clear-line' routine: clear the 
+current line and move the cursor to the
+start of this line.
+
+=item * <B<CTRL+D>>
+
+Call the 'delete-character' routine: delete the 
+character that currently is under the cursor.
+
+=item * <B<backspace>>
+
+Call the 'backspace' routine: delete the character
+this is before the current cursor position.
+
+=item * <B<CTRL+Z>>
+
+Call the 'undo' routine: undo the last change to
+the text, up to B<-undolevels> levels.
+
+=item * <B<CTRL+V>>
+
+Call the 'paste' routine: this will paste the 
+last deleted text at the current cursor position.
+
+=item * <B<any other key>>
+
+Call the 'add-string' routine: the character
+will be inserted in the text at the current
+cursor position.
+
+=back
+
+
+
+=head2 Only for the read only mode
+
+
+
+=over 4
+
+=item * <B<h>> 
+
+Call the 'cursor-left' routine: move the
+cursor one position to the left.
+
+=item * <B<l>> 
+
+Call the 'cursor-right' routine: move the
+cursor one position to the right.
+
+=item * b<<k>> 
+
+Call the 'cursor-up' routine: move the
+cursor one line up.
+
+=item * b<<j>> 
+
+Call the 'cursor-down' routine: move the
+cursor one line down.
+
+=item * <B<space>>, <B<]>> 
+
+Call the 'cursor-pagedown' routine: move
+the cursor to the next page.
+
+=item * <B<->>, <B<[>>
+
+Call the 'cursor-pageup' routine: move the
+cursor to the previous page.
+
+=item * <B</>>
+
+Call the 'search-forward' routine. This will make a 'less'-like
+search system appear in the textviewer. A searchstring can be
+entered. After that the user can search for the next occurance
+using the 'n' key or the previous occurance using the 'N' key.
+
+=item * <B<?>>
+
+Call the 'search-backward' routine. This will do the same as
+the 'search-forward' routine, only it will search in the
+opposite direction.
+
+=back
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::TextViewer|Curses::UI:TextViewer>
+L<Curses::UI::TextEntry|Curses::UI:TextEntry>
+L<Curses::UI::Widget|Curses::UI::Widget>, 
+L<Curses::UI::Common|Curses::UI:Common>
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+

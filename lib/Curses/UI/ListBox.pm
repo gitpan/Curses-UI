@@ -130,6 +130,7 @@ sub layout()
 {
 	my $this = shift;
 	$this->SUPER::layout();	
+	return $this if $Curses::UI::screen_too_small;
 
         # Scroll up if we can and the number of visible lines
         # is smaller than the number of available lines in the screen.
@@ -463,3 +464,270 @@ sub number_of_lines()   { @{shift()->{-values}} }
 sub getline_at_ypos($;) { shift()->getlabel(shift()) }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Curses::UI::ListBox - Create and manipulate listbox widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    my $listbox = $win->add(
+        'mylistbox', 'Listbox',
+        -values    => [1, 2, 3],
+        -labels    => { 1 => 'One', 
+                        2 => 'Two', 
+                        3 => 'Three' },
+        -radio     => 1,
+    );
+
+    $listbox->focus();
+    my $selected = $listbox->get();
+
+
+=head1 DESCRIPTION
+
+Curses::UI::Listbox is a widget that can be used to create 
+a couple of different kinds of listboxes. These are:
+
+=over 4
+
+=item * B<default listbox>
+
+A list of values through which can be browsed. One of these
+values can be selected. The selected value will be 
+highlighted. This kind of listbox looks somewhat like this:
+
+ +------+
+ |One   |
+ |Two   |
+ |Three |
+ +------+
+
+=item * B<multi-select listbox>
+
+This is also a list of values, but now more than one 
+value can be selected at once. This kind of listbox 
+looks somewhat like this:
+  
+ +----------+
+ |[X] One   |
+ |[ ] Two   |
+ |[X] Three |
+ +----------+
+
+=item * B<radiobutton listbox>
+
+This looks a lot like the default listbox (only one
+value can be selected), but now there is clear 
+visual feedback on which value is selected. Before
+each value "< >" is printed. If a value is selected,
+"<o>" is printed instead. This kind of listbox 
+looks somewhat like this:
+
+ +----------+
+ |< > One   |
+ |<o> Two   |
+ |< > Three |
+ +----------+
+
+=back
+
+See exampes/demo-Curses::UI::Listbox in the distribution
+for a short demo.
+
+
+
+=head1 STANDARD OPTIONS
+
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
+B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
+B<-title>, B<-titlefullwidth>, B<-titlereverse>
+
+For an explanation of these standard options, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
+
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item * B<-values> < LIST >
+
+This option sets the values to use. 
+Unless a label is set for the value (see B<-labels>), 
+this value will be shown in the list.
+
+=item * B<-labels> < HASHREF >
+
+The keys of this hash reference correspond to the values of 
+the listbox (see B<-values>). The values of the hash are the 
+labels to show in the listbox. It's not obligatory to have 
+a label defined for each value. You may even omit -labels 
+completely.
+
+=item * B<-selected> < VALUE >
+
+In case the B<-multi> option is not set, VALUE is the index
+of the value that should be selected.
+
+In case the B<-multi> option is set, VALUE is a hash reference
+in which the keys are the indices of the B<-values> which are 
+selected and the values are any true value.
+
+=item * B<-multi> < BOOLEAN >
+
+If BOOLEAN has a true value, the listbox will be a multi-select
+listbox (see DESCRIPTION).
+
+=item * B<-radio> < BOOLEAN >
+
+If BOOLEAN has a true value, the listbox will be a radiobutton
+listbox (see DESCRIPTION).
+
+=item * B<-wraparound> < BOOLEAN >
+
+If BOOLEAN has a true value, wraparound is enabled. This means
+that if the listbox is on its last value and a key is pressed
+to go to the next value, the first value will be selected.
+Also the last value will be selected if this first value is
+selected and "goto previous value" is pressed.
+
+
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( HASH )
+
+=item * B<layout> ( )
+
+=item * B<draw> ( BOOLEAN )
+
+=item * B<focus> ( )
+
+These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
+for an explanation of these.
+
+=item * B<get> ( )
+
+This method will return the values of the currently selected items 
+in the list. If the listbox is not a multi-select listbox only one
+value will be returned of course.
+
+
+=back
+
+
+
+
+=head1 DEFAULT BINDINGS
+
+=over 4
+
+=item * <B<cursor-left>>, <B<h>>, <B<tab>>
+
+Call the 'return' routine. This will have the widget 
+loose its focus.
+
+=item * <B<cursor-right>, <B<l>>, <B<enter>>, <B<space>>
+
+Call the 'option-select' routine. This will select the
+active item in the listbox.
+
+=item * <B<1>>, <B<y>>
+
+Call the 'option-check' routine. If the listbox is a 
+multi-select listbox, the active item will become checked
+and the next item will become active.
+
+=item * <B<0>>, <B<n>>
+
+Call the 'option-uncheck' routine. If the listbox is a 
+multi-select listbox, the active item will become unchecked
+and the next item will become active.
+
+=item * <B<cursor-down>>, <B<j>>
+
+Call the 'option-next' routine. This will make the next
+item of the list active.
+
+=item * <B<cursor-up>>, <B<k>>
+
+Call the 'option-prev' routine. This will make the previous
+item of the list active.
+
+=item * <B<page-up>>
+
+Call the 'option-prevpage' routine. This will make the item
+on the previous page active.
+
+=item * <B<page-down>>
+
+Call the 'option-nextpage' routine. This will make the item
+on the next page active.
+
+=item * <B<home>>, <B<CTRL+A>>
+
+Call the 'option-first' routine. This will make the first
+item of the list active.
+
+=item * <B<end>>, <B<CTRL+E>>
+
+Call the 'option-last' routine. This will make the last
+item of the list active.
+
+=item * <B</>>
+
+Call the 'search-forward' routine. This will make a 'less'-like
+search system appear in the listbox. A searchstring can be
+entered. After that the user can search for the next occurance
+using the 'n' key or the previous occurance using the 'N' key.
+
+=item * <B<?>>
+
+Call the 'search-backward' routine. This will do the same as
+the 'search-forward' routine, only it will search in the 
+opposite direction.
+
+=back 
+
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::Widget|Curses::UI::Widget>, 
+L<Curses::UI::Common|Curses::UI:Common>
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+

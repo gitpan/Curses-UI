@@ -106,6 +106,7 @@ $screen->add(
 	-y 	 	 => -2,
 	-width		 => -1,
 	-reverse 	 => 1,
+	-paddingspaces   => 1,
 	-text 	 	 => " ^Q Quit from the program "
 		  	  . " ^S save file "
 		  	  . " ^W toggle wrapping",
@@ -115,6 +116,7 @@ $screen->add(
 	-y 	 	 => -1,
 	-reverse 	 => 1,
 	-width		 => -1,
+	-paddingspaces   => 1,
 	-text 	 	 => " ^X Open the menu         "
                   	  . " ^O open file "
 		  	  . " ^R toggle hard returns viewing",

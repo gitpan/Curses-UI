@@ -20,24 +20,51 @@ use Curses::UI::Container;
 use Term::ReadKey;
 
 use vars qw($VERSION @ISA);
-$VERSION = "0.56";
+$VERSION = "0.60";
 @ISA = qw(Curses::UI::Container);
 
-$::mws_resizing = 0; 
-$::mws_resizetime = undef; 
+$Curses::UI::resizing = 0; 
+$Curses::UI::resizetime = undef; 
+$Curses::UI::screen_too_small = 0; 
 
 $SIG{'WINCH'} = \&resize_window;
 sub resize_window()
 {
-	$::mws_resizing++;
-	$::mws_resizetime = time();
+	$Curses::UI::resizing++;
+	$Curses::UI::resizetime = time();
 	$SIG{'WINCH'} = \&resize_window;
+}
+
+sub check_for_resize()
+{
+	my $this = shift;
+
+        # The last resize signal should be received more than a
+        # second ago. This mechanism is used to catch window
+        # managers that send a whole bunch of signals to the
+        # application if the screen resizes. Only the last one
+        # will count.
+
+        if ($Curses::UI::resizing and
+            ($Curses::UI::resizetime <= (time()-1)))
+        {
+                $Curses::UI::resizing = 0;
+                $Curses::UI::screen_too_small = 0;
+                $this->root->layout_from_scratch;
+                $this->root->rebuild_from_scratch;
+        }
+	
+	return $this;
 }
 
 sub new()
 {
 	my $class = shift;
-	my $this = bless {}, $class;
+	my %args = (
+		-compat    => 0,
+		@_,
+	);
+	my $this = bless { %args }, $class;
 	$this->layout();	
 	return $this;
 }
@@ -45,6 +72,7 @@ sub new()
 sub layout()
 {
 	my $this = shift;
+	return $this if $Curses::UI::screen_too_small;
 	
 	if (defined $this->{-scr})
 	{
@@ -71,6 +99,60 @@ sub layout()
 	$this->layout_contained_objects;
 	
 	return $this;	
+}
+
+sub compat(;$)
+{
+	my $this = shift;
+	my $val = shift;
+	if (defined $val) {
+		$this->{-compat} = $val
+	}
+	return $this->{-compat};
+}
+
+sub check_for_too_small_screen()
+{
+	my $this = shift;
+	
+	if ($Curses::UI::screen_too_small) 
+	{
+		my $s = $this->rootscr;
+		$s->clear;
+		$s->addstr(0,0,"Your screen is currently too small "
+			     . "for this application.");
+		$s->addstr(1,0,"Resize the screen or press "
+                             . "<CTRL+C> to exit");
+		$s->move(2,0);
+		$s->noutrefresh();
+		doupdate();
+
+		for (;;) 
+		{
+			$this->check_for_resize;
+			last unless $Curses::UI::screen_too_small;
+			sleep 1;
+		}
+	
+	}
+
+	return $this;
+}
+
+sub rebuild()
+{
+	my $this = shift;
+	$this->check_for_too_small_screen();
+	$this->SUPER::rebuild();
+	return $this;
+}
+
+sub draw()
+{
+	my $this = shift;
+	$this->check_for_too_small_screen();
+	$this->SUPER::draw();
+	return $this;
 }
 
 sub add()
@@ -244,7 +326,7 @@ sub setprogress($;$)
 
 	my $p = $this->getobj('_progress');
 	return unless defined $p;
-	$p->setpos($pos) if defined $pos;
+	$p->pos($pos) if defined $pos;
 	$p->message($message) if defined $message;
 	$p->draw;	
 
@@ -279,6 +361,9 @@ __END__
 
 Curses::UI - A curses based user user interface framework
 
+
+
+
 =head1 SYNOPSIS
 
 Here's the obligatory "Hello, world!" example.
@@ -286,6 +371,9 @@ Here's the obligatory "Hello, world!" example.
     use Curses::UI;
     my $cui = new Curses::UI;
     $cui->dialog("Hello, world!");
+
+
+
 
 =head1 DESCRIPTION
 
@@ -326,6 +414,205 @@ Support classes
   Curses::UI::Common
   Curses::UI::SearchEntry
   Curses::UI::Searchable
+
+
+
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-compat> < BOOLEAN >
+
+If the B<-compat> option is set to a true value, the Curses::UI
+program will run in compatibility mode. This means that only
+very simple characters will be used for creating the widgets.
+
+=back
+
+
+
+
+=head1 METHODS
+
+The UI is a descendant of Curses::UI::Container, so you can use the
+Container methods. Here's an overview of the methods that are specific
+for Curses::UI.
+
+=over 4
+
+=item B<new> ( OPTIONS )
+
+Create a new Curses::UI instance. See the OPTIONS section above 
+to find out what options can be used.
+
+=item B<add> ( ID, CLASS, OPTIONS )
+
+The B<add> method of Curses::UI is almost the same as the B<add>
+method of Curses::UI::Container. The difference is that Curses::UI
+will only accept classes that are (descendants) of the
+Curses::UI::Window class. For the rest of the information
+see L<Curses::UI::Container|Curses::UI::Container>.
+
+=item B<layout> ( )
+
+The layout method of Curses::UI will try to find out the size of the
+screen. After that it will call the B<layout> routine of every 
+contained object. So running B<layout> on a Curses::UI object will
+effectively layout the complete application. Normally you will not 
+have to call this method directly.
+
+=item B<compat> ( [BOOLEAN] )
+
+The B<-compat> option will be set to the BOOLEAN value. If the
+argument is omitted, this method will only return the current
+value for B<-compat>.
+
+=item B<dialog> ( MESSAGE or OPTIONS )
+
+Use the B<dialog> method to show a dialog window. If you only
+provide a single argument, this argument will be used as the 
+message to show. Example:
+
+    $cui->dialog("Hello, world!"); 
+
+If you want to have some more control over the dialog window, you
+will have to provide more arguments (for an explanation of the 
+arguments that can be used, see 
+L<Curses::UI::Dialog::Basic|Curses::UI::Dialog::Basic>. 
+Example:
+
+    my $yes = $cui->dialog(
+        -message => "Hello, world?");
+        -buttons => ['< Yes >','< No >']
+        -values  => [1,0],
+        -title   => 'Question',
+    );
+
+    if ($yes) {
+        # whatever
+    }
+       
+
+=item B<error> ( MESSAGE or OPTIONS )
+
+The B<error> method will create an error dialog. This is 
+basically a Curses::UI::Dialog::Basic, but it has an ASCII-art
+exclamation sign drawn left to the message. For the rest 
+it's just like B<dialog>. Example:
+
+    $cui->error("It's the end of the\n"
+               ."world as we know it!");
+
+=item B<filebrowser> ( OPTIONS )
+
+The B<filebrowser> method will create a file browser
+dialog. For an explanation of the arguments that can be 
+used, see L<Curses::UI::FileBrowser|Curses::UI::FileBrowser>.
+Example:
+
+    my $file = $cui->filebrowser(
+        -path => "/tmp",
+        -show_hidden => 1,
+    );
+
+    # Filebrowser will return undef
+    # if no file was selected.
+    if (defined $file) { 
+        unless (open F, ">$file") {
+            print F "Hello, world!\n";
+            close F;
+	} else {
+            $cui->error("Error on writing to "
+                       ."\"$file\":\n$!");
+	}
+    } 
+
+=item B<loadfilebrowser>( OPTIONS )
+
+=item B<savefilebrowser>( OPTIONS )
+
+These two methods will create file browser dialogs as well.
+The difference is that these will have the dialogs set up
+correctly for loading and saving files. Moreover, the save
+dialog will check if the selected file exists or not. If it
+does exist, it will show an overwrite confirmation to check
+if the user really wants to overwrite the selected file.
+
+=item B<status> ( MESSAGE )
+
+=item B<nostatus> ( )
+
+Using these methods it's easy to provide status information for
+the user of your program. The status dialog is a dialog with 
+only a label on it. The status dialog doesn't really get the
+focus. It's only used to display some information. If you need
+more than one status, you can call B<status> subsequently.
+Any existing status dialog will be cleaned up and a new one
+will be created.
+
+If you are finished, you can delete the status dialog by calling
+the B<nostatus> method. Example:
+
+    $cui->status("Saying hello to the world...");
+    # code for saying "Hello, world!"
+
+    $cui->status("Saying goodbye to the world...");
+    # code for saying "Goodbye, world!"
+
+    $cui->nostatus;
+
+=item B<progress> ( OPTIONS )
+
+=item B<setprogress> ( POSITION, MESSAGE )
+
+=item B<noprogress> ( )
+
+Using these methods it's easy to provide progress information
+to the user. The progress dialog is a dialog with an optional
+label on it and a progress bar. Similar to the status dialog,
+this dialog does not get the focus. 
+
+Using the B<progress> method, a new progress dialog can be 
+created (see also 
+L<Curses::IU::Dialog::Progress|Curses::UI::Dialog::Progress>). 
+This method takes the same arguments as the Curses::IU::Dialog::Progress 
+class.
+
+After that the progress can be set using B<setprogress>. This 
+method takes one or two arguments. The first argument is the current
+position of the progressbar. The second argument is the message
+to show in the label. If one of these arguments is undefined,
+the current value will be kept. 
+
+If you are finished, you can delete the progress dialog by calling
+the B<noprogress> method. 
+
+Example:
+
+    $cui->progress(
+        -max => 10,
+	-message => "Counting 10 seconds...",
+    );
+
+    for my $second (0..10) {
+	$cui->setprogress($second)
+	sleep 1;
+    }
+
+    $cui->noprogress;
+
+=back
+
+
+
+=head1 SEE ALSO
+
+L<Curses>
+L<Curses::UI::Container|Curse::UI::Container>,
+
+
+
 
 =head1 BASIC TUTORIAL
 
@@ -515,172 +802,8 @@ We have built a genuine Curses::UI application! Not that it is a
 very useful one, but who cares? Now try out if it works like you 
 think it should. The complete source code of this application can 
 be found in the examples directory of the distribution 
-(examples/tutorial-Curses::UI).
+(examples/demo-Curses::UI).
 
-=head1 METHODS
-
-The UI is a descendant of Curses::UI::Container, so you can use the
-Container methods. Here's an overview of the methods that are specific
-for Curses::UI.
-
-=over 4
-
-=item B<new> ( OPTIONS )
-
-Create a new Curses::UI instance.
-
-=item B<add> ( ID, CLASS, OPTIONS )
-
-The B<add> method of Curses::UI is almost the same as the B<add>
-method of Curses::UI::Container. The difference is that Curses::UI
-will only accept classes that are (descendants) of the
-Curses::UI::Window class. For the rest of the information
-see L<Curses::UI::Container>.
-
-=item B<layout> ( )
-
-The layout method of Curses::UI will try to find out the size of the
-screen. After that it will call the B<layout> routine of every 
-contained object. So running B<layout> on a Curses::UI object will
-effectively layout the complete application. Normally you will not 
-have to call this method directly.
-
-=item B<dialog> ( MESSAGE or OPTIONS )
-
-Use the B<dialog> method to show a dialog window. If you only
-provide a single argument, this argument will be used as the 
-message to show. Example:
-
-    $cui->dialog("Hello, world!"); 
-
-If you want to have some more control over the dialog window, you
-will have to provide more arguments (for an explanation of the 
-arguments that can be used, see L<Curses::UI::Dialog::Basic>. 
-Example:
-
-    my $yes = $cui->dialog(
-        -message => "Hello, world?");
-        -buttons => ['< Yes >','< No >']
-        -values  => [1,0],
-        -title   => 'Question',
-    );
-
-    if ($yes) {
-        # whatever
-    }
-       
-
-=item B<error> ( MESSAGE or OPTIONS )
-
-The B<error> method will create an error dialog. This is 
-basically a Curses::UI::Dialog::Basic, but it has an ASCII-art
-exclamation sign drawn left to the message. For the rest 
-it's just like B<dialog>. Example:
-
-    $cui->error("It's the end of the\n"
-               ."world as we know it!");
-
-=item B<filebrowser> ( OPTIONS )
-
-The B<filebrowser> method will create a file browser
-dialog. For an explanation of the arguments that can be 
-used, see L<Curses::UI::FileBrowser>.
-Example:
-
-    my $file = $cui->filebrowser(
-        -path => "/tmp",
-        -show_hidden => 1,
-    );
-
-    # Filebrowser will return undef
-    # if no file was selected.
-    if (defined $file) { 
-        unless (open F, ">$file") {
-            print F "Hello, world!\n";
-            close F;
-	} else {
-            $cui->error("Error on writing to "
-                       ."\"$file\":\n$!");
-	}
-    } 
-
-=item B<loadfilebrowser>( OPTIONS )
-
-=item B<savefilebrowser>( OPTIONS )
-
-These two methods will create file browser dialogs as well.
-The difference is that these will have the dialogs set up
-correctly for loading and saving files. Moreover, the save
-dialog will check if the selected file exists or not. If it
-does exist, it will show an overwrite confirmation to check
-if the user really wants to overwrite the selected file.
-
-=item B<status> ( MESSAGE )
-
-=item B<nostatus> ( )
-
-Using these methods it's easy to provide status information for
-the user of your program. The status dialog is a dialog with 
-only a label on it. The status dialog doesn't really get the
-focus. It's only used to display some information. If you need
-more than one status, you can call B<status> subsequently.
-Any existing status dialog will be cleaned up and a new one
-will be created.
-
-If you are finished, you can delete the status dialog by calling
-the B<nostatus> method. Example:
-
-    $cui->status("Saying hello to the world...");
-    # code for saying "Hello, world!"
-
-    $cui->status("Saying goodbye to the world...");
-    # code for saying "Goodbye, world!"
-
-    $cui->nostatus;
-
-=item B<progress> ( OPTIONS )
-
-=item B<setprogress> ( POSITION, MESSAGE )
-
-=item B<noprogress> ( )
-
-Using these methods it's easy to provide progress information
-to the user. The progress dialog is a dialog with an optional
-label on it and a progress bar. Similar to the status dialog,
-this dialog does not get the focus. 
-
-Using the B<progress> method, a new progress dialog can be 
-created (see also L<Curses::IU::Dialog::Progress>). This method 
-takes the same arguments as the Curses::IU::Dialog::Progress class.
-
-After that the progress can be set using B<setprogress>. This 
-method takes one or two arguments. The first argument is the current
-position of the progressbar. The second argument is the message
-to show in the label. If one of these arguments is undefined,
-the current value will be kept. 
-
-If you are finished, you can delete the progress dialog by calling
-the B<noprogress> method. 
-
-Example:
-
-    $cui->progress(
-        -max => 10,
-	-message => "Counting 10 seconds...",
-    );
-
-    for my $second (0..10) {
-	$cui->setprogress($second)
-	sleep 1;
-    }
-
-    $cui->noprogress;
-
-=back
-
-=head1 SEE ALSO
-
-L<Curses::UI::Container>, L<Curses>
 
 
 

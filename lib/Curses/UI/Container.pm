@@ -18,7 +18,7 @@ use Curses::UI::Common;
 
 use vars qw(@ISA $VERSION);
 @ISA = qw(Curses::UI::Widget Curses::UI::Common);
-$VERSION = "1.00";
+$VERSION = "1.01";
 
 # ----------------------------------------------------------------------
 # Public interface
@@ -131,6 +131,8 @@ sub draw(;$)
         # Return immediately if this object is hidden.
         return $this if $this->hidden;
 	
+	$this->root->check_for_too_small_screen();
+	
 	# Draw the Widget.
 	$this->SUPER::draw(1);
 
@@ -180,6 +182,7 @@ sub layout()
 {
 	my $this = shift;
 	$this->SUPER::layout();
+	return $this if $Curses::UI::screen_too_small;
 	$this->layout_contained_objects();
 	return $this;	
 }
@@ -191,6 +194,7 @@ sub layout_contained_objects()
 	# Layout all contained objects.
 	foreach my $id (@{$this->{-draworder}})
 	{
+		last if $Curses::screen_too_small;
 		my $obj = $this->{-container}->{$id};
 		$obj->{-parent} = $this;
 		$obj->layout();
@@ -295,6 +299,7 @@ sub focus()
 {
 	my $this = shift;
 	$this->show;
+	$this->draw;
 	
 	# If the container contains no objects, then return
 	# without focusing.
@@ -428,4 +433,253 @@ sub focus_shift($;)
 
 sub focus_to_next() { shift()->focus_shift(+1) }
 sub focus_to_prev() { shift()->focus_shift(-1) }
+
+__END__
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Container - Create and manipulate container widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    my $container = $win->add(
+        'mycontainer', 'Container'
+    );
+
+    $container->add(
+        'contained', 'SomeWidget',
+        .....
+    );
+
+    $container->focus();
+
+
+=head1 DESCRIPTION
+
+A container provides an easy way of managing multiple widgets
+in a single "form". A lot of Curses::UI functionality is
+built around containers. The main class L<Curses::UI|Curses::UI> 
+itself is a container. A L<Curses::UI::Window|Curses::UI::Window>
+is a container. Some of the widgets are implemented as 
+containers.
+
+
+
+=head1 STANDARD OPTIONS
+
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
+B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
+B<-title>, B<-titlefullwidth>, B<-titlereverse>
+
+For an explanation of these standard options, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
+
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+Currently this class does not have any specific options.
+
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( )
+
+Create a new instance of the Curses::UI::Container class.
+
+=item * B<add> ( ID, CLASS, OPTIONS )
+
+This is the main method for this class. Using this method
+it is easy to add widgets to the container. 
+
+The ID is an identifier that you want to use for the
+added widget. This may be any string you want.
+
+The CLASS is the class which you want to add to the
+container. If CLASS does not contain '::' or CLASS
+matches 'Dialog::...' then 'Curses::UI' will be prepended
+to it. This way you do not have to specifiy the full
+class name for widgets that are in the Curses::UI 
+hierarchy. It is not neccessary to call "use CLASS" 
+yourself. The B<add> method will call the B<usemodule>
+method (see below) to automatically load the module.
+
+The hash OPTIONS contains the options that you want to pass
+on to the new instance of CLASS.
+
+Example:
+  
+    $container->add(
+        'myid',                   # ID 
+        'Label',                  # CLASS
+        -text => 'Hello, world!', # OPTIONS
+        -x    => 10,
+        -y    => 5,
+    );
+
+=item * B<delete> ( ID )
+
+This method deletes the contained widget with the given ID
+from the container.
+
+=item * B<hasa> ( CLASS )
+
+This method returns true if the container contains one or
+more widgets of the class CLASS.
+
+=item * B<layout> ( )
+
+Layout the Container and all its contained widgets.
+
+=item * B<layout_from_scratch> ( )
+
+This will find the topmost container and call its 
+B<layout> method. This will recursively layout all
+nested containers.
+
+=item * B<draw> ( BOOLEAN )
+
+Draw the Container and all its contained widgets.
+ If BOOLEAN is true, the screen will not update after 
+drawing. By default this argument is false, so the 
+screen will update after drawing the container.
+
+=item * B<focus> ( )
+
+If the container contains no widgets, this routine will
+return immediately. Else the container will get focus.
+
+If the container gets focus, on of the contained widgets
+will get the focus. The returnvalue of this widget determines
+what has to be done next. Here are the possible cases:
+
+* The returnvalue is B<LEAVE_CONTAINER>
+
+  As soon as a widget returns this value, the container
+  will loose its focus and return the returnvalue and the
+  last pressed key to the caller. 
+
+* The returnvalue is B<STAY_AT_FOCUSPOSITION>
+
+  The container will not loose focus and the focus will stay
+  at the same widget of the container.
+
+* Any other returnvalue
+
+  The focus will go to the next widget in the container.
+
+=item * B<getobj> ( ID )
+
+This method returns the object reference of the contained
+widget with the given ID.
+
+=item * B<getfocusobj> ( )
+
+This method returns the object reference of the contained
+widget which currently has the focus.
+
+=item * B<focus_to_object> ( ID )
+
+This method sets the focuspointer to the object with the
+given ID.
+
+=item * B<set_focusorder> ( LIST )
+
+Normally the order in which widgets get focused in a 
+container is determined by the order in which they
+are added to the container. Use B<set_focusorder> if you
+want a different focus order. The LIST contains a list
+of id's.
+
+=item * B<set_draworder> ( LIST )
+
+Normally the order in which widgets are drawn in a 
+container is determined by the order in which they
+are added to the container. Use B<set_draworder> if you
+want a different draw order. The LIST contains a list
+of id's.
+
+=item * B<rebuild> ( )
+
+This will redraw the Curses::UI::Window widgets
+(and descendants) that are in the container (internally
+this method calls B<ontop> (undef, 1)).
+
+=item * B<rebuild_from_scratch> ( )
+
+This will find the topmost container and call its 
+B<rebuild> method. This will recursively rebuild all
+nested containers.
+
+=item * B<ontop> ( ID, BOOLEAN )
+
+If a container contains a number of Curses::UI::Window
+widgets (or descendants), the window stack order is 
+remembered. Using the B<ontop> method, the window with 
+the given ID can be brought on top of the stack. If
+ID is undefined, the id of the window that is currently
+on top will be used.
+
+If BOOLEAN is true the screen will always be redrawn.
+If BOOLEAN is false, the screen will only be redrawn if
+the ID differs from the id of the window that is currently
+on top.
+
+=item * B<returnkeys> ( LIST )
+
+After you have added all the wanted widgets to the 
+container, you can add keybindings to each widget
+to have the container loose its focus. This is done
+by the B<returnkeys> method. The LIST is a list of
+keys on which the container must loose focus (see 
+also L<Curses::UI|Curses::UI>). 
+
+=item * B<loadmodule> ( CLASS )
+
+This will load the module for the CLASS. If loading
+fails, the program will die. 
+
+=back
+
+
+
+
+=head1 DEFAULT BINDINGS
+
+Since interacting is not handled by the container itself, but 
+by the contained widgets, this class does not have any key
+bindings.
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
 

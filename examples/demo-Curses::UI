@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
-open STDERR, ">/tmp/errors";
+# We do not want STDERR to clutter our screen.
+open STDERR, ">/dev/null";
 
 use strict;
 use FindBin;

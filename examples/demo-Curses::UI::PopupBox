@@ -1,0 +1,94 @@
+#!/usr/bin/perl -w
+use strict;
+
+# We do not want STDERR to clutter our screen.
+open STDERR, ">/dev/null";
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI;
+
+my $win = $cui->add('window_id', 'Window');
+
+my $values = [ 1,2,3,4,5,6,7 ];
+my $labels = {
+	1  => 'First',
+	2  => 'Second',
+	3  => 'Third',
+	4  => 'Fourth',
+	5  => 'Fifth',
+	6  => 'Sixth',
+	7  => 'Seventh',
+};
+
+$win->add(
+	'label1', 'Label',
+	-text => "Press <CTRL+Q> to leave this demo."
+);
+
+$win->add(
+	'label2', 'Label',
+	-y 	    => 2,
+	-width	    => 17,
+	-textalignment => 'right',
+	-text	    => 'Standard:',
+);
+
+$win->add(
+        'popupbox1', 'PopupBox',
+	-y          => 2,
+	-x          => 19,
+        -values     => $values,
+	-labels     => $labels,
+);
+
+$win->add(
+	'label3', 'Label',
+	-y 	    => 4,
+	-width	    => 17,
+	-textalignment => 'right',
+	-text	    => 'With wraparound:',
+);
+
+$win->add(
+        'popupbox2', 'PopupBox',
+	-y          => 4,
+	-x          => 19,
+        -values     => $values,
+	-labels     => $labels,
+	-wraparound => 1,
+);
+
+$win->add(
+	'label4', 'Label',
+	-y 	    => 6,
+	-width	    => 17,
+	-textalignment => 'right',
+	-text	    => 'Preselected:',
+);
+
+$win->add(
+        'popupbox3', 'PopupBox',
+	-y          => 6,
+	-x          => 19,
+        -values     => $values,
+	-labels     => $labels,
+	-selected   => 3,
+);
+
+$win->returnkeys("\cC", "\cQ");
+
+$win->focus;
+
+my $value1 = $win->getobj('popupbox1')->get;
+my $value2 = $win->getobj('popupbox2')->get;
+my $value3 = $win->getobj('popupbox3')->get;
+$value1 = '<undef>' unless defined $value1;
+$value2 = '<undef>' unless defined $value2;
+$value3 = '<undef>' unless defined $value3;
+
+$cui->dialog("You selected the values:\n"
+           . "$value1, $value2 and $value3");
+
+

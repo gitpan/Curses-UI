@@ -85,14 +85,14 @@ sub layout()
 	my $this = shift;
 
 	$this->SUPER::layout();
+	return $this if $Curses::UI::screen_too_small;
 
 	# Compute the space that is needed for the buttons.
 	my $xneed = compute_buttonwidth($this->{-buttons});
 	
 	if ( $xneed > $this->screenwidth ) {	
-# TODO unfit detection
-#		confess "Not enough room for the buttons "
-#		  . "in the $this object";
+		$Curses::UI::screen_too_small++;
+		return $this;
 	}
 
 	# Compute the x location of the buttons.
@@ -285,16 +285,15 @@ Curses::UI::Buttons - Create and manipulate button widgets
     my $cui = new Curses::UI;
     my $win = $cui->add('window_id', 'Window');
 
-    $win->add(
+    my $buttons = $win->add(
         'mybuttons', 'Buttons',
-        -x         => 1,
-        -y         => 1,
         -buttons   => ['< Button 1 >', '< Button 2>']
         -values    => [1,2] 
         -shortcuts => ['1','2'],
     );
 
-
+    $buttons->focus();
+    my $value = $buttons->get();
 
 
 =head1 DESCRIPTION
@@ -302,16 +301,20 @@ Curses::UI::Buttons - Create and manipulate button widgets
 Curses::UI::Buttons is a widget that can be used to create an
 array of buttons. 
 
+See exampes/demo-Curses::UI::Buttons in the distribution
+for a short demo.
+
 
 
 =head1 STANDARD OPTIONS
 
-B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
 B<-title>, B<-titlefullwidth>, B<-titlereverse>
 
-For an explanation of these standard options, see L<Curses::UI::Widget>.
+For an explanation of these standard options, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
 
 
 
@@ -320,40 +323,40 @@ For an explanation of these standard options, see L<Curses::UI::Widget>.
 
 =over 4
 
-=item B<-buttons> <arrayref>
+=item * B<-buttons> < ARRAYREF >
 
 This option takes a reference to a list of buttonlabels
 as its argument. 
 
-=item B<-values> <arrayref>
+=item * B<-values> < ARRAYREF >
 
 This option takes a reference to a list of values as its
 argument. The order of the values in the list corresponds
 to the order of the buttons.
 
-=item B<-shortcuts> <arrayref>
+=item * B<-shortcuts> < ARRAYREF >
 
 This option takes a reference to a list of shortcut
 keys as its argument. The order of the keys in the list 
 corresponds to the order of the buttons.
 
-=item B<-selected> <button index>
+=item * B<-selected> < SCALAR >
 
 By default the first button (index = 0) is active. If you
 want another button to be active at creation time, 
-add this option. The value is the index of the button you
+add this option. The SCALAR is the index of the button you
 want to make active.
 
-=item B<-buttonalignment> <'left', 'middle' or 'right'> 
+=item * B<-buttonalignment> < SCALAR >
 
 You can specify how the buttons should be aligned in the 
-widget. Available values for this option are 'left', 'middle' 
+widget. Available values for SCALAR are 'left', 'middle' 
 and 'right'.
 
-=item B<-mayloosefocus> <0 or 1>
+=item * B<-mayloosefocus> < BOOLEAN >
 
-By default a buttons widget may loose it's focus using the
-<tab> key. By setting this option to a false value (0),
+By default a buttons widget may loose its focus using the
+<tab> key. By setting BOOLEAN to a false value,
 this binding can be disabled.
 
 =back
@@ -365,18 +368,18 @@ this binding can be disabled.
 
 =over 4
 
-=item B<new> ( OPTIONS )
+=item * B<new> ( HASH )
 
-=item B<layout> ( )
+=item * B<layout> ( )
 
-=item B<draw> ( NODOUPDATE )
+=item * B<draw> ( BOOLEAN )
 
-=item B<focus> ( )
+=item * B<focus> ( )
 
-These are standard methods. See L<Curses::UI::Widget> for
-an explanation of these.
+These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
+for an explanation of these.
 
-=item B<get> ( )
+=item * B<get> ( )
 
 This method will return the index of the currently active
 button. If a value is given for that index (using the
@@ -391,14 +394,14 @@ B<-values> option, see above), that value will be returned.
 
 =over 4
 
-=item <B<tab>>
+=item * <B<tab>>
 
 Call the 'loose-focus' routine. This will have the widget 
 loose its focus. If you do not want the widget to loose 
 its focus, you can disable this binding by using the
 B<-mayloosefocus> option (see below).
 
-=item <B<enter>>, <B<space>> 
+=item * <B<enter>>, <B<space>> 
 
 Call the 'return' routine. By default this routine will have the
 container in which the widget is loose its focus. If you do
@@ -407,21 +410,23 @@ by calling:
 
     $buttonswidget->set_routine('return', 'RETURN');
 
-For an explanation of this, see L<Curses::UI::Common>.
+For an explanation of B<set_routine>, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
 
-=item <B<cursor left>>, <B<h>>
+
+=item * <B<cursor left>>, <B<h>>
 
 Call the 'previous' routine. This will make the previous
 button the active button. If the active button already is
 the first button, nothing will be done.
 
-=item <B<cursor right>>, <B<l>
+=item * <B<cursor right>>, <B<l>
 
 Call the 'next' routine. This will make the next button the
 active button. If the next button already is the last button,
 nothing will be done.
 
-=item <B<any other key>>
+=item * <B<any other key>>
 
 This will call the 'shortcut' routine. This routine will 
 handle the shortcuts that are set by the B<-shortcuts> option.
@@ -434,7 +439,9 @@ handle the shortcuts that are set by the B<-shortcuts> option.
 
 =head1 SEE ALSO
 
-L<Curses::UI>, L<Curses::UI::Widget>, L<Curses::UI::Common>
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::Widget|Curses::UI::Widget>, 
+L<Curses::UI::Common|Curses::UI:Common>
 
 
 

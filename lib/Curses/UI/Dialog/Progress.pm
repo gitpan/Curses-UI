@@ -82,11 +82,11 @@ sub layout()
 	return $this;
 }
 
-sub setpos($;)
+sub pos($;)
 {
 	my $this = shift;
 	my $pos = shift;
-	$this->getobj('progress')->setpos($pos);
+	$this->getobj('progress')->pos($pos);
 	return $this;
 }
 
@@ -98,5 +98,11 @@ sub message()
 	$this->getobj('label')->text($msg);
 	return $this;
 }
-	
+
+sub focus()
+{
+        my $this = shift;
+        return $this;
+}
+
 1;

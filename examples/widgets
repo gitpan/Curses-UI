@@ -47,8 +47,7 @@ $page1->add(
 	-width=>11,
 	-maxlength=>8,
 	-password=>'*',
-	-border=>0,
-	-showlines=>0,
+	-sbborder => 1,
 );
 
 $page1->add(
@@ -60,7 +59,7 @@ $page1->add(
 	'foo_entry', 'TextEntry', 
 	-x=>15, -y=>2, -width=>11, -sbborder=>1, 
 	-regexp => '/^\d*$/',
-	-showlines=>0, -border=>0,
+	-sbborder => 1,
 );
 
 $page1->add(
@@ -72,13 +71,13 @@ $page1->add(
 $page1->add(
 	'limit_entry', 'TextEntry', 
 	-x=>15, -y=>3, -width=>11, -maxlength=>8,
-	-sbborder=>1, -showlines=>0, -border=>0,
+	-sbborder=>1,
 );
 
 $page1->add(
 	'pulldown1_label', 'Label',
 	-width=>15, -textalignment=>'right', -y=>4, 
-	-text => "pulldown 1 : ",
+	-text => "pulldown: ",
 );
 
 $page1->add(
@@ -146,7 +145,9 @@ $page1->add(
 	'texteditor', 'TextEditor', 
 	-x=>27, -y=>0, -padbottom => 3,
 	-title => "editor",
-	-border=>1, -vscrollbar => 1, -hscrollbar=>1,
+	-border=>1, 
+	-vscrollbar => 1, 
+	-hscrollbar=>1,
 );
 
 $page1->add(
@@ -156,6 +157,7 @@ $page1->add(
 	-width => -1,
 	-border => 0,
 	-reverse => 1,
+	-paddingspaces => 1,
 	-text => " ^F : Show filebrowser dialog",
 );
 $page1->add(
@@ -165,6 +167,7 @@ $page1->add(
 	-width => -1,
 	-border => 0,
 	-reverse => 1,
+	-paddingspaces => 1,
 	-text => " ^Q : Quit program  ^N : Goto the next screen",
 );
 
@@ -251,10 +254,11 @@ $page3->add(
 		my $p2 = $this->getobj('progress2');
 		my $p3 = $this->getobj('progress3');
 		my $p4 = $this->getobj('progress4');
-		$p1->setpos($p1->get + 1);
-		$p2->setpos($p2->get - 1);
-		$p3->setpos($p3->get + 0.5);
-		$p4->setpos($p4->get + 0.2);
+		$p1->pos($p1->get + 1);
+		$p2->pos($p2->get - 1);
+		$p3->pos($p3->get + 0.5);
+		$p4->pos($p4->get + 0.2);
+		$page3->draw;
 	},
 	-label => 'This is just _another_ very simple page... ',
 );
@@ -273,7 +277,7 @@ $page3->add(
 	-min => 0,
 	-max => 100,
 	-pos => 100,	
-	-showpercentage => 0,
+	-nopercentage => 1,
 );
 
 $page3->add(
@@ -282,8 +286,8 @@ $page3->add(
 	-min => 0,
 	-max => 100,
 	-pos => 50,	
-	-showpercentage => 0,
-	-showcenterline => 0,
+	-nopercentage => 1,
+	-nocenterline => 1,
 );
 
 
@@ -300,7 +304,6 @@ $page1->returnkeys("\cQ", "\cN", "\cL","\cF");
 $page2->returnkeys("\cQ", "\cN", "\cL","\cF");
 $page3->returnkeys("\cQ", "\cN", "\cL","\cF");
 
-		
 my $curpage = 'page1';
 FOCUS_CHANGE: for (;;)
 {

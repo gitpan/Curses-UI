@@ -1,0 +1,29 @@
+#!/usr/bin/perl -w
+use strict;
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI;
+
+my $win = $cui->add('window_id', 'Window');
+
+$win->add(
+        'label1', 'Label',
+        -text => "Press <CTRL+Q> to leave this demo."
+);
+
+my $cb = $win->add(
+        'mycheckbox', 'CheckBox',
+	-y => 3,
+        -label     => 'Say hello to the world',
+);
+$cb->set_routine('return', 'LEAVE_CONTAINER');
+
+$win->returnkeys("\cQ");
+$win->focus;
+
+if ($cb->get) {
+	$cui->dialog("Hello, world!");
+}
+

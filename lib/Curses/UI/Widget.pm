@@ -19,7 +19,7 @@ use Curses::UI::Common;
 require Exporter;
 
 use vars qw($VERSION @ISA @EXPORT);
-@ISA = qw(Exporter);
+@ISA = qw(Exporter Curses::UI::Common);
 @EXPORT = qw(
 	height_by_windowscrheight
 	width_by_windowscrwidth
@@ -99,7 +99,8 @@ sub new ()
 sub layout()
 {
 	my $this = shift;
-
+		
+	return $this if $Curses::UI::screen_too_small;
 	$this->process_padding;
 	
 	# -------------------------------------------------------
@@ -170,10 +171,8 @@ sub layout()
 	# Check if the widget fits in the window.
 	if ($width > $avail_w or $height > $avail_h 
 	    or $width == 0 or $height == 0) {
-		# TODO?: no fit error
-		confess "There is not enough space for the $this object "
-		  . "(width=$width, avail width=$avail_w, "
-		  . "height=$height, avail height=$avail_h)";
+		$Curses::UI::screen_too_small++;
+		return $this;
 	}
 
 	$this->{-w}  = $width;
@@ -206,9 +205,12 @@ sub layout()
 		} else {
 			$this->{-borderscr} = newwin(@args);
 		}
-		# TODO?: no fit error
-		confess "Could not create border screen (args = @args)\n" 
-			unless defined $this->{-borderscr};
+
+		unless (defined $this->{-borderscr}) 
+		{
+			$Curses::UI::screen_too_small++;
+			return $this;
+		}
 
 		$this->{-scr} = $this->{-borderscr};
 	}
@@ -236,10 +238,8 @@ sub layout()
 
 	# Check if there is room left for the screen.
 	if ($this->{-sw} <= 0 or $this->{-sh} <= 0) {
-		# TODO?: no fit error
-		confess "There is not enough space for the " 
-		  . $this . " widget (screenwidth=$this->{-sw}, "
-                  . "screenheight=$this->{-sh})";
+		$Curses::UI::screen_too_small++;
+		return $this;
 	}
 
 	# Create a window for the data.
@@ -252,21 +252,20 @@ sub layout()
 	} else {
 		$this->{-windowscr} = newwin(@args);
 	}
-	# TODO?: no fit error
-	confess "Could not create window screen (args = @args)\n" 
-		unless defined $this->{-windowscr};
+		
+	unless (defined $this->{-windowscr}) 
+	{
+		$Curses::UI::screen_too_small++;
+		return $this;
+	}
 
-	if (not defined $this->{-borderscr})
+	unless (defined $this->{-borderscr})
 	{
 		$this->{-scr} = $this->{-windowscr};
 		$this->{-bw} = $this->{-sw};
 		$this->{-bh} = $this->{-sh};
 	}
 		
-	# TODO?: no fit error
-	confess "Could not create border window" 
-		unless defined $this->{-windowscr};
-
 	return $this;
 }
 
@@ -422,7 +421,14 @@ sub draw(;$)
 	    elsif ($this->{-border}) # Normal border
 	    {
 		$this->{-borderscr}->attron(A_BOLD) if $this->{-focus};
-		$this->{-borderscr}->box(ACS_VLINE, ACS_HLINE);
+		if ($this->root->compat) {
+			$this->{-borderscr}->border(
+				'|','|','-','-',
+				'+','+','+','+'
+			);
+		} else {
+			$this->{-borderscr}->box(ACS_VLINE, ACS_HLINE);
+		}
 		$this->{-borderscr}->attroff(A_BOLD) if $this->{-focus};
 		
 		# Draw a title if needed.
@@ -503,6 +509,11 @@ sub draw_scrollbars()
 		$this->{-borderscr}->attron(A_BOLD) if $this->{-focus};
 		$this->{-borderscr}->move($ypos_min, $xpos);
 		$this->{-borderscr}->vline(ACS_VLINE,$scrlen);
+		if ($this->root->compat) {
+			$this->{-borderscr}->vline('|',$scrlen);
+		} else {
+			$this->{-borderscr}->vline(ACS_VLINE,$scrlen);
+		}
 		$this->{-borderscr}->attroff(A_BOLD) if $this->{-focus};
 
 		# Should an active region be drawn?
@@ -560,7 +571,11 @@ sub draw_scrollbars()
 		# there is no border.
 		$this->{-borderscr}->attron(A_BOLD) if $this->{-focus};
 		$this->{-borderscr}->move($ypos, $xpos_min);
-		$this->{-borderscr}->hline(ACS_HLINE,$scrlen);
+		if ($this->root->compat) {
+			$this->{-borderscr}->hline('-',$scrlen);
+		} else {
+			$this->{-borderscr}->hline(ACS_HLINE,$scrlen);
+		}
 		$this->{-borderscr}->attroff(A_BOLD) if $this->{-focus};
 
 		# Should an active region be drawn?
@@ -683,11 +698,19 @@ sub generic_focus($$;)
 		unless defined $pre_key_callback
 		   and ref $pre_key_callback eq 'CODE';
 
+	# A binding routine may return a scalar value
+	# looking like: DO_KEY:<key>. The variable
+	# $do_key will be set to <key>. If $do_key is
+	# set at the point where normally a key would be
+	# read, the key <key> is used instead.
 	my $do_key;
+
+	# Start the loop where keys are read.
         for (;;)
         {
 		$pre_key_callback->($this);
 
+		# Give focus to this widget and redraw it.
                 $this->{-focus} = 1;
                 $this->draw();
 
@@ -701,8 +724,11 @@ sub generic_focus($$;)
 			  );
 		undef $do_key;
 
-		# Do callback if wanted.
+		# Do callback if needed.
                 $this->process_callback;
+
+		# Check if the screen resized.
+		$this->root->check_for_resize;
 
 		# No key pressed? Then retry grabbing one.
                 next if $key eq '-1';
@@ -747,7 +773,403 @@ Curses::UI::Widget - The base class for all widgets
 
 This class is not used directly by somebody who is building an application
 using Curses::UI. It's a base class that is expanded by the Curses::UI widgets.
-Here's an example of how to start out creating a new widget:
+See WIDGET STRUCTURE below for a basic widget framework.
+
+    use Curses::UI::Widget;
+    my $widget = new Curses::UI::Widget(
+        -width  => 15,
+        -height => 5,
+        -border => 1,
+    );
+
+
+
+
+=head1 STANDARD OPTIONS
+
+The standard options for (most) widgets are the options that are enabled
+by this class. So this class doesn't really have standard options.
+
+
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=head2 GENERAL:
+
+=over 4
+
+=item * B<-parent> < OBJECTREF >
+
+This option specifies parent of the object. This parent is 
+the object (Curses::UI, Window, Widget(descendant), etc.) 
+in which the widget is drawn.
+
+=item * B<-border> < BOOLEAN >
+
+Each widget can be drawn with or without a border. To enable
+the border use a true value and to disable it use a 
+false value for BOOLEAN. The default is not to use a border.
+
+=item * B<-sbborder> < BOOLEAN >
+
+If no border is used, a square bracket border may be used.
+This is a border which is constructed from '[' and ']' 
+characters. This type of border is especially useful for 
+single line widgets (like text entries and popup boxes).
+A square bracket border can only be enabled if -border 
+is false. The default is not to use a square bracket border.
+
+=back
+
+
+
+=head2 POSITIONING:
+ 
+ +---------------------------------------------------+
+ | parent                     ^                      |
+ |                            |                      |
+ |                            y                      |
+ |                            |                      |
+ |                            v                      |
+ |                            ^                      |
+ |                            |                      |
+ |                          padtop                   |
+ |                            |                      |
+ |                            v                      |
+ |                    +- TITLE -------+              |
+ |                    | widget   ^    |              |
+ |                    |          |    |              |
+ |                    |          |    |              |
+ |<--x--><--padleft-->|<----width---->|<--padright-->|
+ |                    |          |    |              |
+ |                    |          |    |              |
+ |                    |        height |              |
+ |                    |          v    |              |
+ |                    +---------------+              |
+ |                               ^                   |
+ |                               |                   |
+ |                           padbottom               |
+ |                               |                   |
+ |                               v                   |
+ +---------------------------------------------------+
+
+
+=over 4
+
+=item * B<-x> < SCALAR >             
+
+The x-position of the widget, relative to the parent. The default
+is 0.
+
+=item * B<-y> < SCALAR >
+
+The y-position of the widget, relative to the parent. The default
+is 0.
+
+=item * B<-width> < SCALAR >
+
+The width of the widget. If the width is undefined or -1,
+the maximum available width will be used. By default the widget
+will use the maximum available width.
+
+=item * B<-height> < SCALAR >
+
+The height of the widget. If the height is undefined or -1,
+the maximum available height will be used. By default the widget
+will use the maximum available height.
+
+=back
+
+
+
+=head2 PADDING:
+ 
+=over 4
+
+=item * B<-pad> < SCALAR >
+
+=item * B<-padtop> < SCALAR >
+
+=item * B<-padbottom> < SCALAR >
+
+=item * B<-padleft> < SCALAR >
+
+=item * B<-padright> < SCALAR >
+
+With -pad you can specify the default padding outside the widget
+(the default value for -pad is 0). Using one of the -pad... options
+that have a direction in them, you can override the default
+padding.
+ 
+=item * B<-ipad> < SCALAR >
+
+=item * B<-ipadtop> < SCALAR >
+
+=item * B<-ipadbottom> < SCALAR >
+
+=item * B<-ipadleft> < SCALAR >
+
+=item * B<-ipadright> < SCALAR >
+
+These are almost the same as the -pad... options, except these options
+specify the padding _inside_ the widget. Normally the available 
+effective drawing area for a widget will be the complete area
+if no border is used or else the area within the border. 
+
+=back
+
+
+
+=head2 TITLE:
+
+Remark:
+
+A title is drawn in the border of a widget. So a title will only
+be available if -border is true.
+
+=over 4
+ 
+=item * B<-title> < SCALAR >
+
+Set the title of the widget to SCALAR. If the text is longer then the 
+available width, it will be clipped.
+
+=item * B<-titlereverse> < BOOLEAN >
+
+The title can be drawn in normal or in reverse type. If -titlereverse
+is true, the text will be drawn in reverse type. The default is to
+use reverse type.
+
+=item * B<-titlefullwidth> < BOOLEAN >
+
+If -titlereverse is true, the title can be stretched to fill the
+complete width of the widget by giving -titlefullwidth a true value.
+By default this option is disabled.
+
+=back
+
+ 
+
+=head2 SCROLLBARS:
+
+Remark: 
+
+Since the user of a Curses::UI program has no real control over
+the so called "scrollbars", they aren't really scrollbars. A 
+better name would be something like "document loction indicators".
+But since they look so much like scrollbars I decided I could get
+away with this naming convention.
+ 
+=over 4
+
+=item * B<-vscrollbar> < SCALAR >
+
+SCALAR can be 'left', 'right', another true value or false.
+
+If -vscrollbar has a true value, a vertical scrollbar will
+be drawn by the widget. If this true value happens to be "left",
+the scrollbar will be drawn on the left side of the widget. In 
+all other cases it will be drawn on the right side. The default
+is not to draw a vertical scrollbar.
+
+For widget programmers: To control the scrollbar, the widget
+data -vscrolllen (the total length of the content of the widget)
+and -vscrollpos (the current position in the document) should 
+be set. If Curses::UI::Widget::draw is called, the scrollbar
+will be drawn.
+
+=item * B<-hscrollbar> < SCALAR >
+
+SCALAR can be 'top', 'bottom', another true value or false.
+
+If -hscrollbar has a true value, a horizontal scrollbar will
+be drawn by the widget. If this true value happens to be "top",
+the scrollbar will be drawn at the top of the widget. In 
+all other cases it will be drawn at the bottom. The default
+is not to draw a horizontal scrollbar.
+
+For widget programmers: To control the scrollbar, the widget
+data -hscrolllen (the maximum width of the content of the widget)
+and -hscrollpos (the current horizontal position in the document) 
+should be set. If Curses::UI::Widget::draw is called, 
+the scrollbar will be drawn.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( HASH )
+
+Create a new Curses::UI::Widget instance using the options in HASH.
+
+=item * B<layout> ( )
+
+Layout the widget. Compute the size the widget needs and see
+if it fits. Create the curses windows that are needed for
+the widget (the border and the effective drawing area).
+
+=item * B<draw> ( BOOLEAN )
+
+Draw the Curses::UI::Widget. If BOOLEAN is true, the screen 
+will not update after drawing. By default this argument is 
+false, so the screen will update after drawing the widget.
+
+=item * B<focus> ( )
+
+Give focus to the widget. In Curses::UI::Widget, this method
+immediately returns, so the widget will not get focused. 
+A derived class that needs focus, must override this method.
+
+=item * B<title> ( SCALAR )
+
+Change the title that is shown in the border of the widget
+to SCALAR.
+
+=item * B<width> ( )
+
+=item * B<height> ( )
+
+These methods return the total width and height of the widget.
+This is the space that the widget itself uses plus the space that 
+is used by the outside padding.
+
+=item * B<borderwidth> ( )
+
+=item * B<borderheight> ( )
+
+These methods return the width and the height of the border of the
+widget.
+
+=item * B<screenwidth> ( )
+
+=item * B<screenheight> ( )
+
+These methods return the with and the height of the effective
+drawing area of the widget. This is the area where the 
+draw() method of a widget may draw the contents of the widget
+(BTW: the curses window that is associated to this drawing
+area is $this->{-windowscr}).
+
+=item * B<width_by_windowscrwidth> ( NEEDWIDTH, HASH )
+
+=item * B<height_by_windowscrheight> ( NEEDHEIGHT, HASH )
+
+These methods are exported by this module. These can be used
+in child classes to easily compute the total width/height the widget
+needs in relation to the needed width/height of the effective drawing
+area ($this->{-windowscr}). The HASH contains the arguments that
+will be used to create the widget. So if we want a widget that
+has a drawing area height of 1 and that has a border, the -height
+option can be computed using something like:
+
+  my $height = height_by_windowscrheight(1, -border => 1); 
+
+=item * B<generic_focus> ( BLOCKTIME, CTRLKEYS, CURSOR, PRECALLBACK )
+
+For most widgets the B<generic_focus> method will be enough to 
+handle focusing. This method will do the following:
+
+It starts a loop for reading keyboard input from the user. 
+At the start of this loop the PRECALLBACK is called. This callback
+can for example be used for layouting the widget. Then, the widget 
+is drawn. 
+
+Now a key is read or if the DO_KEY:<key> construction was used,
+the <key> will be used as if it was read from the keyboard (you
+can find more on this construction below). If the DO_KEY:<key>
+construction was not used, a key is read using the B<get_key>
+method which is in L<Curses::UI::Common|Curses::UI::Common>. 
+The arguments BLOCKTIME, CTRLKEYS and CURSOR are passed to 
+B<get_key>.
+
+Now the key is checked. If the value of the key is -1, B<get_key>
+did not read a key at all. In that case, the program will go back
+to the start of the loop.
+
+As soon as a key is read, this key will be handed to the
+B<process_bindings> method (see below). The returnvalue of this
+method (called RETURN from now on) will be used to determine
+what to do next. We have the following cases:
+
+* B<RETURN matches DO_KEY:<key>>
+
+The <key> is extracted from RETURN. The loop is restarted and
+<key> will be used as if it was entered using the keyboard.
+
+* B<RETURN is a CODE reference>
+
+RETURN will be returned to the caller of B<generic_focus>. 
+This will have the widget loose its focus. The caller then can 
+execute the code.
+
+* B<RETURN is a SCALAR value>
+
+RETURN will be returned to the caller of B<generic_focus>. 
+This will have the widget loose its focus. 
+
+* B<anything else>
+
+The widget will keep its focus. The loop will be restarted all 
+over again. So, if you are writing a binding routine for a widget,
+you can have the focus to stay at the widget by returning the 
+widget instance itself. Example:
+
+    sub myroutine() {
+        my $this = shift;
+        .... do your thing ....
+        return $this;
+    }
+
+
+=item * B<process_bindings> ( KEY )
+
+KEY -> maps via binding to -> ROUTINE -> maps to -> VALUE
+
+This method will try to find out if there is a binding defined
+for the KEY. If no binding is found, the method will return
+the widget object itself.
+If a binding is found, the method will check if there is
+an corresponding ROUTINE. If the ROUTINE can be found it
+will check if it's VALUE is a code reference. If it is, the
+code will be executed and the returnvalue of this code will
+be returned. Else the VALUE will directly be returned.
+
+=item * B<clear_binding> ( ROUTINE )
+
+Clear all keybindings for routine ROUTINE. 
+
+=item * B<set_routine> ( ROUTINE, VALUE )
+
+Set the routine ROUTINE to the VALUE. The VALUE may either be a 
+scalar value or a code reference. If B<process_bindings> (see above)
+sees a scalar value, it will return this value. If it sees a
+coderef, it will execute the code and return the returnvalue of
+this code. 
+
+=item * B<set_binding> ( ROUTINE, LIST )
+
+Bind the keys in the list LIST to the ROUTINE. If you use an
+empty string for a key, then this routine will become the default
+routine (in case no other keybinding could be found). This 
+is for example used in the TextEditor widget.
+
+=back
+
+
+
+
+=head1 WIDGET STRUCTURE
+
+Here's a basic framework for creating a new widget. You do not have
+to follow this framework. As long as your widget has the methods
+new(), layout(), draw() and focus(), it can be used in Curses::UI.
 
     package Curses::UI::YourWidget
     
@@ -825,9 +1247,19 @@ Here's an example of how to start out creating a new widget:
     #
     sub layout () {
         my $this = shift;
+
         $this->SUPER::layout;
+	return $this if $Curses::UI::screen_too_small;
 
         ....your own layout stuff....
+
+        # If you decide that the widget does not fit on the
+        # screen, then set $Curses::UI::screen_too_small
+        # to a true value and return.	
+        if ( ....the widget does not fit.... ) {
+            $Curses::UI::screen_too_small++;
+            return $this;
+        }
 
         return $this;
     }
@@ -856,8 +1288,7 @@ Here's an example of how to start out creating a new widget:
 
     # Focus the widget. If you do not override this routine
     # from Curses::UI::Widget, the widget will not be 
-    # focusable. Mostly you will use generic_focus() from
-    # Curses::UI::Common. 
+    # focusable. Mostly you will use the generic_focus() method.
     #
     sub focus()
     {
@@ -876,329 +1307,6 @@ Here's an example of how to start out creating a new widget:
     
     ....your own widget handling routines....
 
-
-
-=head1 STANDARD OPTIONS
-
-The standard options for (most) widgets are the options that are enabled
-by this class. So this class doesn't really have standard options.
-
-
-
-
-
-=head1 WIDGET-SPECIFIC OPTIONS
-
-=head2 GENERAL:
-
-=over 4
-
-=item B<-parent> <parent object>
-
-This option specifies parent of the object. This parent is 
-the object (Curses::UI, Window, Widget(descendant), etc.) 
-in which the widget is drawn.  
-
-=item B<-border> <0 or 1>
-
-Each widget can be drawn with or without a border. To enable
-the border use a true value (1) and to disable it use a 
-false value (0). The default is not to use a border.
-
-=item B<-sbborder> <0 or 1>
-
-If no border is used, a square bracket border may be used.
-This is a border which is constructed from '[' and ']' 
-characters. This type of border is especially useful for 
-single line widgets (like text entries and popup boxes).
-A square bracket border can only be enabled if -border 
-is false. The default is not to use a square bracket border.
-
-=back
-
-
-
-=head2 POSITIONING:
- 
- +---------------------------------------------------+
- | parent                     ^                      |
- |                            |                      |
- |                            y                      |
- |                            |                      |
- |                            v                      |
- |                            ^                      |
- |                            |                      |
- |                          padtop                   |
- |                            |                      |
- |                            v                      |
- |                    +- TITLE -------+              |
- |                    | widget   ^    |              |
- |                    |          |    |              |
- |                    |          |    |              |
- |<--x--><--padleft-->|<----width---->|<--padright-->|
- |                    |          |    |              |
- |                    |          |    |              |
- |                    |        height |              |
- |                    |          v    |              |
- |                    +---------------+              |
- |                               ^                   |
- |                               |                   |
- |                           padbottom               |
- |                               |                   |
- |                               v                   |
- +---------------------------------------------------+
-
-
-=over 4
-
-=item B<-x> <value>             
-
-The x-position of the widget, relative to the parent. The default
-is 0.
-
-=item B<-y> <value>
-
-The y-position of the widget, relative to the parent. The default
-is 0.
-
-=item B<-width> <value>
-
-The width of the widget. If the width is undefined or -1,
-the maximum available width will be used. By default the widget
-will use the maximum available width.
-
-=item B<-height> <value>
-
-The height of the widget. If the height is undefined or -1,
-the maximum available height will be used. By default the widget
-will use the maximum available height.
-
-=back
-
-
-
-=head2 PADDING:
- 
-=over 4
-
-=item B<-pad> <value>
-
-=item B<-padtop> <value>
-
-=item B<-padbottom> <value>
-
-=item B<-padleft> <value>
-
-=item B<-padright> <value>
-
-With -pad you can specify the default padding outside the widget
-(the default value for -pad is 0). Using one of the -pad... options
-that have a direction in them, you can override the default
-padding.
- 
-=item B<-ipad> <value>
-
-=item B<-ipadtop> <value>
-
-=item B<-ipadbottom> <value>
-
-=item B<-ipadleft> <value>
-
-=item B<-ipadright> <value>
-
-These are almost the same as the -pad... options, except these options
-specify the padding _inside_ the widget. Normally the available 
-effective drawing area for a widget will be the complete area
-if no border is used or else the area within the border. 
-
-=back
-
-
-
-=head2 TITLE:
-
-Remark:
-
-A title is drawn in the border of a widget. So a title will only
-be available if -border is true.
-
-=over 4
- 
-=item B<-title> <text>
-
-The text to use for the title. If the text is longer then the 
-available width, it will be clipped.
-
-=item B<-titlereverse> <0 or 1>
-
-The title can be drawn in normal or in reverse type. If -titlereverse
-is true, the text will be drawn in reverse type. The default is to
-use reverse type.
-
-=item B<-titlefullwidth> <0 or 1>
-
-If -titlereverse is true, the title can be stretched to fill the
-complete width of the widget by giving -titlefullwidth a true value.
-By default this option is disabled.
-
-=back
-
- 
-
-=head2 SCROLLBARS:
-
-Remark: 
-
-Since the user of a Curses::UI program has no real control over
-the so called "scrollbars", they aren't really scrollbars. A 
-better name would be something like "document loction indicators".
-But since they look so much like scrollbars I decided I could get
-away with this naming convention.
- 
-=over 4
-
-=item B<-vscrollbar> <0, 1, 'left' or 'right'>
-
-If -vscrollbar has a true value, a vertical scrollbar will
-be drawn by the widget. If this true value happens to be "left",
-the scrollbar will be drawn on the left side of the widget. In 
-all other cases it will be drawn on the right side. The default
-is not to draw a vertical scrollbar.
-
-For widget programmers: To control the scrollbar, the widget
-data -vscrolllen (the total length of the content of the widget)
-and -vscrollpos (the current position in the document) should 
-be set. If Curses::UI::Widget::draw is called, the scrollbar
-will be drawn.
-
-=item B<-hscrollbar> <0, 1, 'top' or 'bottom'>
-
-If -hscrollbar has a true value, a horizontal scrollbar will
-be drawn by the widget. If this true value happens to be "top",
-the scrollbar will be drawn at the top of the widget. In 
-all other cases it will be drawn at the bottom. The default
-is not to draw a horizontal scrollbar.
-
-For widget programmers: To control the scrollbar, the widget
-data -hscrolllen (the maximum width of the content of the widget)
-and -hscrollpos (the current horizontal position in the document) 
-should be set. If Curses::UI::Widget::draw is called, 
-the scrollbar will be drawn.
-
-=back
-
-
-
-
-=head1 METHODS
-
-=over 4
-
-=item B<new> ( OPTIONS )
-
-Create a new Curses::UI::Widget instance. 
-
-=item B<layout> ( )
-
-Layout the widget. Compute the size the widget needs and see
-if it fits. Create the curses windows that are needed for
-the widget (the border and the effective drawing area).
-
-=item B<draw> ( NODOUPDATE )
-
-Draw the Curses::UI::Widget. If the argument NODOUPDATE is true,
-the screen will not update after drawing. By default this 
-argument is false.
-
-=item B<focus> ( )
-
-Give focus to the widget. In Curses::UI::Widget, this method
-immediately returns, so the widget will not get focused. 
-A derived class that needs focus, must override this method.
-
-=item B<title> ( TITLE )
-
-Change the title that is shown in the border of the widget
-to TITLE.
-
-=item B<width> ( )
-
-=item B<height> ( )
-
-These methods return the total width and height of the widget.
-This is the space that the widget itself uses plus the space that 
-is used by the outside padding.
-
-=item B<borderwidth> ( )
-
-=item B<borderheight> ( )
-
-These methods return the width and the height of the border of the
-widget.
-
-=item B<screenwidth> ( )
-
-=item B<screenheight> ( )
-
-These methods return the with and the height of the effective
-drawing area of the widget. This is the area where the 
-draw() method of a widget may draw the contents of the widget
-(BTW: the curses window that is associated to this drawing
-area is $this->{-windowscr}).
-
-=item B<width_by_windowscrwidth> ( NEEDWIDTH, OPTIONS )
-
-=item B<height_by_windowscrheight> ( NEEDHEIGHT, OPTIONS )
-
-These methods are exported by this module. These can be used
-in child classes to easily compute the total width/height the widget
-needs in relation to the needed width/height of the effective drawing
-area ($this->{-windowscr}). The OPTIONS are the arguments that
-will be used to create the widget. So if we want a widget that
-has a drawing area height of 1 and that has a border, the -height
-option can be computed using something like:
-
-  my $height = height_by_windowscrheight(1, -border => 1); 
-
-=item B<generic_focus>
-
-TODO
-
-=item B<process_bindings> ( KEY )
-
-KEY -> maps via binding to -> ROUTINE -> maps to -> VALUE
-
-This method will try to find out if there is a binding defined
-for the KEY. If no binding is found, the method will return
-the widget object itself.
-If a binding is found, the method will check if there is
-an corresponding ROUTINE. If the ROUTINE can be found it
-will check if it's VALUE is a code reference. If it is, the
-code will be executed and the returnvalue of this code will
-be returned. Else the VALUE will directly be returned.
-
-=item B<clear_binding> ( ROUTINE )
-
-Clear all keybindings for routine ROUTINE. 
-
-=item B<set_routine> ( ROUTINE, VALUE )
-
-Set the routine ROUTINE to the VALUE. The VALUE may either be a 
-scalar value or a code reference. If B<process_bindings> (see above)
-sees a scalar value, it will return this value. If it sees a
-coderef, it will execute the code and return the returnvalue of
-this code. 
-
-=item B<set_binding> ( ROUTINE, KEYLIST )
-
-Bind the keys in the list KEYLIST to the ROUTINE. If you use an
-empty string for a key, then this routine will become the default
-routine (in case no other keybinding could be found). This 
-is for example used in the TextEditor widget.
-
-
-
-=back
 
 
 

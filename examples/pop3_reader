@@ -15,7 +15,8 @@ my $cui = new Curses::UI;
 my $pop3 = undef;
 my $connection = undef;
 
-open STDERR, ">>/tmp/mailreder.STDERR";
+# We do not want STDERR to clutter our screen.
+open STDERR, ">/dev/null";
 
 # ----------------------------------------------------------------------
 # setup(): Setup the connection
@@ -23,11 +24,12 @@ open STDERR, ">>/tmp/mailreder.STDERR";
 
 sub setup_connection()
 {
+
 	my $conwin = $cui->add(
 		'connection_window', 'Window',
 		-border => 1,
 		-ipad => 2,
-		-height => 19,
+		-height => 15,
 		-width => 60,
 		-centered => 1,
 		-title => "POP3 connection",
@@ -42,9 +44,8 @@ sub setup_connection()
 
 	$conwin->add(
 		'host', 'TextEntry',
-		-x => 14, -y => 0, -width => -1,
+		-x => 14, -y => 0,
 		-text => 'pop',
-		-border => 0,
 	);
 
 	$conwin->add(
@@ -56,10 +57,9 @@ sub setup_connection()
 
 	$conwin->add(
 		'port', 'TextEntry',
-		-x => 14, -y => 2, -width => 7,
+		-x => 14, -y => 2,
 		-regexp => '/^\d*$/',	
 		-text => '110',
-		-border => 0,
 	);
 
 	$conwin->add(
@@ -71,9 +71,8 @@ sub setup_connection()
 
 	$conwin->add(
 		'username', 'TextEntry',
-		-x => 14, -y => 4, -width => 12,
+		-x => 14, -y => 4,
 		-text => getpwuid($>),
-		-border => 0,
 	);
 
 	$conwin->add(
@@ -85,9 +84,8 @@ sub setup_connection()
 
 	$conwin->add(
 		'password', 'TextEntry',
-		-x => 14, -y => 6, -width => 12,
+		-x => 14, -y => 6,
 		-password => '*',
-		-border => 0,
 		-text => '',
 	);
 
@@ -228,13 +226,13 @@ sub inbox()
 		-vscrollbar => 1,
 		-border => 1,
 		-ipad   => 1,
-		-title  => '<ENTER> view message <Q> Quit from program',
+		-title  => '<ENTER> view message <CTR+Q> Quit from program',
 	);
 	
 	$cui->nostatus;
 
 	$ml->set_routine('option-select', \&view_message);
-	$listwin->returnkeys("q", "\cC");
+	$listwin->returnkeys("\cQ", "\cC");
 	$listwin->focus;
 }
 
@@ -279,14 +277,14 @@ sub view_message()
 		-wrapping => 1,
 		-border => 1,
 		-ipad   => 1,
-		-title  => '<ENTER> return to inbox <Q>: Quit from program',
+		-title  => '<ENTER> return to inbox <CTRL+Q>: Quit from program',
 	);
 
-	$viewwin->returnkeys(KEY_ENTER(), "q", "\cC");
+	$viewwin->returnkeys(KEY_ENTER(), "\cQ", "\cC");
 	$cui->draw;
 
 	my (undef, $key) = $viewwin->focus;
-	exit_program() if $key eq "q" or $key eq "\cC";
+	exit_program() if $key eq "\cQ" or $key eq "\cC";
 	
 	$cui->delete('view_window');
 	$cui->draw;

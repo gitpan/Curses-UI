@@ -1,0 +1,24 @@
+#!/usr/bin/perl -w
+use strict;
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI;
+
+my $msg = "Counting from 1 to 200";
+$cui->progress(
+        -max => 200,
+        -message => "$msg"
+);
+
+for my $count (0..200) {
+        $cui->setprogress($count, $msg . ": $count");
+	$cui->draw;
+	select (undef, undef, undef, 0.02);
+}
+
+$cui->setprogress(200, "I'm done!");
+sleep 1;
+$cui->noprogress;
+

@@ -41,6 +41,8 @@ sub layout ()
 {
 	my $this = shift;
 
+	return $this if $Curses::UI::screen_too_small;
+
 	# Compute the coordinates of the Window if
 	# it has to be centered.
 	if ($this->{-centered})
@@ -89,18 +91,19 @@ Curses::UI::Window is a window widget. It can be added to
 a Curses::UI instance. After that the window can be filled
 with other widgets to create an application window. For
 information on how to fill the window with widgets, see
-L<Curses::UI::Container>.
+L<Curses::UI::Container|Curses::UI::Container>.
 
 
 
 =head1 STANDARD OPTIONS
 
-B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
 B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
 B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
 B<-title>, B<-titlefullwidth>, B<-titlereverse>
 
-For an explanation of these standard options, see L<Curses::UI::Widget>.
+For an explanation of these standard options, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
 
 
 
@@ -108,11 +111,11 @@ For an explanation of these standard options, see L<Curses::UI::Widget>.
 
 =over 4
 
-=item B<-centered> <0 or 1>
+=item * B<-centered> < BOOLEAN >
 
 A window can automatically be drawn in the center of the screen.
-To enable this option use a true value (1) and to disable it use a
-false value (0). The default is not to center a window. Example:
+To enable this option use a true value and to disable it use a
+false value. The default is not to center a window. Example:
 
     $cui->add('mywindow', 'Window', -centered => 1);
  
@@ -123,7 +126,9 @@ false value (0). The default is not to center a window. Example:
 
 =head1 SEE ALSO
 
-L<Curses::UI>, L<Curses::UI::Container>, L<Curses::UI::Widget>
+L<Curses::UI|Curses::UI>,
+L<Curses::UI::Container|Curses::UI::Container>,
+L<Curses::UI::Widget|Curses::UI::Widget>
 
 
 

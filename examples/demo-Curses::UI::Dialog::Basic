@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w use strict;
+
+# Deny STDERR
+open STDERR, ">/dev/null";
+
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use Curses::UI;
+my $cui = new Curses::UI;
+
+$cui->dialog(
+	-message => "The most simple dialog"
+);
+
+$cui->draw;
+
+my $pressed = $cui->dialog(
+	-message => "Some extra buttons",
+	-buttons => ['< Yeah, so? >', '< Why would I care? >'],
+	-values  => ['first', 'second'],
+);
+
+$cui->draw;
+
+$cui->dialog(
+	-message => "I don't know but you pressed\n"
+                  . "the $pressed button",
+	-buttons => ['< Allright, get me outta here! >']
+);
+
+$cui->draw;
+
+$cui->dialog(
+	-message => "At your command, my lord"
+);
+

@@ -25,12 +25,12 @@ sub new ()
 	my $class = shift;
 
 	my %args = ( 
-		-min        => 0,	  # minimal value	
-		-max        => 100,	  # maximum value	
-		-pos	    => 0,	  # the current position
-		-showpercentage => 1,     # show the percentage or not?
-		-showcenterline => 1,     # show the center line or not?
-		-border	    => 1,
+		-min          => 0,	# minimal value	
+		-max          => 100,	# maximum value	
+		-pos	      => 0,	# the current position
+		-nopercentage => 0,     # show the percentage or not?
+		-nocenterline => 0,     # show the center line or not?
+		-border	      => 1,
 		@_
 	);
 
@@ -54,12 +54,11 @@ sub get()
 	return $this->{-pos};
 }
 
-sub setpos(;$)
+sub pos(;$)
 {
 	my $this = shift;
 	my $pos = shift || 0;
 	$this->{-pos} = $pos;	
-	$this->draw;
 	return $this;
 }
 
@@ -95,7 +94,7 @@ sub draw(;$)
 	
 	# Draw center line
 	$this->{-windowscr}->addstr(0, 0, "-"x$this->screenwidth)
-		if $this->{-showcenterline};
+		unless $this->{-nocenterline};
 
 	# Draw blocks.
 	$this->{-windowscr}->attron(A_REVERSE);
@@ -103,7 +102,7 @@ sub draw(;$)
 	$this->{-windowscr}->attroff(A_REVERSE);
 
 	# Draw percentage
-	if ($this->{-showpercentage})
+	unless ($this->{-nopercentage})
 	{
 		$perc = int($perc); 
 		my $str = " $perc% ";
@@ -128,4 +127,149 @@ sub draw(;$)
 
 
 1;
+
+__END__
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::ProgressBar - Create and manipulate progressbar widgets
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+    my $cui = new Curses::UI;
+    my $win = $cui->add('window_id', 'Window');
+
+    my $progressbar = $win->add(
+        'myprogressbar', 'ProgressBar',
+        -max       => 250,
+        -pos       => 42,
+    );
+
+    $progressbar->draw;
+
+
+=head1 DESCRIPTION
+
+Curses::UI::ProgressBar is a widget that can be used to 
+provide some sort of progress information to the user
+of your program. The progressbar looks like this:
+
+ +------------------------------------------+
+ |||||||||---------- 14% ------------------ |
+ +------------------------------------------+
+
+See exampes/demo-Curses::UI::ProgressBar in the distribution
+for a short demo.
+
+
+
+=head1 STANDARD OPTIONS
+
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
+B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
+B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
+B<-title>, B<-titlefullwidth>, B<-titlereverse>
+
+For an explanation of these standard options, see 
+L<Curses::UI::Widget|Curses::UI::Widget>.
+
+
+
+
+=head1 WIDGET-SPECIFIC OPTIONS
+
+=over 4
+
+=item * B<-min> < SCALAR >
+
+This opion sets the minimum value for the progress bar. 
+Default is 0.
+
+=item * B<-max> < SCALAR >
+
+This opion sets the maximum value for the progress bar.
+
+=item * B<-pos> < SCALAR >
+
+This option sets the startposition for the progress
+bar.
+
+=item * B<-nopercentage> < BOOLEAN >
+
+This option controls if a percentage indicator should
+be drawn in the widget. The default for the BOOLEAN 
+value is false, so a percentage incdicator will be drawn.
+
+=item * B<-nocenterline> < BOOLEAN >
+
+This option controls if a horizontal line should
+be drawn in the widget. The default for the BOOLEAN 
+value is false, so a horizontal line will be drawn.
+
+=back
+
+
+
+
+=head1 METHODS
+
+=over 4
+
+=item * B<new> ( HASH )
+
+=item * B<layout> ( )
+
+=item * B<draw> ( BOOLEAN )
+
+=item * B<focus> ( )
+
+These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
+for an explanation of these.
+
+=item * B<get> ( )
+
+This method will return the current B<-pos> value of the widget.
+
+=item * B<pos> ( SCALAR )
+
+This method will set the B<-pos> value of the widget to SCALAR.
+The widget will not be redrawn, so you will have to call
+the B<draw> method yourself to see the change.
+
+=back
+
+
+
+
+=head1 DEFAULT BINDINGS
+
+Since a ProgressBar is a non-interacting widget, it does not have
+any bindings.
+
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+L<Curses::UI::Widget|Curses::UI::Widget>, 
+L<Curses::UI::Common|Curses::UI:Common>
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
 

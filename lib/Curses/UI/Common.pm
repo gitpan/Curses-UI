@@ -24,18 +24,18 @@ use vars qw(
 	$DEBUG
 ); 
 
-$VERSION = '1.04';
+$VERSION = '1.05';
 $DEBUG = 0;
 
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(
-	mws_wrap
+	text_wrap
 	scrlength
 	split_to_lines
-	KEY_ESCAPE	KEY_SPACE	KEY_TAB
-	WORDWRAP	NO_WORDWRAP
-	CONTROLKEYS	NO_CONTROLKEYS
+	KEY_ESCAPE	 KEY_SPACE	KEY_TAB
+	WORDWRAP	 NO_WORDWRAP
+	CONTROLKEYS	 NO_CONTROLKEYS
 	CURSOR_INVISIBLE CURSOR_VISIBLE
 );
 
@@ -117,22 +117,6 @@ sub delallwin()
         return $this;
 }
 
-# ----------------------------------------------------------------------
-# "Constants"
-# ----------------------------------------------------------------------
-
-sub NO_WORDWRAP() { return 1 }
-sub WORDWRAP() { return 0 }
-sub NO_CONTROLKEYS() { return 0 }
-sub CONTROLKEYS() { return 1 }
-sub CURSOR_INVISIBLE() { return 0 }
-sub CURSOR_VISIBLE() { return 1 }
-
-# Keys that are not defined in curses.h, but which might
-# come in handy.
-sub KEY_ESCAPE() { return "\x1b" }
-sub KEY_TAB()    { return "\t" }
-sub KEY_SPACE()  { return " " }
 
 # ----------------------------------------------------------------------
 # Text processing
@@ -150,7 +134,7 @@ sub split_to_lines($;)
         my @lines = split /\n/, $text . "IHATEBUGS";
         $lines[-1] =~ s/IHATEBUGS$//g;
 	
-	return @lines;
+	return \@lines;
 }
 
 sub scrlength($;)
@@ -175,14 +159,18 @@ sub scrlength($;)
 	return $scrlength;	
 }
 
-sub mws_wrap($$;)
+# Contstants for text_wrap()
+sub NO_WORDWRAP() { return 1 }
+sub WORDWRAP() { return 0 }
+
+sub text_wrap($$;)
 {
-        # Make $this->mws_wrap() possible.
+        # Make $this->text_wrap() possible.
         shift if ref $_[0];
         my ($line, $maxlen, $wordwrap) = @_;
 	$wordwrap = WORDWRAP unless defined $wordwrap;
 	
-	return ("") if $line eq '';
+	return [""] if $line eq '';
 
 	my @wrapped = ();
 	my $len = 0;
@@ -229,7 +217,7 @@ sub mws_wrap($$;)
 		my $idx = 0;
 
 		# Line shorter than allowed? Then return immediately.
-		return ($line) if length($line) < $maxlen;
+		return [$line] if length($line) < $maxlen;
 
 		CHUNK: while ($idx < length($line))
 		{
@@ -257,19 +245,32 @@ sub mws_wrap($$;)
 		}
 	}
 		
-	return @wrapped;
+	return \@wrapped;
 }
 
 # ----------------------------------------------------------------------
 # Keyboard input
 # ----------------------------------------------------------------------
 
+# Constants:
+
+# Keys that are not defined in curses.h, but which might come in handy.
+sub KEY_ESCAPE() { return "\x1b" }
+sub KEY_TAB()    { return "\t" }
+sub KEY_SPACE()  { return " " }
+
+# Settings for get_key().
+sub NO_CONTROLKEYS() { return 0 }
+sub CONTROLKEYS() { return 1 }
+sub CURSOR_INVISIBLE() { return 0 }
+sub CURSOR_VISIBLE() { return 1 }
+
 sub get_key(;$$)
 {
-	my $this = shift;
-	my $blocktime = shift || 0;
-	my $controlkeystype = shift || 0;
-	my $cursormode = shift || 0;
+	my $this            = shift;
+	my $blocktime       = shift || 0;              
+	my $controlkeystype = shift || NO_CONTROLKEYS;
+	my $cursormode      = shift || CURSOR_INVISIBLE;
 
 	# Set terminal mode.
 	$controlkeystype ? cbreak() : raw(); 
@@ -295,24 +296,6 @@ sub get_key(;$$)
 		getch();
 	}
 
-	# ------------------------------------ #
-	# Did the screen resize?               #
-	# ------------------------------------ #
-
-	# The last resize signal should be received more than a
-	# second ago. This mechanism is used to catch window 
-	# managers that send a whole bunch of signals to the
-	# application if the screen resizes. Only the last one
-	# will count.
-	
-	if ($::mws_resizing and ($::mws_resizetime <= (time()-1)))
-	{
-		$::mws_resizing = 0;
-		$this->root->layout_from_scratch;
-		$this->root->rebuild_from_scratch;
-		$this->draw;
-	}
-	
         # ------------------------------------ #
         #  Hacks for broken termcaps / curses  #
         # ------------------------------------ #
@@ -333,7 +316,7 @@ sub get_key(;$$)
 	);
 
 	# Catch ESCape sequences.  
-	my $ESC = "\x1b";
+	my $ESC = KEY_ESCAPE();
 	if ($key eq $ESC) 
 	{ 
 		$key .= $this->{-windowscr}->getch();
@@ -351,7 +334,8 @@ sub get_key(;$$)
 		}
 
 		# Function keys.
-		# My Sun Solaris box needs this.
+		# My Sun Solaris box needs this. I have no idea
+		# of the portability of this stuff...
 		if ($key =~ /\[(\d+)\~/)
 		{
 			my $digit = $1;
@@ -363,7 +347,7 @@ sub get_key(;$$)
 		}
 		
 		$key = KEY_HOME if (
-			$key eq $ESC . "OH" 
+			   $key eq $ESC . "OH" 
 			or $key eq $ESC . "[7~"
 			or $key eq $ESC . "[1~"
 		);
@@ -373,16 +357,16 @@ sub get_key(;$$)
 		);
 
 		$key = KEY_END if (
-			$key eq $ESC . "OF" 
+			   $key eq $ESC . "OF" 
 			or $key eq $ESC . "[4~"
 		);
 
 		$key = KEY_PPAGE if (
-			$key eq $ESC . "[5~"
+			   $key eq $ESC . "[5~"
 		);
 
 		$key = KEY_NPAGE if (
-			$key eq $ESC . "[6~"
+			   $key eq $ESC . "[6~"
 		);
 	}
 
@@ -410,3 +394,206 @@ sub get_key(;$$)
 }
 
 1;
+
+__END__
+
+
+=pod
+
+=head1 NAME
+
+Curses::UI::Common - Common methods for Curse::UI
+
+=head1 SYNOPSIS
+
+    package MyPackage;
+
+    use Curses::UI::Common;
+    use vars qw(@ISA);
+    @ISA = qw(Curses::UI::Common);
+ 
+
+=head1 DESCRIPTION
+
+Curses::UI::Common is a collection of methods that is
+shared between Curses::UI classes.
+
+
+
+
+=head1 METHODS
+
+=head2 Various methods
+
+=over 4
+
+=item * B<parent> ( )
+
+Returns the B<-parent> data member.
+
+=item * B<root> ( )
+
+Returns the topmost B<-parent> (the Curses::UI instance).
+
+=item * B<rootscr> ( )
+
+Returns the topmost curses window (the B<-scr> data member
+of the Curses::UI instance). 
+
+=item * B<delallwin> ( )
+
+This method will walk through all the data members of the
+class intance. Each data member that is a Curses::Window
+descendant will be removed. This method is mostly used
+in the B<layout> method of widgets to remove all contained
+subwidgets before adding them again.
+
+=back
+
+
+=head2 Text processing
+
+=over 4
+
+=item B<split_to_lines> ( SCALAR )
+
+This method will split SCALAR into a list of separate lines.
+It returns a reference to this list.
+
+=item B<scrlength> ( SCALAR )
+
+Returns the screenlength of the string SCALAR. The difference
+with the perl function length() is that this method will
+expand TAB characters. It is exported by this class and it may
+be called as a stand-alone routine.
+
+
+=item B<text_wrap> ( LINE, LENGTH, WORDWRAP ) 
+
+=item B<WORDWRAP> ( )
+
+=item B<NO_WORDWRAP> ( )
+
+This method will wrap a line of text (LINE) to a 
+given length (LENGTH). If the WORDWRAP argument is
+true, wordwrap will be enabled (this is the default
+for WORDWRAP). It will return a reference to a list
+of wrapped lines. It is exported by this class and it may
+be called as a stand-alone routine.
+
+The B<WORDWRAP> and B<NO_WORDWRAP> routines will
+return the correct value vor the WORDWRAP argument.
+These routines are exported by this class.
+
+Example:
+
+    $this->text_wrap($line, 50, NO_WORDWRAP);
+
+=back
+
+
+
+=head2 Reading key input
+
+=over 4
+
+=item B<KEY_ESCAPE> ( )
+
+=item B<KEY_TAB> ( )
+
+=item B<KEY_SPACE> ( )
+
+These are a couple of routines that are not defined by the
+L<Curses|Curses> module, but which might be useful anyway. 
+These routines are exported by this class.
+
+=item B<get_key> ( BLOCKTIME, CONTROLKEYS, CURSOR )
+
+=item B<NO_CONTROLKEYS> ( )
+
+=item B<CONTROLKEYS> ( )
+
+=item B<CURSOR_VISIBLE> ( )
+
+=item B<CURSOR_INVISIBLE> ( )
+
+This method will try to read a key from the keyboard.
+It will return the key pressed or -1 if no key was 
+pressed. It is exported by this class and it may
+be called as a stand-alone routine.
+
+The BLOCKTIME argument can be used to set
+the curses halfdelay (the time to wait before the
+routine decides that no key was pressed). BLOCKTIME is
+given in tenths of seconds. The default is 0 (non-blocking
+key read).
+
+If CONTROLKEYS has a true value, the control-keys will 
+be handled in the normal way. So a <CTRL+C> will try to
+interrupt the program. If it has a false value, the
+normal control-keys will be disabled (the terminal will
+be set in raw mode).
+
+If CURSOR has a true value, the cursor will be visible
+during the key read (only if the terminal supports this
+through the curses curs_set call).
+
+The B<CONTROLKEYS> and B<NO_CONTROLKEYS> routines will
+return the correct value vor the CONTROLKEYS argument.
+The B<CURSOR_VISIBLE> and B<CURSOR_INVISIBLE> routines will
+return the correct value vor the CURSOR argument.
+These routines are exported by this class.
+
+Example:
+
+    my $key = $this->get_key(
+        5, 
+        NO_CONTROLKEYS,
+        CURSOR_INVISIBLE
+    );
+
+=back
+
+
+
+=head2 Beep control
+
+=over 4
+
+=item B<beep_on> ( )
+
+This sets the B<-nobeep> data member of the class instance
+to a false value.
+
+=item B<beep_off> ( )
+
+This sets the B<-nobeep> data member of the class instance
+to a true value.
+
+=item B<dobeep> ( )
+
+This will call the curses beep() routine, but only if
+B<-nobeep> is false.
+
+=back
+
+
+
+
+=head1 SEE ALSO
+
+L<Curses::UI|Curses::UI>, 
+
+
+
+
+=head1 AUTHOR
+
+Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+
+This package is free software and is provided "as is" without express
+or implied warranty. It may be used, redistributed and/or modified
+under the same terms as perl itself.
+
+=end
+

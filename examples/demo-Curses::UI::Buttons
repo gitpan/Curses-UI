@@ -1,7 +1,9 @@
 #!/usr/bin/perl -w
 use strict;
 
-open STDERR, ">/tmp/r";
+# We do not want STDERR to clutter our screen.
+open STDERR, ">/dev/null";
+
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
