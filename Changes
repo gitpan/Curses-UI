@@ -1,5 +1,11 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.74
+============
+
+2003-04-27	- Fixed critical bug that broke Menubar selection
+
+
 Version 0.73
 ============
 

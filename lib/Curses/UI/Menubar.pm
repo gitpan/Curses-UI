@@ -535,11 +535,12 @@ sub pulldown()
     $this->{-returnaction} = undef;
     $this->{-is_expanded}  = 1;
     $submenu->modalfocus;
-    $this->{-is_expanded}  = 0;
 
     # Remove the submenu.
     $this->root->delete($id);
     $this->root->draw;
+
+    $this->{-is_expanded}  = 0;
 
     # Parameters that are set by the previous modal focused menulistbox.
     my $return = $this->{-returnaction};
