@@ -159,7 +159,7 @@ sub derwin{
 
 sub getbegxy{ $_[1] = 1; $_[2] = 2; }
 sub getbegyx{ $_[1] = 1; $_[2] = 2; }
-sub getmaxyx{ $_[1] = 1; $_[2] = 2; }
+sub getmaxyx{ $_[1] = 24; $_[2] = 80; }
 
 sub getch{
 # ok, I got a problem here ... mess with the internals

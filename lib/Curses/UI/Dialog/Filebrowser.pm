@@ -409,10 +409,14 @@ sub fileselect()
     my $filebrowser = shift;
     my $this = $filebrowser->parent;
 
-    my $file = $filebrowser->values->[$filebrowser->{-ypos}];
-    $this->{-file} = $file;
-    $this->getobj('filevalue')->text("$file");
+    my $selected = $filebrowser->{-ypos};
     
+    my $file = $filebrowser->values->[$selected];
+
+    if (defined $file) {
+	$this->{-file} = $file;
+	$this->getobj('filevalue')->text($file);
+    } 
 # TODO: find out if it is done by mouseclick. If yes, then do 
 # not change focus.
 # Doubleclick may also select the file.

@@ -102,6 +102,25 @@ sub add($@;)
     $this->{-id2object}->{$id} = $object;
     $this->{-object2id}->{$object} = $id; 
 
+    # begin by AGX: inherith parent background color!
+    if (defined( $object->{-bg} )) {
+    	if ($object->{-bg} eq "-1" ) {
+    		if (defined( $this->{-bg} )) {
+    			$object->{-bg} = $this->{-bg};
+		}
+	}
+    }
+    # end by AGX
+    # begin by AGX: inherith parent foreground color!
+    if (defined( $object->{-fg} )) {
+    	if ($object->{-fg} eq "-1" ) {
+    		if (defined( $this->{-fg} )) {
+    			$object->{-fg} = $this->{-fg};
+		}
+	}
+    }
+    # end by AGX
+
     # Automatically create a focus- and draworder (last added = 
     # last focus/draw). This can be overriden by the 
     # set_focusorder() and set_draworder() functions.

@@ -2,7 +2,7 @@
 use strict;
 use Test;
 
-BEGIN { plan tests => 14 }
+BEGIN { plan tests => 15 }
 
 foreach my $class (qw(
     Curses::UI::Checkbox
@@ -18,7 +18,9 @@ foreach my $class (qw(
     Curses::UI::TextEntry
     Curses::UI::TextViewer
     Curses::UI::Window
-    Curses::UI::Radiobuttonbox )) {
+    Curses::UI::Radiobuttonbox 
+    Curses::UI::Notebook
+		      )) {
 
     my $file = $class;
     $file =~ s|::|/|g;

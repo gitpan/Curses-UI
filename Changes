@@ -1,7 +1,14 @@
 Changelog for the Curses::UI distribution:
 
-Version 0.94_01
-===============
+Version 0.95
+============
+		- Fixes to the RT#6770 patch to unbreak listbox
+		- Updated Manifest
+		- Fixes to Dialog Colors by Antonio Gallo
+		- Notebook widget by George Theall
+
+Version 0.94
+============
 		- Some patches by Luke Closs (lukec@activestate.com):
 		  - fixed 99template.t 
 		  - word wrap bug

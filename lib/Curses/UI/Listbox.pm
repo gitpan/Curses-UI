@@ -144,12 +144,16 @@ sub onSelectionChange(;$) { shift()->set_event('-onselchange', shift()) };
 sub values(;$)
 {
     my $this = shift;
-    my $values = ref $_[0] ? $_[0] : [ @_ ];
+    my $values = shift;
 
-    # Clear and go to first item if we get new data
-    $this->clear_selection();
+    if (defined $values && ! ref $values) {
+	$values = [ $values, @_ ];
+    }
  
     if (defined $values and ref $values eq 'ARRAY') {
+	# Clear and go to first item if we get new data
+	$this->clear_selection();    
+
         $this->{-values} = $values;
 	$this->option_first() if defined $values;
 
