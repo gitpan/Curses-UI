@@ -9,6 +9,8 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: fix dox
+
 package Curses::UI::PasswordEntry;
 
 use strict;
@@ -17,8 +19,12 @@ use Curses::UI::TextEntry;
 use Curses::UI::Common;
 
 use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::TextEntry);
-$VERSION = '1.00';
+
+@ISA = qw(
+    Curses::UI::TextEntry
+);
+
+$VERSION = '1.10';
 	
 sub new ()
 {
@@ -29,7 +35,7 @@ sub new ()
 
 	my %args = ( 
 		-undolevels	 => 20,	# number of undolevels. 0 = infinite
-		-homeonreturn    => 1,	# cursor to homepos on return?
+		-homeonblur      => 1,	# cursor to homepos on blur?
 	
 		%userargs,
 
@@ -40,7 +46,7 @@ sub new ()
 	# Create the entry.
 	my $this = $class->SUPER::new( %args);
 
-	return bless $this, $class;
+	return $this;
 }
 
 1;

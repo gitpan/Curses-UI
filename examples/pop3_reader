@@ -5,14 +5,14 @@ use strict;
 use FindBin;
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
-use Curses; # For KEY_*()
 
+use Curses;
 use Net::POP3;
 use Mail::Header;
 use Mail::Address;
 
-my $cui = new Curses::UI ( -clear_on_exit => 1 );
-my $pop3 = undef;
+my $cui        = new Curses::UI ( -clear_on_exit => 1 );
+my $pop3       = undef;
 my $connection = undef;
 
 # We do not want STDERR to clutter our screen.
@@ -22,9 +22,31 @@ open STDERR, ">/dev/null";
 # setup(): Setup the connection
 # ----------------------------------------------------------------------
 
+sub check_connection($;)
+{
+	my $buttons = shift;
+	my $conwin  = $buttons->parent;
+	my $cui     = $conwin->root;
+
+	foreach my $key ('username','password','host','port') 
+	{
+		my $obj = $conwin->getobj($key);
+		my $value = $obj->get;
+		$connection->{$key} = $value;
+		# TODO: focus back to entry does not seem to
+		# move the cursor with it.
+		if ($value =~ /^\s*$/) {
+			$cui->error("Missing value for $key field");
+			$obj->focus;
+			return;
+		}
+	}
+
+	return 1;
+}
+
 sub setup_connection()
 {
-
 	my $conwin = $cui->add(
 		'connection_window', 'Window',
 		-border => 1,
@@ -39,7 +61,7 @@ sub setup_connection()
 		'host_label', 'Label',	
 		-x => 0, -y => 0, -width => 13,
 		-textalignment => 'right',
-		-text => 'POP3 server :',
+		-text => 'POP3 host :',
 	);
 
 	$conwin->add(
@@ -87,55 +109,30 @@ sub setup_connection()
 		-x => 14, -y => 6,
 		-password => '*',
 		-text => '',
-	);
+	)->focus;
 
 	my $buttons = $conwin->add(
 		'buttons', 'Buttonbox',
 		-x => 14, -y => 8,
 		-buttons => [
 		    { -label => '< Connect >',
-		      -value => 'connect' },
+		      -onpress => sub {
+		          my $this = shift;
+		          if (check_connection($this)) {
+			      if (pop3_connect()) {
+			          $this->parent->loose_focus;
+			      }
+			  }
+		      },
+		    },
 		    { -label => '< Quit >',
-		      -value => 'quit' },
+		      -onpress => sub {exit} },
 		],
 	);
 
-
-	$conwin->returnkeys("\cC");
-	$conwin->draw;
-
-	my %connection = ();
-	for(;;)
-	{
-		my ($return, $lastkey) = $conwin->focus;
-
-		# See if Connect or Quit was chosen from the menu.
-		my $btnval = $conwin->getobj('buttons')->get;
-
-		# Quit if CTRL+C was pressed or if Quit was pressed.
-		exit_program() if $lastkey eq "\cC" or $btnval eq 'quit';
-
-		# Get the connection data from the connection window.
-		my $error = 0;
-		foreach my $key ('username','password','host','port') {
-			my $value = $conwin->getobj($key)->get;
-			$connection{$key} = $value;
-			if ($value =~ /^\s*$/) {
-				$cui->error("Missing value for $key field");
-				$error = 1;
-			}
-		}
-
-		last unless $error;
-	}
-
-	# We do not need the connection window anymore. Get rid of it.
-	$cui->delete('connection_window');
-	$cui->draw;
-	
-	$connection = \%connection;
+	$conwin->modalfocus;
+	$cui->delete('connection_window')
 }
-
 
 # ----------------------------------------------------------------------
 # pop3_connect(): Connect to the POP3 server and exit if it fails
@@ -143,7 +140,13 @@ sub setup_connection()
 
 sub pop3_connect()
 {
-	$cui->status("Connecting to the POP3 server...");
+	$cui->progress(
+		-message => "Connecting to the POP3 server...",
+		-max => 4,
+		-pos => 1,
+	);
+
+	my $error = 0;
 
 	$pop3 = Net::POP3->new(
 		$connection->{host},
@@ -152,38 +155,41 @@ sub pop3_connect()
 	);
 
 	if (not $pop3) {
+		$error++;
 		$cui->error("Could not connect to "
 		           ."$connection->{host}:$connection->{port}");
-		exit(1);
 	}
 
-	$cui->status("Sending username...");
-	if (not defined $pop3->user($connection->{username})) {
-		$cui->error("Sending USER failed:\n"
-			   . $pop3->message() );
-		exit(1);
+	$cui->setprogress(2, "Sending username...");
+	if (not $error and not defined $pop3->user($connection->{username})) {
+		$error++;
+		my $err = $pop3->message(); chomp $err;
+		$cui->error("Sending USER failed:\n$err");
 	}
 	
-	$cui->status("Sending password...");
-	if (not defined $pop3->pass($connection->{password})) {
-		$cui->error("Sending PASS failed:\n"
-			   . $pop3->message() );
-		exit(1);
+	$cui->setprogress(3, "Sending password...");
+	if (not $error and not defined $pop3->pass($connection->{password})) {
+		$error++;
+		my $err = $pop3->message(); chomp $err;
+		$cui->error("Sending PASS failed:\n$err");
 	}
 
-	$cui->nostatus;
+	if (not $error) {
+		$cui->setprogress(4, "Connection successful!");
+		sleep 1;
+	}
 
-	return $pop3;
+	$cui->noprogress;
+
+	return !$error;
 }
 
 # ----------------------------------------------------------------------
-# inbox(): Show the contents of the inbox
+# The inbox screen
 # ----------------------------------------------------------------------
 
-sub inbox()
+sub build_inbox()
 {
-	$cui->status("Retrieving message list...");
-
 	my $list = $pop3->list();
 	my @ids = sort {$a<=>$b} keys %$list;
 
@@ -233,11 +239,8 @@ sub inbox()
 		-title  => '<ENTER> view message <CTR+Q> Quit from program',
 	);
 	
-	$cui->nostatus;
-
+	$ml->set_binding(sub{exit(0)}, "\cC", "\cQ");
 	$ml->set_routine('option-select', \&view_message);
-	$listwin->returnkeys("\cQ", "\cC");
-	$listwin->focus;
 }
 
 # ----------------------------------------------------------------------
@@ -260,7 +263,12 @@ sub view_message()
 	{
 		# Maybe the connection went away. Reconnect and try again.
 		$pop3->close;
-		pop3_connect();
+		unless (pop3_connect()) 
+		{
+			$cui->error("Fatal error: Could not reconnect\n"
+			          . "to the POP3 server.");
+	 		exit(1);
+		}
 		$lines = $pop3->get($id);		
 	}
 	unless (ref $lines)
@@ -284,37 +292,24 @@ sub view_message()
 		-title  => '<ENTER> return to inbox <CTRL+Q>: Quit from program',
 	);
 
-	$viewwin->returnkeys(KEY_ENTER(), "\cQ", "\cC");
-	$cui->draw;
-
-	my (undef, $key) = $viewwin->focus;
-	exit_program() if $key eq "\cQ" or $key eq "\cC";
-	
+	$viewwin->set_binding(sub{ shift()->loose_focus }, KEY_ENTER());
+	$viewwin->set_binding(sub{exit(0)}, "\cC", "\cQ");
+	$viewwin->modalfocus;
 	$cui->delete('view_window');
 	$cui->draw;
-	
-	return $this;
 }
 
 # ----------------------------------------------------------------------
-# exit_program(): clean exit
+# Clean exit
 # ----------------------------------------------------------------------
 
-sub exit_program()
-{
-	if (defined $pop3)
-	{
-		$cui->status("Closing POP3 connection...");
-		$pop3->quit;
-		$cui->nostatus;
-	}
-	exit;
-}
+END { $pop3->quit if defined $pop3 }
 
 # ----------------------------------------------------------------------
-# Mainloop
+# The main program
 # ----------------------------------------------------------------------
 
 setup_connection();
-pop3_connect();
-inbox();
+build_inbox();
+MainLoop;
+

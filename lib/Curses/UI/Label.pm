@@ -9,196 +9,203 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: fix dox
+
 package Curses::UI::Label;
+
 use strict;
 use Curses;
 use Curses::UI::Widget;
 use Curses::UI::Common;
 
-use vars qw($VERSION @ISA);
-$VERSION = '1.00';
-@ISA = qw(Curses::UI::Widget);
+use vars qw(
+    $VERSION 
+    @ISA
+);
+
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::Widget
+);
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-	my %userargs = @_;
-	keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = (
-		-parent		 => undef,	# the parent window
-		-width		 => undef,	# the width of the label
-		-height		 => undef,      # the height of the label
-		-x		 => 0,		# the horizontal position,
-                                                # relative to the parent
-		-y		 => 0,		# the vertical position,
-                                                # relative to the parent
-		-text		 => undef,	# the text to show
-		-textalignment   => undef,  	# left / middle / right
-		-bold            => 0,		# Special attributes
-		-reverse         => 0,
-		-underline       => 0,	
-		-dim	         => 0,
-		-blink	         => 0,
-                -paddingspaces   => 0,          # Pad text with spaces?
-		
-		%userargs,
-	);
+    my %args = (
+        -parent          => undef,    # the parent window
+        -width           => undef,    # the width of the label
+        -height          => undef,    # the height of the label
+        -x               => 0,        # the hor. pos. rel. to the parent
+        -y               => 0,        # the vert. pos. rel. to the parent
+        -text            => undef,    # the text to show
+        -textalignment   => undef,    # left / middle / right
+        -bold            => 0,        # Special attributes
+        -reverse         => 0,
+        -underline       => 0,    
+        -dim             => 0,
+        -blink           => 0,
+        -paddingspaces   => 0,        # Pad text with spaces?
+        
+        %userargs,
+        
+        -nocursor        => 1,        # This widget uses no cursor
+        -focusable       => 0,        # This widget can't be focused
+    );
 
-	# Get the text dimension if -width or -height is undefined.
-	my @text_dimension = (undef,1);
-	unless (defined $args{-width} and defined $args{-height}) {
-		@text_dimension = text_dimension($args{-text})
-			if defined $args{-text};
-	}
+    # Get the text dimension if -width or -height is undefined.
+    my @text_dimension = (undef,1);
+    unless (defined $args{-width} and defined $args{-height}) {
+        @text_dimension = text_dimension($args{-text})
+            if defined $args{-text};
+    }
 
-	# If the -height is not set, determine the height
-	# using the initial contents of the -text.
-	if (not defined $args{-height}) 
-	{
-		my $l = $text_dimension[1];
-		$l = 1 if $l <= 0;
-		$args{-height} = height_by_windowscrheight($l, %args);
-	}
-	
-	# No width given? Then make the width the same size
-	# as the text. No initial text? Then let
-	# Curses::UI::Widget figure it out.
-	$args{-width} = width_by_windowscrwidth($text_dimension[0], %args)
-		unless defined $args{-width} or not defined $args{-text};
+    # If the -height is not set, determine the height
+    # using the initial contents of the -text.
+    if (not defined $args{-height}) 
+    {
+        my $l = $text_dimension[1];
+        $l = 1 if $l <= 0;
+        $args{-height} = height_by_windowscrheight($l, %args);
+    }
+    
+    # No width given? Then make the width the same size
+    # as the text. No initial text? Then let
+    # Curses::UI::Widget figure it out.
+    $args{-width} = width_by_windowscrwidth($text_dimension[0], %args)
+        unless defined $args{-width} or not defined $args{-text};
 
-	# If no text was defined (how silly...) we define an empty strin. 
-	$args{-text} = '' unless defined $args{-text};
-	
-	# Create the widget.
-	my $this = $class->SUPER::new( %args );
+    # If no text was defined (how silly...) we define an empty strin. 
+    $args{-text} = '' unless defined $args{-text};
+    
+    # Create the widget.
+    my $this = $class->SUPER::new( %args );
 
-	$this->layout();
+    $this->layout();
 
-	return bless $this, $class;
+    return $this;
 }
 
 sub layout()
 {
-	my $this = shift;
-	$this->SUPER::layout;
-	return $this if $Curses::UI::screen_too_small;
-	return $this;
+    my $this = shift;
+    $this->SUPER::layout or return;
+    return $this;
 }
 
 
-sub bold ($;$) { shift()->set_attribute('-bold', shift()) }
-sub reverse ($;$) { shift()->set_attribute('-reverse', shift()) }
+sub bold ($;$)      { shift()->set_attribute('-bold', shift())      }
+sub reverse ($;$)   { shift()->set_attribute('-reverse', shift())   }
 sub underline ($;$) { shift()->set_attribute('-underline', shift()) }
-sub dim ($;$) { shift()->set_attribute('-dim', shift()) }
-sub blink ($;$) { shift()->set_attribute('-blink', shift()) }
+sub dim ($;$)       { shift()->set_attribute('-dim', shift())       }
+sub blink ($;$)     { shift()->set_attribute('-blink', shift())     }
+
 sub set_attribute($$;)
 {
-	my $this = shift;
-	my $attribute = shift;
-	my $value = shift || 0;
+    my $this = shift;
+    my $attribute = shift;
+    my $value = shift || 0;
 
-	$this->{$attribute} = $value;
-	$this->intellidraw;
+    $this->{$attribute} = $value;
+    $this->intellidraw;
 
-	return $this;
+    return $this;
 }
 
 sub text($;$)
 {
-	my $this = shift;
-	my $text = shift;
+    my $this = shift;
+    my $text = shift;
 
-	if (defined $text) 
-	{
-		$this->{-text} = $text;
-		$this->intellidraw;
-		return $this;
-	} else {
-		return $this->{-text};
-	}
+    if (defined $text) 
+    {
+        $this->{-text} = $text;
+        $this->intellidraw;
+        return $this;
+    } else {
+        return $this->{-text};
+    }
 }
 
 sub get() { shift()->text }
 
 sub textalignment($;)
 {
-	my $this = shift;
-	my $value = shift;
-	$this->{-textalignment} = $value;
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    my $value = shift;
+    $this->{-textalignment} = $value;
+    $this->intellidraw;
+    return $this;
 }
 
 sub compute_xpos()
 {
-	my $this = shift;
-	my $line = shift;
+    my $this = shift;
+    my $line = shift;
 
-	# Compute the x location of the text.
-	my $xpos = 0;
-	if (defined $this->{-textalignment})
-	{
-	    if ($this->{-textalignment} eq 'right') {
-		$xpos = $this->screenwidth - length($line);
-	    } elsif ($this->{-textalignment} eq 'middle') {
-		$xpos = int (($this->screenwidth-length($line))/2);
-	    }
-	}
-	$xpos = 0 if $xpos < 0;
-	return $xpos;
+    # Compute the x location of the text.
+    my $xpos = 0;
+    if (defined $this->{-textalignment})
+    {
+        if ($this->{-textalignment} eq 'right') {
+	    $xpos = $this->canvaswidth - length($line);
+        } elsif ($this->{-textalignment} eq 'middle') {
+	    $xpos = int (($this->canvaswidth-length($line))/2);
+        }
+    }
+    $xpos = 0 if $xpos < 0;
+    return $xpos;
 }
 
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
+    my $this = shift;
+    my $no_doupdate = shift || 0;
+        
+    # Draw the widget.
+    $this->SUPER::draw(1) or return $this;
+    
+    # Clear all attributes.
+    $this->{-canvasscr}->attroff(A_REVERSE);
+    $this->{-canvasscr}->attroff(A_BOLD);
+    $this->{-canvasscr}->attroff(A_UNDERLINE);
+    $this->{-canvasscr}->attroff(A_BLINK);
+    $this->{-canvasscr}->attroff(A_DIM);
 
-        # Return immediately if this object is hidden.
-        return $this if $this->hidden;
-		
-	# Clear all attributes.
-	$this->{-windowscr}->attroff(A_REVERSE);
-	$this->{-windowscr}->attroff(A_BOLD);
-	$this->{-windowscr}->attroff(A_UNDERLINE);
-	$this->{-windowscr}->attroff(A_BLINK);
-	$this->{-windowscr}->attroff(A_DIM);
-	
-	# Draw the widget.
-	$this->SUPER::draw(1);
-	
-	# Set wanted attributes.
-	$this->{-windowscr}->attron(A_REVERSE) 	 if $this->{-reverse};
-	$this->{-windowscr}->attron(A_BOLD) 	 if $this->{-bold};
-	$this->{-windowscr}->attron(A_UNDERLINE) if $this->{-underline};
-	$this->{-windowscr}->attron(A_BLINK)	 if $this->{-blink};
-	$this->{-windowscr}->attron(A_DIM)	 if $this->{-dim};
+    # Set wanted attributes.
+    $this->{-canvasscr}->attron(A_REVERSE)   if $this->{-reverse};
+    $this->{-canvasscr}->attron(A_BOLD)      if $this->{-bold};
+    $this->{-canvasscr}->attron(A_UNDERLINE) if $this->{-underline};
+    $this->{-canvasscr}->attron(A_BLINK)     if $this->{-blink};
+    $this->{-canvasscr}->attron(A_DIM)       if $this->{-dim};
 
+    # Draw the text. Clip it if it is too long.
+    my $ypos = 0;
+    my $split = split_to_lines($this->{-text});
+    foreach my $line (@$split)
+    {
+        if (length($line) > $this->canvaswidth) {
+            # Break text
+            $line = substr($line, 0, $this->canvaswidth);
+            $line =~ s/.$/\$/;
+        } elsif ($this->{-paddingspaces}) {
+            $this->{-canvasscr}->addstr($ypos, 0, " "x$this->canvaswidth);    
+        }
 
-	# Draw the text. Clip it if it is too long.
-	my $ypos = 0;
-	my $split = split_to_lines($this->{-text});
-	foreach my $line (@$split)
-	{
-		if (length($line) > $this->screenwidth) {
-			# Break text
-			$line = substr($line, 0, $this->screenwidth);
-			$line =~ s/.$/\$/;
-		} elsif ($this->{-paddingspaces}) {
-			$this->{-windowscr}->addstr($ypos, 0, " "x$this->screenwidth);	
-		}
+        my $xpos = $this->compute_xpos($line);
+        $this->{-canvasscr}->addstr($ypos, $xpos, $line);
 
-		my $xpos = $this->compute_xpos($line);
-		$this->{-windowscr}->addstr($ypos, $xpos, $line);
+        $ypos++;
+    }
+    
+    $this->{-canvasscr}->noutrefresh;
+    doupdate() unless $no_doupdate;
 
-		$ypos++;
-	}
-
-	$this->{-windowscr}->noutrefresh;
-	doupdate() unless $no_doupdate;
-
-	return $this;
+    return $this;
 }
 
 1;

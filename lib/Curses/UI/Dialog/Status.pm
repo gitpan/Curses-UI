@@ -16,89 +16,94 @@ use Curses;
 use Curses::UI::Common;
 use Curses::UI::Window;
 
-use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Window Curses::UI::Common);
-$VERSION = '1.02';
+use vars qw(
+    $VERSION
+    @ISA
+);
+
+@ISA = qw(
+    Curses::UI::Window
+    Curses::UI::Common
+);
+
+$VERSION = '1.10';
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		-message 	 => undef,   # The message to show
-		-ipad            => 1,
-		-border 	 => 1,
-		-width           => undef,
-		-height          => undef,
+    my %args = ( 
+        -message     => undef,   # The message to show
+        -ipad        => 1,
+        -border      => 1,
+        -width       => undef,
+        -height      => undef,
 
-		%userargs,
+        %userargs,
 
-		-centered        => 1,
-	);
+        -centered    => 1,
+    );
 
-	my $this = $class->SUPER::new(%args);
-	$args{-message} = 'no message' unless defined $args{-message};
+    my $this = $class->SUPER::new(%args);
+    $args{-message} = 'no message' unless defined $args{-message};
 
-	my $l = $this->add(
-		'label', 'Label',
-		-text  => $this->{-message},
-	);
+    my $l = $this->add(
+        'label', 'Label',
+        -text  => $this->{-message},
+    );
 
-	$this->layout();
+    $this->layout();
 
-	bless $this, $class;
+    bless $this, $class;
 }
+
+# There is no need to focus a status dialog
+sub focus() {} ;
 
 sub layout()
 {
-	my $this = shift;
+    my $this = shift;
 
-	my $label = $this->getobj('label');
+    my $label = $this->getobj('label');
 
-	# The label might not be added at this point.
-	if (defined $label)
-	{
-		# Compute the width the dialog window needs.
-		if (not defined $this->{-width})
-		{
-			$this->{-width} = $this->width_by_windowscrwidth(
-				$label->{-width} + 1, # +1 for visible cursor 
-				%$this
-			);
-		}
+    # The label might not be added at this point.
+    if (defined $label)
+    {
+        # Compute the width the dialog window needs.
+        if (not defined $this->{-width})
+        {
+            $this->{-width} = $this->width_by_windowscrwidth(
+                $label->{-width} + 1, # +1 for visible cursor 
+                %$this
+            );
+        }
 
-		# Compute the height the dialog window needs.
-		if (not defined $this->{-height})
-		{
-			$this->{-height} = $this->height_by_windowscrheight(
-				$label->{-height}, 
-				%$this
-			);
-		}
+        # Compute the height the dialog window needs.
+        if (not defined $this->{-height})
+        {
+            $this->{-height} = $this->height_by_windowscrheight(
+                $label->{-height}, 
+                %$this
+            );
+        }
 
-	}
+    }
 
-	$this->SUPER::layout;
+    $this->SUPER::layout or return;
 
-	return $this;
+    return $this;
 }
-	
+    
 sub message($;)
 {
-	my $this = shift;
-	my $message = shift;
-	$message = 'no message' unless defined $message;
-	$this->getobj('label')->text($message);
-	return $this;
-}
-
-sub focus()
-{
-	my $this = shift;
-	return $this;
+    my $this = shift;
+    my $message = shift;
+    $message = 'no message' unless defined $message;
+    $this->getobj('label')->text($message);
+    return $this;
 }
 
 1;
@@ -132,7 +137,7 @@ Curses::UI::Dialog::Status - Create and manipulate status dialogs
     # -------------
     my $dialog = $win->add(
         'mydialog', 'Dialog::Status',
-	-message   => 'Hello, world!',
+    -message   => 'Hello, world!',
     );
 
     $dialog->draw();

@@ -16,51 +16,63 @@ use Curses;
 use Curses::UI::Common;
 use Curses::UI::Dialog::Basic;
 
-use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Dialog::Basic Curses::UI::Common);
-$VERSION = '1.01';
+use vars qw(
+    $VERSION
+    @ISA
+);
+
+@ISA = qw(
+    Curses::UI::Dialog::Basic
+    Curses::UI::Common
+);
+
+$VERSION = '1.10';
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		-message 	 => '',		# The message to show
+    my %args = ( 
+	-message      => '',        # The message to show
 
-		%userargs,
+	%userargs,
 
-		-ipadleft	 => 10,		# Space for sign
-		-centered        => 1,
-	);
-	$args{-title} = 'error message' unless defined $args{-title};
+	-ipadleft     => 10,        # Space for sign
+	-centered     => 1,
+    );
 
-	my $this = $class->SUPER::new(%args);
+    my $this = $class->SUPER::new(%args);
 
-	bless $this, $class;
+    unless (defined $this->{-title}) {
+	my $l = $this->root->lang;
+	$this->title($l->get('error_title'));
+    }
+
+    bless $this, $class;
 }
 
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
-	
-	# Draw widget
-	$this->SUPER::draw(1);
+    my $this = shift;
+    my $no_doupdate = shift || 0;
+    
+    # Draw widget
+    $this->SUPER::draw(1) or return $this;
 
-	# Draw sign
-	$this->{-borderscr}->addstr(2, 1, "    _"); 
-	$this->{-borderscr}->addstr(3, 1, "   / \\"); 
-	$this->{-borderscr}->addstr(4, 1, "  / ! \\"); 
-	$this->{-borderscr}->addstr(5, 1, " /_____\\"); 
-	$this->{-borderscr}->noutrefresh();
+    # Draw sign
+    $this->{-borderscr}->addstr(2, 1, "    _"); 
+    $this->{-borderscr}->addstr(3, 1, "   / \\"); 
+    $this->{-borderscr}->addstr(4, 1, "  / ! \\"); 
+    $this->{-borderscr}->addstr(5, 1, " /_____\\"); 
+    $this->{-borderscr}->noutrefresh();
 
-	$this->{-windowscr}->noutrefresh();
-	doupdate() unless $no_doupdate;
+    $this->{-canvasscr}->noutrefresh();
+    doupdate() unless $no_doupdate;
 
-	return $this;
+    return $this;
 }
 
 1;
@@ -96,7 +108,7 @@ Curses::UI::Dialog::Error - Create and manipulate error dialogs
     # -------------
     my $dialog = $win->add(
         'mydialog', 'Dialog::Error',
-	-message   => 'The world has gone!'
+    -message   => 'The world has gone!'
     );
     $dialog->focus;
     $win->delete('mydialog');

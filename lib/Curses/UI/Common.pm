@@ -9,35 +9,36 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: fix dox
+
 package Curses::UI::Common;
 
 use strict;
 use Term::ReadKey;
 use Curses;
+require Exporter;
 
 use vars qw(
-	@ISA 
-	@EXPORT_OK 	
-	@EXPORT 
-	$VERSION 
-	$DEBUG
+    @ISA 
+    @EXPORT_OK     
+    @EXPORT 
+    $VERSION 
 ); 
 
-$VERSION = '1.05';
-$DEBUG = 0;
+$VERSION = '1.10';
 
-require Exporter;
-@ISA = qw(Exporter);
+@ISA = qw(
+    Exporter
+);
+    
 @EXPORT = qw(
-	keys_to_lowercase
-	text_wrap
-	scrlength
-	split_to_lines
-	text_dimension
-	KEY_ESCAPE	 KEY_SPACE	KEY_TAB
-	WORDWRAP	 NO_WORDWRAP
-	CONTROLKEYS	 NO_CONTROLKEYS
-	CURSOR_INVISIBLE CURSOR_VISIBLE
+    keys_to_lowercase
+    text_wrap
+    scrlength
+    split_to_lines
+    text_dimension
+    CUI_ESCAPE       CUI_SPACE      CUI_TAB
+    WORDWRAP         NO_WORDWRAP
 );
 
 # ----------------------------------------------------------------------
@@ -46,98 +47,40 @@ require Exporter;
 
 sub parent()
 {
-	my $this = shift;
-	$this->{-parent};
+    my $this = shift;
+    $this->{-parent};
 }
 
 sub root()
 {
-	my $this = shift;
-	my $root = $this;
-        while (defined $root->{-parent}->{-scr}) {
-                $root = $root->{-parent};
-        }
-	return $root;
-}
-
-sub rootscr()
-{
-	my $this = shift;
-	return $this->root->{-scr};
-}
-
-sub beep_on()  { my $this = shift; $this->{-nobeep} = 0; return $this }
-sub beep_off() { my $this = shift; $this->{-nobeep} = 1; return $this }
-sub dobeep()
-{
-	my $this = shift;
-	beep() unless $this->{-nobeep};
-	return $this;
-}
-
-sub process_callback()
-{
-	my $this = shift;
-	if (ref $this->{-callback} eq 'CODE') {
-		$this->{-callback}->($this);
-	}
-	return $this;
-}
-
-# Delete all Curses::Window objects from $this.
-# This is used in the layout routines to easily
-# get rid of all created windows.
-#
-sub delallwin()
-{
-        my $this = shift;
-
-	my @delete = ();
-	my %didit  = ();
-        while (my ($id,$val) = each %{$this}) 
-	{
-            next unless ref $val;
-            eval { # in case $val is no object
-                if ($val->isa('Curses::Window')) 
-		{
-			if (not defined $didit{$val}) 
-			{
-				delwin($val);
-				$didit{$val} = 1;
-			}
-                        push @delete, $id;
-                }
-            };
-        }
-
-	foreach my $id (@delete) 
-	{ 
-		delete $this->{$id} 
-	}
-
-        return $this;
+    my $this = shift;
+    my $root = $this;
+    while (defined $root->{-parent}) {
+        $root = $root->{-parent};
+    }
+    return $root;
 }
 
 sub accessor($;$)
 {
-        my $this  = shift;
-	my $key   = shift;
-        my $value = shift;
-        if (defined $value) {
-                $this->{$key} = $value
-        }
-        return $this->{$key};
+    my $this  = shift;
+    my $key   = shift;
+    my $value = shift;
+
+    $this->{$key} = $value if defined $value;
+    return $this->{$key};
 }
 
 sub keys_to_lowercase($;)
 {
-	my $hash = shift;
+    my $hash = shift;
 
-	my $copy = {%$hash};
-	while (my ($k,$v) = each %$copy) {
-		$hash->{lc $k} = $v;
-	}
-	return $hash;
+    my $copy = {%$hash};
+    while (my ($k,$v) = each %$copy) {
+        $hash->{lc $k} = $v;
+    }
+
+    return $hash;
 }
 
 # ----------------------------------------------------------------------
@@ -146,150 +89,149 @@ sub keys_to_lowercase($;)
 
 sub split_to_lines($;)
 {
-	# Make $this->split_to_lines() possible.
-	shift if ref $_[0];
-	my $text = shift;
+    # Make $this->split_to_lines() possible.
+    shift if ref $_[0];
+    my $text = shift;
 
-        # Break up the text in lines. IHATEBUGS is
-        # because a split with /\n/ on "\n\n\n" would
-        # return zero result :-(
-        my @lines = split /\n/, $text . "IHATEBUGS";
-        $lines[-1] =~ s/IHATEBUGS$//g;
-	
-	return \@lines;
+    # Break up the text in lines. IHATEBUGS is
+    # because a split with /\n/ on "\n\n\n" would
+    # return zero result :-(
+    my @lines = split /\n/, $text . "IHATEBUGS";
+    $lines[-1] =~ s/IHATEBUGS$//g;
+    
+    return \@lines;
 }
 
 sub scrlength($;)
 {
-        # Make $this->scrlength() possible.
-        shift if ref $_[0];
-	my $line = shift;
+    # Make $this->scrlength() possible.
+    shift if ref $_[0];
+    my $line = shift;
 
-	return 0 unless defined $line; 
+    return 0 unless defined $line; 
 
-	my $scrlength = 0;
-	for (my $i=0; $i < length($line); $i++)	
-	{
-		my $chr = substr($line, $i, 1);
-		$scrlength++;
-		if ($chr eq "\t") {
-			while ($scrlength%8) {
-				$scrlength++;
-			}
-		}
-	}
-	return $scrlength;	
+    my $scrlength = 0;
+    for (my $i=0; $i < length($line); $i++)    
+    {
+        my $chr = substr($line, $i, 1);
+        $scrlength++;
+        if ($chr eq "\t") {
+            while ($scrlength%8) {
+                $scrlength++;
+            }
+        }
+    }
+    return $scrlength;    
 }
 
 # Contstants for text_wrap()
-sub NO_WORDWRAP() { return 1 }
-sub WORDWRAP() { return 0 }
+sub NO_WORDWRAP() { 1 }
+sub WORDWRAP()    { 0 }
 
 sub text_wrap($$;)
 {
-        # Make $this->text_wrap() possible.
-        shift if ref $_[0];
-        my ($line, $maxlen, $wordwrap) = @_;
-	$wordwrap = WORDWRAP unless defined $wordwrap;
-	
-	return [""] if $line eq '';
+    # Make $this->text_wrap() possible.
+    shift if ref $_[0];
+    my ($line, $maxlen, $wordwrap) = @_;
+    $wordwrap = WORDWRAP unless defined $wordwrap;
+    
+    return [""] if $line eq '';
 
-	my @wrapped = ();
-	my $len = 0;
-	my $wrap = '';
+    my @wrapped = ();
+    my $len = 0;
+    my $wrap = '';
 
-	# Special wrapping is needed if the line contains tab
-	# characters. These should be expanded to the TAB-stops.
-	if ($line =~ /\t/)
-	{
-		CHAR: for (my $i = 0; $i <= length($line); $i++)
+    # Special wrapping is needed if the line contains tab
+    # characters. These should be expanded to the TAB-stops.
+    if ($line =~ /\t/)
+    {
+        CHAR: for (my $i = 0; $i <= length($line); $i++)
+        {
+            my $nextchar = substr($line, $i, 1);
+
+            # Find the length of the string in case the
+            # next character is added.
+            my $newlen = $len + 1;
+            if ($nextchar eq "\t") { while($newlen%8) { $newlen++ } }
+
+            # Would that go beyond the end of the available width?
+            if ($newlen > $maxlen)
+            {
+                if ($wordwrap == WORDWRAP 
+                    and $wrap =~ /^(.*)([\s])(\S+)$/)
 		{
-			my $nextchar = substr($line, $i, 1);
-			### last CHAR unless defined $nextchar and $nextchar ne '';
+                    push @wrapped, $1 . $2;
+                    $wrap = $3;
+                    $len = scrlength($wrap) + 1;
+                } else {
+                    $len = 1;
+                    push @wrapped, $wrap;
+                    $wrap = '';
+                }
+            } else {
+                $len = $newlen;
+            }
+            $wrap .= $nextchar;
+        }
+        push @wrapped, $wrap if defined $wrap;
 
-			# Find the length of the string in case the
-			# next character is added.
-			my $newlen = $len + 1;
-			if ($nextchar eq "\t") { while($newlen%8) { $newlen++ } }
+    # No tab characters in the line? Then life gets a bit easier. We can 
+    # process large chunks at once.
+    } else {
+        my $idx = 0;
 
-			# Would that go beyond the end of the available width?
-			if ($newlen > $maxlen)
-			{
-				if ($wordwrap == WORDWRAP 
-				    and $wrap =~ /^(.*)([\s])(\S+)$/)
-				{
-					push @wrapped, $1 . $2;
-					$wrap = $3;
-					$len = scrlength($wrap) + 1;
-				} else {
-					$len = 1;
-					push @wrapped, $wrap;
-					$wrap = '';
-				}
-			} else {
-				$len = $newlen;
-			}
-			$wrap .= $nextchar;
-		}
-		push @wrapped, $wrap if defined $wrap;
+        # Line shorter than allowed? Then return immediately.
+        return [$line] if length($line) < $maxlen;
+        return ["internal wrap error: wraplength undefined"] 
+            unless defined $maxlen;
 
-	# No tab characters in the line? Then life gets a bit easier. We can 
-	# process large chunks at once.
-	} else {
-		my $idx = 0;
-
-		# Line shorter than allowed? Then return immediately.
-		return [$line] if length($line) < $maxlen;
-		return ["internal wrap error: wraplength undefined"] 
-			unless defined $maxlen;
-
-		CHUNK: while ($idx < length($line))
-		{
-			my $next = substr($line, $idx, $maxlen);
-			if (length($next) < $maxlen)
-			{
-				push @wrapped, $next;
-				last CHUNK;
-			}
-			elsif ($wordwrap == WORDWRAP)
-			{
-				my $space_idx = rindex($next, " ");
-				if ($space_idx == -1 or $space_idx == 0)
-				{
-					push @wrapped, $next;
-					$idx += $maxlen;
-				} else {
-					push @wrapped, substr($next, 0, $space_idx + 1);
-					$idx += $space_idx + 1;
-				}
-			} else {
-				push @wrapped, $next;
-				$idx += $maxlen;
-			}	
-		}
-	}
-		
-	return \@wrapped;
+        CHUNK: while ($idx < length($line))
+        {
+            my $next = substr($line, $idx, $maxlen);
+            if (length($next) < $maxlen)
+            {
+                push @wrapped, $next;
+                last CHUNK;
+            }
+            elsif ($wordwrap == WORDWRAP)
+            {
+                my $space_idx = rindex($next, " ");
+                if ($space_idx == -1 or $space_idx == 0)
+                {
+                    push @wrapped, $next;
+                    $idx += $maxlen;
+                } else {
+                    push @wrapped, substr($next, 0, $space_idx + 1);
+                    $idx += $space_idx + 1;
+                }
+            } else {
+                push @wrapped, $next;
+                $idx += $maxlen;
+            }    
+        }
+    }
+        
+    return \@wrapped;
 }
 
 sub text_dimension ($;)
 {
-        # Make $this->text_wrap() possible.
-        shift if ref $_[0];
-	my $text = shift;
-	
-	my $lines = split_to_lines($text);
-	
-	my $height = scalar @$lines;
-	
-	my $width = 0;
-	foreach (@$lines)
-	{
-		my $l = length($_);
-		$width = $l if $l > $width;
-	}
+    # Make $this->text_wrap() possible.
+    shift if ref $_[0];
+    my $text = shift;
+    
+    my $lines = split_to_lines($text);
+    
+    my $height = scalar @$lines;
+    
+    my $width = 0;
+    foreach (@$lines)
+    {
+        my $l = length($_);
+        $width = $l if $l > $width;
+    }
 
-	return ($width, $height);
+    return ($width, $height);
 }
 
 # ----------------------------------------------------------------------
@@ -299,142 +241,166 @@ sub text_dimension ($;)
 # Constants:
 
 # Keys that are not defined in curses.h, but which might come in handy.
-sub KEY_ESCAPE() { return "\x1b" }
-sub KEY_TAB()    { return "\t" }
-sub KEY_SPACE()  { return " " }
+sub CUI_ESCAPE()       { "\x1b" }
+sub CUI_TAB()          { "\t"   }
+sub CUI_SPACE()        { " "    }
 
-# Settings for get_key().
-sub NO_CONTROLKEYS() { return 0 }
-sub CONTROLKEYS() { return 1 }
-sub CURSOR_INVISIBLE() { return 0 }
-sub CURSOR_VISIBLE() { return 1 }
-
-sub get_key(;$$)
+# Make ascii representation of a key.
+sub key_to_ascii($;)
 {
-	my $this            = shift;
-	my $blocktime       = shift || 0;              
-	my $controlkeystype = shift || NO_CONTROLKEYS;
-	my $cursormode      = shift || CURSOR_INVISIBLE;
+    my $this = shift;
+    my $key  = shift;
 
-	# Set terminal mode.
-	$controlkeystype ? cbreak() : raw(); 
-	noecho();
+    if ($key eq CUI_ESCAPE()) {
+	$key = '<Esc>';
+    }
+    # Control characters. Change them into something printable
+    # via Curses' unctrl function.
+    elsif ($key lt ' ' and $key ne "\n" and $key ne "\t") {
+        $key = '<' . uc(unctrl($key)) . '>';
+    }
 
-	# eval, because not every system might have
-	# this function available.
-	eval { curs_set($cursormode) };
+    # Extended keys get translated into their names via Curses'
+    # keyname function.
+    elsif ($key =~ /^\d{2,}$/) {
+        $key = '<' . uc(keyname($key)) . '>';
+    }
 
-	my $key;
-	if (defined $this->{-windowscr})
-	{
-		$blocktime 
-		    ? halfdelay($blocktime) 
-		    : $this->{-windowscr}->nodelay(1);
-		$this->{-windowscr}->keypad(1);
-		$key = $this->{-windowscr}->getch();
-	} else {
-		$blocktime 
-		    ? halfdelay($blocktime) 
-		    : nodelay(1);
-		keypad(1);
-		getch();
-	}
+    return $key;
+}
 
-        # ------------------------------------ #
-        #  Hacks for broken termcaps / curses  #
-        # ------------------------------------ #
+# For the select() syscall in char_read().
+my $rin = '';
+vec($rin, fileno(STDIN),  1) = 1;
 
-        $key = KEY_BACKSPACE if (
-                ord($key) == 127
-                or $key eq "\cH"
+sub char_read(;$)
+{
+    my $this = shift;
+    my $blocktime = shift;
+
+    # Initialize the toplevel window for 
+    # reading a key.
+    my $s = $this->root->{-canvasscr};
+    noecho();
+    raw();
+    $s->keypad(1);
+
+    # Read input on STDIN.
+    my $key = '-1';
+    $blocktime = undef if $blocktime < 0; # Wait infinite
+    my $crin = $rin;
+    $! = 0;
+    my $found = select($crin, undef, undef, $blocktime);
+
+    if ($found < 0 ) {
+	print STDERR "DEBUG: get_key() -> select() -> $!\n"
+	    if $Curses::UI::debug; 
+    } elsif ($found) {
+	$key = $s->getch();
+    }
+
+    return $key;
+}
+
+sub get_key(;$)
+{
+    my $this            = shift;
+    my $blocktime       = shift || 0;
+
+    my $key = $this->char_read($blocktime);
+
+    # ------------------------------------ #
+    #  Hacks for broken termcaps / curses  #
+    # ------------------------------------ #
+
+    $key = KEY_BACKSPACE if (
+	ord($key) == 127 or 
+	$key eq "\cH"
+    );
+
+    $key = KEY_DC if (
+	$key eq "\c?" or 
+	$key eq "\cD"
+    );
+
+    $key = KEY_ENTER if (
+        $key eq "\n" or 
+	$key eq "\cM"
+    );
+
+    # Catch ESCape sequences.  
+    my $ESC = CUI_ESCAPE();
+    if ($key eq $ESC) 
+    { 
+        $key .= $this->char_read(0);
+
+        # Only ESC pressed?
+        $key = $ESC if $key eq "${ESC}-1" 
+                or $key eq "${ESC}${ESC}";
+        return $key if $key eq $ESC;
+        
+        # Not only a single ESC? 
+        # Then get extra keypresses.
+        $key .= $this->char_read(0);
+        while ($key =~ /\[\d+$/) {
+            $key .= $this->char_read(0);
+        }
+
+        # Function keys on my Sun Solaris box. 
+	# I have no idea of the portability of 
+	# this stuff, but it works for me...
+        if ($key =~ /\[(\d+)\~/)
+        {
+            my $digit = $1;
+            if ($digit >= 11 and $digit <= 15) {
+                $key = KEY_F($digit-10);
+            } elsif ($digit >= 17 and $digit <= 21) {
+                $key = KEY_F($digit-11);
+            }
+        }
+        
+        $key = KEY_HOME if (
+            $key eq $ESC . "OH"  or 
+	    $key eq $ESC . "[7~" or 
+	    $key eq $ESC . "[1~"
         );
 
-        $key = KEY_DC if (
-                $key eq "\c?"
-		or $key eq "\cD"
-        );
-
-	$key = KEY_ENTER if (
-		$key eq "\n" 
-		or $key eq "\cM"
+	$key = KEY_BTAB if (
+	    $key eq $ESC . "OI"  or   # My xterm under solaris
+	    $key eq $ESC . "[Z"       # My xterm under Redhat Linux
 	);
+    
+        $key = KEY_DL if (
+            $key eq $ESC . "[2K"
+        );
 
-	# Catch ESCape sequences.  
-	my $ESC = KEY_ESCAPE();
-	if ($key eq $ESC) 
-	{ 
-		$key .= $this->{-windowscr}->getch();
+        $key = KEY_END if (
+	    $key eq $ESC . "OF"  or 
+	    $key eq $ESC . "[4~"
+        );
 
-		# Only ESC pressed?
-		$key = $ESC if $key eq "${ESC}-1" 
-			    or $key eq "${ESC}${ESC}";
-		return $key if $key eq $ESC;
-		
-		# Not only a single ESC? 
-		# Then get extra keypresses.
-		$key .= $this->{-windowscr}->getch();
-		while ($key =~ /\[\d+$/) {
-			$key .= $this->{-windowscr}->getch() 
-		}
+        $key = KEY_PPAGE if (
+	    $key eq $ESC . "[5~"
+        );
 
-		# Function keys.
-		# My Sun Solaris box needs this. I have no idea
-		# of the portability of this stuff...
-		if ($key =~ /\[(\d+)\~/)
-		{
-			my $digit = $1;
-			if ($digit >= 11 and $digit <= 15) {
-				$key = KEY_F($digit-10);
-			} elsif ($digit >= 17 and $digit <= 21) {
-				$key = KEY_F($digit-11);
-			}
-		}
-		
-		$key = KEY_HOME if (
-			   $key eq $ESC . "OH" 
-			or $key eq $ESC . "[7~"
-			or $key eq $ESC . "[1~"
-		);
-	
-		$key = KEY_DL if (
-			$key eq $ESC . "[2K"
-		);
+        $key = KEY_NPAGE if (
+	    $key eq $ESC . "[6~"
+        );
+    }
 
-		$key = KEY_END if (
-			   $key eq $ESC . "OF" 
-			or $key eq $ESC . "[4~"
-		);
+    # ----------#
+    # Debugging #
+    # ----------#
 
-		$key = KEY_PPAGE if (
-			   $key eq $ESC . "[5~"
-		);
+    if ($Curses::UI::debug and $key ne "-1")
+    {
+        my $k = '';
+        my @k = split //, $key;
+        foreach (@k) { $k .= $this->key_to_ascii($_) }
+        print STDERR "DEBUG: get_key() -> [$k]\n"
+    }
 
-		$key = KEY_NPAGE if (
-			   $key eq $ESC . "[6~"
-		);
-	}
-
-	# ----------#
-	# Debugging #
-	# ----------#
-
-	if ($DEBUG and $key ne "-1")
-	{
-		my $k = $key;
-		my @k = split //, $k;
-		foreach (@k) { $_ = ord($_) }
-		$k =~ s/$ESC/<esc>/g;
-		$k =~ s/\c/<ctrl>/g;
-		print STDERR "GRAB KEY DEBUGGER:\n"
-			   . "--------------------------\n"
-			   . "KEY: $k " . KEY_F(10) . " OCT: "
-			   . ($k =~ /^\d\d\d$/ ? sprintf("%o", $k) : "")
-			   . "\n"
-			   . "ORD: @k\n"
-			   . "--------------------------\n";
-	}
-
-        return $key;
+    return $key;    
 }
 
 1;
@@ -482,11 +448,6 @@ Returns the data member $this->{B<-parent>}.
 =item * B<root> ( )
 
 Returns the topmost B<-parent> (the Curses::UI instance).
-
-=item * B<rootscr> ( )
-
-Returns the topmost curses window (the data member
-$this->{B<-scr>} of the Curses::UI instance). 
 
 =item * B<delallwin> ( )
 
@@ -559,25 +520,17 @@ Example:
 
 =over 4
 
-=item B<KEY_ESCAPE> ( )
+=item B<CUI_ESCAPE> ( )
 
-=item B<KEY_TAB> ( )
+=item B<CUI_TAB> ( )
 
-=item B<KEY_SPACE> ( )
+=item B<CUI_SPACE> ( )
 
 These are a couple of routines that are not defined by the
 L<Curses|Curses> module, but which might be useful anyway. 
 These routines are exported by this class.
 
-=item B<get_key> ( BLOCKTIME, CONTROLKEYS, CURSOR )
-
-=item B<NO_CONTROLKEYS> ( )
-
-=item B<CONTROLKEYS> ( )
-
-=item B<CURSOR_VISIBLE> ( )
-
-=item B<CURSOR_INVISIBLE> ( )
+=item B<get_key> ( BLOCKTIME, CURSOR )
 
 This method will try to read a key from the keyboard.
 It will return the key pressed or -1 if no key was 
@@ -590,55 +543,11 @@ routine decides that no key was pressed). BLOCKTIME is
 given in tenths of seconds. The default is 0 (non-blocking
 key read).
 
-If CONTROLKEYS has a true value, the control-keys will 
-be handled in the normal way. So a <CTRL+C> will try to
-interrupt the program. If it has a false value, the
-normal control-keys will be disabled (the terminal will
-be set in raw mode).
-
-If CURSOR has a true value, the cursor will be visible
-during the key read (only if the terminal supports this
-through the curses curs_set call).
-
-The B<CONTROLKEYS> and B<NO_CONTROLKEYS> routines will
-return the correct value vor the CONTROLKEYS argument.
-The B<CURSOR_VISIBLE> and B<CURSOR_INVISIBLE> routines will
-return the correct value vor the CURSOR argument.
-These routines are exported by this class.
-
 Example:
 
-    my $key = $this->get_key(
-        5, 
-        NO_CONTROLKEYS,
-        CURSOR_INVISIBLE
-    );
+    my $key = $this->get_key(5)
 
 =back
-
-
-
-=head2 Beep control
-
-=over 4
-
-=item B<beep_on> ( )
-
-This sets the data member $this->{B<-nobeep>} of the class instance
-to a false value.
-
-=item B<beep_off> ( )
-
-This sets the data member $this->{B<-nobeep>} of the class instance
-to a true value.
-
-=item B<dobeep> ( )
-
-This will call the curses beep() routine, but only if B<-nobeep> 
-is false.
-
-=back
-
 
 
 

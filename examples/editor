@@ -37,26 +37,25 @@ if (defined $currentfile and -f $currentfile)
 # Hint: If you need STDERR, write it out to a file and put 
 # a tail on that file to see the STDERR output. Example:
 #open STDERR, ">>/tmp/editor_errors.$$";
-open STDERR, ">/dev/null" or die "Can't redirect STDERR to /dev/null";
+open STDERR, ">/dev/null";
 
 # ----------------------------------------------------------------------
 # Menu definition
 # ----------------------------------------------------------------------
 
-my @file_menu = (
-    { -label => 'Open file ^O', -callback => \&open_dialog },
-    { -label => 'Save file ^S', -callback => \&save_dialog },
-    { -label => 'Exit      ^Q', -callback => \&exit_dialog   }
-);
-
-
-my @help_menu = (
-    { -label => 'About',     -callback => \&about_dialog }
-);
-
 my @menu = (
-    { -label => 'File',      -submenu => \@file_menu },
-    { -label => 'Help',      -submenu => \@help_menu }
+  { -label => 'File', 
+    -submenu => [
+      { -label => 'Open file ^O', -value => \&open_dialog  },
+      { -label => 'Save file ^S', -value => \&save_dialog  },
+      { -label => 'Exit      ^Q', -value => \&exit_dialog  }
+    ]
+  },
+  { -label => 'Help', 
+    -submenu => [
+      { -label => 'About editor', -value => \&about_dialog }
+    ]
+  } 
 );
 
 # ----------------------------------------------------------------------
@@ -65,7 +64,9 @@ my @menu = (
 
 # Create the root. Everything else will be built up from here.
 use Curses::UI;
-my $cui = new Curses::UI ( -clear_on_exit => 1 );
+my $cui = new Curses::UI ( 
+	-clear_on_exit => 1 
+);
 
 # Add the menu to the root.
 my $menu = $cui->add(
@@ -73,9 +74,10 @@ my $menu = $cui->add(
 	-menu => \@menu,
 );
 
-# First we create the screen for the editor.
+# Create the screen for the editor.
 my $screen = $cui->add(
 	'screen', 'Window',
+	-padtop          => 1, # leave space for the menu
 	-border		 => 0,
 	-ipad		 => 0,
 );
@@ -96,38 +98,22 @@ my $editor = $screen->add(
 );
 
 # There is no need for the editor widget to loose focus, so
-# the "return" binding is disabled here. This also enables the
+# the "loose-focus" binding is disabled here. This also enables the
 # use of the "TAB" key in the editor, which is nice to have.
-$editor->clear_binding('return');
+$editor->clear_binding('loose-focus');
 
 # Help information for the user. 
 $screen->add(
-	'help_1', 'Label',
+	'help', 'Label',
 	-y 	 	 => -2,
 	-width		 => -1,
 	-reverse 	 => 1,
 	-paddingspaces   => 1,
-	-text 	 	 => " ^Q Quit from the program "
-		  	  . " ^S save file "
-		  	  . " ^W toggle wrapping",
-);
-$screen->add(
-	'help_2', 'Label',
-	-y 	 	 => -1,
-	-reverse 	 => 1,
-	-width		 => -1,
-	-paddingspaces   => 1,
-	-text 	 	 => " ^X Open the menu         "
-                  	  . " ^O open file "
-		  	  . " ^R toggle hard returns viewing",
-);
-
-# The screen will loose focus if one of the 
-# returnkeys is pressed. \cX is just a fallback key
-# in case F10 does not work on a particular system.
-$screen->returnkeys(
-	"\cX", KEY_F(10), "\cQ", 
-	"\cC", "\cO", "\cS", "\cL"
+	-text 	 	 => 
+	      " ^Q Quit from the program ^S save file"
+	    . " ^W toggle wrapping\n"
+	    . " ^X Open the menu         ^O open file"
+	    . " ^R toggle hard returns viewing",
 );
 
 # ----------------------------------------------------------------------
@@ -205,28 +191,20 @@ sub exit_dialog()
 # The main loop of the program
 # ----------------------------------------------------------------------
 
-# Draw the screen.
-$cui->draw;
 
-for (;;)
-{
-	# Focus on the screen, so the editor can be used.
-	my ($ret,$key) = $screen->focus;
+$cui->set_binding(\&exit_dialog, "\cQ", "\cC");
+$cui->set_binding(\&save_dialog, "\cS");
+$cui->set_binding(\&open_dialog, "\cO");
+$cui->set_binding(sub {shift()->getobj('menu')->focus}, "\cX", KEY_F(10));
+$cui->set_binding(sub {
+	my $cui = shift;
+	$cui->layout;
+	$cui->draw;
+}, "\cL");
 
-	# If CTRL+Q or CTRL+C was pressed, show the exit dialog.
-	if ($key eq "\cQ" or $key eq "\cC") {
-		exit_dialog();	
-	# Else bring the focus to the menu.
-	} elsif ($key eq "\cS") {
-		save_dialog();
-	} elsif ($key eq "\cO") {
-		open_dialog();
-	} elsif ($key eq "\cL") {
-                $cui->layout_from_scratch;
-                $cui->rebuild_from_scratch;
-	} else {
-		$menu->focus;
-	}
-}
 
+# Bring the focus to the editor widget.
+$editor->focus;
+
+$cui->mainloop;
 

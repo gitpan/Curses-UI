@@ -9,6 +9,8 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+#TODO: fix dox
+
 package Curses::UI::Calendar;
 
 use strict;
@@ -16,440 +18,523 @@ use Curses;
 use Curses::UI::Common;
 use Curses::UI::Widget;
 
-use vars qw($VERSION @ISA @EXPORT);
-require Exporter;
-@ISA = qw(Curses::UI::Widget Curses::UI::Common);
-$VERSION = '1.03';
+use vars qw(
+    $VERSION 
+    @ISA
+);
 
-my @days   = (
-	'Su', 'Mo', 'Tu', 
-	'We', 'Th', 'Fr', 'Sa'
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::Widget 
+    Curses::UI::Common
 );
-my @months = (
-	undef,
-	'Januari', 'Februari', 'March', 'April',
-	'May', 'June', 'July', 'August',
-	'September', 'October', 'November', 'December'
-);
+
+my @days   = ();
+my @months = ();
 
 my %routines = (
-	'return'		=> 'RETURN',
-	'date-select'		=> \&date_select,
-	'date-selected'		=> \&date_selected,
-	'date-nextday'		=> \&date_nextday,
-	'date-prevday'		=> \&date_prevday,
-	'date-nextweek'		=> \&date_nextweek,
-	'date-prevweek'		=> \&date_prevweek,
-	'date-nextmonth'	=> \&date_nextmonth,
-	'date-prevmonth'	=> \&date_prevmonth,
-	'date-nextyear'		=> \&date_nextyear,
-	'date-prevyear'		=> \&date_prevyear,
-	'date-today'		=> \&date_today,
+    'loose-focus'          => \&loose_focus,
+    'date-select'          => \&date_select,
+    'date-selected'        => \&date_selected,
+    'date-nextday'         => \&date_nextday,
+    'date-prevday'         => \&date_prevday,
+    'date-nextweek'        => \&date_nextweek,
+    'date-prevweek'        => \&date_prevweek,
+    'date-nextmonth'       => \&date_nextmonth,
+    'date-prevmonth'       => \&date_prevmonth,
+    'date-nextyear'        => \&date_nextyear,
+    'date-prevyear'        => \&date_prevyear,
+    'date-today'           => \&date_today,
+    'mouse-button'         => \&mouse_button,
 );
 
 my %bindings = (
-        KEY_TAB()            	=> 'return',
-        KEY_LEFT()      	=> 'date-prevday',
-        "h"             	=> 'date-prevday',
-        KEY_RIGHT()     	=> 'date-nextday',
-        "l"             	=> 'date-nextday',
-        KEY_DOWN()      	=> 'date-nextweek',
-	"j"			=> 'date-nextweek',
-        KEY_UP()        	=> 'date-prevweek',
-        "k"             	=> 'date-prevweek',
-        KEY_NPAGE()     	=> 'date-nextmonth',
-	"J",			=> 'date-nextmonth',
-        KEY_PPAGE()     	=> 'date-prevmonth',
-	"K",			=> 'date-prevmonth',
-	"L",			=> 'date-nextyear',
-	"H",			=> 'date-prevyear',
-        KEY_HOME()      	=> 'date-selected',
-        "\cA"           	=> 'date-selected',
-        "c" 	          	=> 'date-selected',
-        "t"           		=> 'date-today',
-	KEY_ENTER()		=> 'date-select',
-        KEY_SPACE()            	=> 'date-select',
+    CUI_TAB()              => 'loose-focus',
+    KEY_BTAB()             => 'loose-focus',
+    KEY_LEFT()             => 'date-prevday',
+    "h"                    => 'date-prevday',
+    KEY_RIGHT()            => 'date-nextday',
+    "l"                    => 'date-nextday',
+    KEY_DOWN()             => 'date-nextweek',
+    "j"                    => 'date-nextweek',
+    KEY_UP()               => 'date-prevweek',
+    "k"                    => 'date-prevweek',
+    KEY_NPAGE()            => 'date-nextmonth',
+    "J",                   => 'date-nextmonth',
+    KEY_PPAGE()            => 'date-prevmonth',
+    "K",                   => 'date-prevmonth',
+    "L",                   => 'date-nextyear',
+    "H",                   => 'date-prevyear',
+    "n",                   => 'date-nextyear',
+    "p",                   => 'date-prevyear',
+    KEY_HOME()             => 'date-selected',
+    "\cA"                  => 'date-selected',
+    "c"                    => 'date-selected',
+    "t"                    => 'date-today',
+    KEY_ENTER()            => 'date-select',
+    CUI_SPACE()            => 'date-select',
 );
+
+# ----------------------------------------------------------------------
+# Constructor
+# ----------------------------------------------------------------------
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-	my %userargs = @_;
-	keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		-date	    => undef,   # The date to start width
-		-width      => 0,
-		-height     => 0,
-		-onchange   => undef,	# Event handler	
-		%userargs,
-		-ipadleft   => 1,
-		-ipadright  => 1,
-		-ipadbottom => 0,
-		-ipadtop    => 0,
-		-routines   => {%routines},
-		-bindings   => {%bindings},
-	);
+    my %args = ( 
+        -date       => undef,   # The date to start width
+        -width      => 0,       # Widget will fix width itself
+        -height     => 0,       # Widget will fix height itself
+        -onchange   => undef,   # Event handler    
 
-	# The width should be at least 20.
-	my $min_width = width_by_windowscrwidth(20, %args);
-	$args{-width} = $min_width if $args{-width} != -1 
-				   and $args{-width} < $min_width;
-	
-	# The height should be at least 11.
-	my $min_height = height_by_windowscrheight(11, %args);
-	$args{-height} = $min_height if $args{-height} != -1
-			 	     and $args{-height} < $min_height;
+        %userargs,
 
-	my $this = $class->SUPER::new( %args );	
+        -routines   => {%routines},
+        -bindings   => {%bindings},
 
-	# Split up and fix the date.
-	$this->setdate($this->{-date}, 1);
+        -ipadleft   => 1,
+        -ipadright  => 1,
+        -ipadbottom => 0,
+        -ipadtop    => 0,
+        -focus      => 0,
+        -nocursor   => 1,
+    );
 
-	# Set cursor to current date.
-	$this->{-cyear} = $this->{-year};
-	$this->{-cmonth} = $this->{-month};
-	$this->{-cday} = $this->{-day};
+    # The widget width should be at least 20.
+    my $min_width = width_by_windowscrwidth(20, %args);
+    $args{-width} = $min_width if $args{-width} != -1 
+                   and $args{-width} < $min_width;
+    
+    # The widget height should be at least 11.
+    my $min_height = height_by_windowscrheight(11, %args);
+    $args{-height} = $min_height if $args{-height} != -1
+                      and $args{-height} < $min_height;
 
-	bless $this, $class;
+    my $this = $class->SUPER::new( %args );    
+
+    # Split up and fix the date.
+    $this->setdate($this->{-date}, 1);
+
+    # Set cursor to current date.
+    $this->{-cyear}  = $this->{-year};
+    $this->{-cmonth} = $this->{-month};
+    $this->{-cday}   = $this->{-day};
+
+    # Load day- and monthnames.
+    @days = $this->root->lang->getarray('days_short');
+    @months = (undef, $this->root->lang->getarray('months'));
+
+    if ($Curses::UI::ncurses_mouse) {
+	$this->set_mouse_binding(
+	    'mouse-button', BUTTON1_CLICKED(), BUTTON3_CLICKED());
+    }
+
+    return $this;
 }
 
-sub onChange(;$) { shift()->set_event('-onchange', shift())}
+# ----------------------------------------------------------------------
+# Methods
+# ----------------------------------------------------------------------
+
+sub onChange(;$) { shift()->set_event('-onchange', shift()) }
+sub day($;)      { shift()->accessor('-day',       shift()) }
+sub month($;)    { shift()->accessor('-month',     shift()) }
+sub year($;)     { shift()->accessor('-year',      shift()) }
+
 
 sub layout()
 {
-	my $this = shift;
-	return $this if $Curses::UI::screen_too_small;
-	
-	$this->SUPER::layout();	
-	
-	return $this;
+    my $this = shift;
+    $this->SUPER::layout() or return;    
+    return $this;
 }
 
 sub setdate($;$)
 {
-	my $this = shift;
-	my $date = shift;
-	my $nodraw = shift || 0;
+    my $this = shift;
+    my $date = shift;
+    my $nodraw = shift || 0;
 
-	if (not defined $date)
-	{
-		$this->{-year}  = undef;
-		$this->{-month} = undef;
-		$this->{-day}   = undef;
-	}
-	elsif ($date =~ /^(\d\d\d\d+)(\d\d)(\d\d)$/)
-	{
-		$this->{-year}  = $1;
-		$this->{-month} = $2;
-		$this->{-day}   = $3;
-	}
-	elsif ($date =~ /^(\d{1,2})\D(\d{1,2})\D(\d\d\d\d+)$/)
-	{
-		$this->{-year}  = $3;
-		$this->{-month} = $2;
-		$this->{-day}   = $1;
-	}
-	elsif ($date =~ /^(\d\d\d\d+)\D(\d{1,2})\D(\d{1,2})$/)
-	{
-		$this->{-year}  = $1;
-		$this->{-month} = $2;
-		$this->{-day}   = $3;
-	}
+    if (not defined $date)
+    {
+        $this->{-year}  = undef;
+        $this->{-month} = undef;
+        $this->{-day}   = undef;
+    }
+    elsif ($date =~ /^(\d\d\d\d+)(\d\d)(\d\d)$/)
+    {
+        $this->{-year}  = $1;
+        $this->{-month} = $2;
+        $this->{-day}   = $3;
+    }
+    elsif ($date =~ /^(\d{1,2})\D(\d{1,2})\D(\d\d\d\d+)$/)
+    {
+        $this->{-year}  = $3;
+        $this->{-month} = $2;
+        $this->{-day}   = $1;
+    }
+    elsif ($date =~ /^(\d\d\d\d+)\D(\d{1,2})\D(\d{1,2})$/)
+    {
+        $this->{-year}  = $1;
+        $this->{-month} = $2;
+        $this->{-day}   = $3;
+    }
 
-	$this->make_sane_date;
-	$this->intellidraw unless $nodraw;
+    $this->make_sane_date;
+    $this->intellidraw unless $nodraw;
 
-	return $this;
+    return $this;
 }
 
 sub make_sane_date()
 {
-	my $this = shift;
-	my $cursor = shift;
-	my $c = $cursor ? 'c' : '';
-	
-	# Determine 'today'.
-	my @now = localtime(); $now[4]++; $now[5]+=1900;
+    my $this = shift;
+    my $cursor = shift;
+    my $c = $cursor ? 'c' : '';
+    
+    # Determine 'today'.
+    my @now = localtime(); $now[4]++; $now[5]+=1900;
 
-	# Use today's values if undefined.
-	$this->{"-${c}day"}   = $now[3] 
-		unless defined $this->{"-${c}day"};
-	$this->{"-${c}month"} = $now[4] 
-		unless defined $this->{"-${c}month"};
-	$this->{"-${c}year"}  = $now[5] 
-		unless defined $this->{"-${c}year"};
+    # Use today's values if undefined.
+    $this->{"-${c}day"}   = $now[3] 
+        unless defined $this->{"-${c}day"};
+    $this->{"-${c}month"} = $now[4] 
+        unless defined $this->{"-${c}month"};
+    $this->{"-${c}year"}  = $now[5] 
+        unless defined $this->{"-${c}year"};
 
 
-	if ($this->{"-${c}year"} < 0)    { $this->{"-${c}year"}  = 0    }
-	if ($this->{"-${c}year"} > 9999) { $this->{"-${c}year"}  = 9999 }
-	if ($this->{"-${c}month"} < 1)   { $this->{"-${c}month"} = 1    }
-	if ($this->{"-${c}month"} > 12)  { $this->{"-${c}month"} = 12   }
+    if ($this->{"-${c}year"} < 0)    { $this->{"-${c}year"}  = 0    }
+    if ($this->{"-${c}year"} > 9999) { $this->{"-${c}year"}  = 9999 }
+    if ($this->{"-${c}month"} < 1)   { $this->{"-${c}month"} = 1    }
+    if ($this->{"-${c}month"} > 12)  { $this->{"-${c}month"} = 12   }
 
-	my $days = days_in_month($this->{"-${c}year"}, $this->{"-${c}month"});
-	if ($this->{"-${c}day"} < 1)     { $this->{"-${c}day"} = 1     }
-	if ($this->{"-${c}day"} > $days) { $this->{"-${c}day"} = $days }
-	
-	# undef value?
-	if ($this->{"-${c}year"} == 1752 and $this->{"-${c}month"} == 9) {
-		if ($this->{"-${c}day"} > 2 and $this->{"-${c}day"} < 14) {
-			$this->{"-${c}day"} = ($this->{"-${c}day"} > 8 ? 14 : 2);
-		}
-	}
+    my $days = days_in_month($this->{"-${c}year"}, $this->{"-${c}month"});
+    if ($this->{"-${c}day"} < 1)     { $this->{"-${c}day"} = 1     }
+    if ($this->{"-${c}day"} > $days) { $this->{"-${c}day"} = $days }
+    
+    # undef value?
+    if ($this->{"-${c}year"} == 1752 and $this->{"-${c}month"} == 9) {
+        if ($this->{"-${c}day"} > 2 and $this->{"-${c}day"} < 14) {
+            $this->{"-${c}day"} = ($this->{"-${c}day"} > 8 ? 14 : 2);
+        }
+    }
 
-	return $this;
+    return $this;
 }
 
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
+    my $this = shift;
+    my $no_doupdate = shift || 0;
+    
+    # Draw the widget
+    $this->SUPER::draw(1) or return $this;
+    
+    $this->make_sane_date;
+    $this->make_sane_date(1);
 
-        # Return immediately if this object is hidden.
-        return $this if $this->hidden;
-	
-	# Draw the widget
-	$this->SUPER::draw(1);
-	
-	$this->make_sane_date;
-	$this->make_sane_date(1);
+    # Bold font on if the widget has focus and the selected
+    # date is the active date.
+    $this->{-canvasscr}->attron(A_BOLD) 
+        if $this->{-focus} and
+           $this->{-cyear} == $this->{-year} and
+           $this->{-cmonth} == $this->{-month} and
+           $this->{-cday} == $this->{-day};
 
-	# Bold font on if the widget has focus and the selected
-	# date is the active date.
-	$this->{-windowscr}->attron(A_BOLD) 
-		if $this->{-focus} and
-		   $this->{-cyear} == $this->{-year} and
-		   $this->{-cmonth} == $this->{-month} and
-		   $this->{-cday} == $this->{-day};
+    # Draw day, month and year. If the widget has focus,
+    # show the cursor position. Else show the selected position.
+    my $c = $this->{-focus} ? 'c' : '';    
+    $this->{-canvasscr}->addstr(0,0," "x$this->canvaswidth);
+    $this->{-canvasscr}->addstr(0,0, $months[$this->{"-${c}month"}] 
+                    . " " . $this->{"-${c}day"});
+    $this->{-canvasscr}->addstr(0,$this->canvaswidth-4,$this->{"-${c}year"});
 
-	# Draw day, month and year. If the widget has focus,
-	# show the cursor position. Else show the selected position.
-	my $c = $this->{-focus} ? 'c' : '';	
-	$this->{-windowscr}->addstr(0,0," "x$this->screenwidth);
-	$this->{-windowscr}->addstr(0,0, $months[$this->{"-${c}month"}] 
-					. " " . $this->{"-${c}day"});
-	$this->{-windowscr}->addstr(0,$this->screenwidth-4,$this->{"-${c}year"});
-	# Draw daynames
-	$this->{-windowscr}->attron(A_BOLD) if $this->{-focus};
-	$this->{-windowscr}->addstr(2,0,join " ", @days);
+    # Draw daynames
+    $this->{-canvasscr}->attron(A_BOLD) if $this->{-focus};
+    $this->{-canvasscr}->addstr(2,0,join " ", @days);
 
-	# Reset bold font attribute.
-	$this->{-windowscr}->attroff(A_BOLD) if $this->{-focus};
+    # Reset bold font attribute.
+    $this->{-canvasscr}->attroff(A_BOLD) if $this->{-focus};
 
-	$this->{-windowscr}->move(1,0);
-	$this->{-windowscr}->hline(ACS_HLINE,$this->screenwidth);
+    # Draw a line under the date.
+    $this->{-canvasscr}->move(1,0);
+    $this->{-canvasscr}->hline(ACS_HLINE,$this->canvaswidth);
 
-	my @month = build_month($this->{"-${c}year"}, $this->{"-${c}month"});
+    # Create the list of days in the current month.
+    my @month = build_month($this->{"-${c}year"}, $this->{"-${c}month"});
 
-	my $month = $this->{"-${c}month"};
-	my $year  = $this->{"-${c}year"};
-	
-	my $y = 4; 
-	my $weekday = 0;
-	foreach my $day (@month)
-	{
-		unless (defined $day) {
-			$weekday++;
-			next;
-		}
+    # Draw the days.
+    my $month = $this->{"-${c}month"};
+    my $year  = $this->{"-${c}year"};
+    my $y = 4; 
+    my $weekday = 0;
+    foreach my $day (@month)
+    {
+        unless (defined $day) {
+            $weekday++;
+            next;
+        }
 
-		# Make current date bold.
-		if ($this->{-day}   == $day and 
-                    $this->{-month} == $month and
-		    $this->{-year}  == $year) {
-		    $this->{-windowscr}->attron(A_BOLD)
-		}
-	
-		# Make selected date inverse if widget has focus.
-		if ($this->{-cday}   == $day and 
-                    $this->{-cmonth} == $month and
-                    $this->{-cyear}  == $year and
-                    $this->{-focus}) {
-			$this->{-windowscr}->attron(A_REVERSE)
-		}
+        # Make current date bold.
+        $this->{-canvasscr}->attron(A_BOLD)
+            if $this->{-day}    == $day   and 
+	       $this->{-month}  == $month and
+	       $this->{-year}   == $year;
+    
+        # Make selected date inverse if widget has focus.
+        $this->{-canvasscr}->attron(A_REVERSE)
+	    if $this->{-focus}            and
+               $this->{-cday}   == $day   and 
+	       $this->{-cmonth} == $month and
+	       $this->{-cyear}  == $year;
 
-		$this->{-windowscr}->addstr($y, $weekday*3, sprintf("%2d",$day));
+        # Draw the day.
+        $this->{-canvasscr}->addstr($y, $weekday*3, sprintf("%2d",$day));
 
-		# Reset attributes.
-		$this->{-windowscr}->attroff(A_REVERSE);
-		$this->{-windowscr}->attroff(A_BOLD);
+        # Reset attributes.
+        $this->{-canvasscr}->attroff(A_REVERSE);
+        $this->{-canvasscr}->attroff(A_BOLD);
 
-		$weekday++;
-		if ($weekday == 7) {
-			$weekday = 0;
-			$y++;
-		}
-	}
+        $weekday++;
+        if ($weekday == 7) {
+            $weekday = 0;
+            $y++;
+        }
+    }
 
-	$this->{-windowscr}->noutrefresh();
-	doupdate() unless $no_doupdate;
+    # Move the cursor to the bottomright corner of the widget
+    # (in case the terminal does not support widget hiding).
+    $this->{-canvasscr}->move($this->canvasheight-1, $this->canvaswidth-1);
 
-	return $this;
+    $this->{-canvasscr}->noutrefresh();
+    doupdate() unless $no_doupdate;
+
+    return $this;
 }
 
 sub date_selected()
 {
-	my $this = shift;
-	$this->{-cyear} = $this->{-year};
-	$this->{-cmonth} = $this->{-month};
-	$this->{-cday} = $this->{-day};
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->{-cyear} = $this->{-year};
+    $this->{-cmonth} = $this->{-month};
+    $this->{-cday} = $this->{-day};
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_today()
 {
-	my $this = shift;
-	$this->{-cmonth} = undef;
-	$this->{-cday}   = undef;
-	$this->{-cyear}  = undef;
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->{-cmonth} = undef;
+    $this->{-cday}   = undef;
+    $this->{-cyear}  = undef;
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_prevyear()
 {
-	my $this = shift;
-	$this->{-cyear}--;
-	$this->{-cyear} = 0 if $this->{-cyear} < 0;
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->{-cyear}--;
+    $this->{-cyear} = 0 if $this->{-cyear} < 0;
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_nextyear()
 {
-	my $this = shift;
-	$this->{-cyear}++;
-	$this->{-cyear} = 9999 if $this->{-cyear} > 9999;
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->{-cyear}++;
+    $this->{-cyear} = 9999 if $this->{-cyear} > 9999;
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_prevmonth()
 {
-	my $this = shift;
-	$this->{-cmonth}--;
-	if ($this->{-cmonth} < 1 and $this->{-cyear} > 0) {
-		$this->{-cmonth} = 12;
-		$this->{-cyear}--;
-	}
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->{-cmonth}--;
+    if ($this->{-cmonth} < 1 and $this->{-cyear} > 0) {
+        $this->{-cmonth} = 12;
+        $this->{-cyear}--;
+    }
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_nextmonth()
 {
-	my $this = shift;
-	$this->{-cmonth}++;
-	if ($this->{-cmonth} > 12 and $this->{-cyear} < 9999) {
-		$this->{-cmonth} = 1;
-		$this->{-cyear}++;
-	}
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->{-cmonth}++;
+    if ($this->{-cmonth} > 12 and $this->{-cyear} < 9999) {
+        $this->{-cmonth} = 1;
+        $this->{-cyear}++;
+    }
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_delta_days($;)
 {
-	my $this = shift;
-	my $delta = shift;
+    my $this = shift;
+    my $delta = shift;
 
-	if ($delta < 0) 
-	{
-		my $startday = $this->{-cday};
-		$this->{-cday} += $delta;
-		if ($this->{-cday} < 1 and 
-		    $this->{-cmonth} >= 2 and 
-		    $this->{-cyear} >= 0) 
-		{
-			$this->date_prevmonth();
-			my $days = days_in_month($this->{-cyear}, $this->{-cmonth}); 
-		   	$this->{-cday} = $startday + $delta + $days;
-		}
-	} else {
-		my $days = days_in_month($this->{-cyear}, $this->{-cmonth});
-		my $newday = $this->{-cday} + $delta - $days; 
-		$this->{-cday} += $delta;
-		if ($this->{-cday} > $days and 
-		    $this->{-cyear} < 9999)
-		{
-			$this->date_nextmonth();
-			$this->{-cday} = $newday;
-		}
-	}
-	
-	if ($this->{-cyear} == 1752 and $this->{-cmonth} == 9) {
-		if ($this->{-cday} > 2 and $this->{-cday} < 14) {
-			$this->{-cday} = ($delta > 0 ? 14 : 2);
-		}
-	}
-	
+    if ($delta < 0) 
+    {
+        my $startday = $this->{-cday};
+        $this->{-cday} += $delta;
+        if ($this->{-cday} < 1) 
+        {
+            if ( ($this->{-cmonth} >= 1 and $this->{-cyear} >= 1) or
+                 ($this->{-cmonth} >= 2 and $this->{-cyear} >= 0) ) 
+            {
+            $this->date_prevmonth();
+            my $days = days_in_month($this->{-cyear}, $this->{-cmonth}); 
+               $this->{-cday} = $startday + $delta + $days;
+            }
+        }
+    } else {
+        my $days = days_in_month($this->{-cyear}, $this->{-cmonth});
+        my $newday = $this->{-cday} + $delta - $days; 
+        $this->{-cday} += $delta;
+        if ($this->{-cday} > $days and 
+            $this->{-cyear} < 9999)
+        {
+            $this->date_nextmonth();
+            $this->{-cday} = $newday;
+        }
+    }
+    
+    if ($this->{-cyear} == 1752 and $this->{-cmonth} == 9) {
+        if ($this->{-cday} > 2 and $this->{-cday} < 14) {
+            $this->{-cday} = ($delta > 0 ? 14 : 2);
+        }
+    }
+    $this->schedule_draw(1);
 }
 
 sub date_prevweek()
 {
-	my $this = shift;
-	$this->date_delta_days(-7);
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->date_delta_days(-7);
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_nextweek()
 {
-	my $this = shift;
-	$this->date_delta_days(+7);
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->date_delta_days(+7);
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_prevday()
 {
-	my $this = shift;
-	$this->date_delta_days(-1);
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->date_delta_days(-1);
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_nextday()
 {
-	my $this = shift;
-	$this->date_delta_days(+1);
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    $this->date_delta_days(+1);
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub date_select()
 {
-	my $this = shift;	
-	$this->{-day}   = $this->{-cday};
-	$this->{-month} = $this->{-cmonth};
-	$this->{-year}  = $this->{-cyear};
-	$this->intellidraw;
-	$this->run_event('-onchange');
-	return $this;
+    my $this = shift;    
+    $this->{-day}   = $this->{-cday};
+    $this->{-month} = $this->{-cmonth};
+    $this->{-year}  = $this->{-cyear};
+    $this->schedule_draw(1);
+    $this->run_event('-onchange');
+    return $this;
 }
 
-sub day($;)   { shift()->accessor('-day',   shift()) }
-sub month($;) { shift()->accessor('-month', shift()) }
-sub year($;)  { shift()->accessor('-year',  shift()) }
+sub mouse_button($$$$;)
+{
+    my $this  = shift;
+    my $event = shift;
+    my $x     = shift;
+    my $y     = shift;
+
+    # Click in the day area?
+    if ($y > 3 and $y < 10) 
+    {
+	my @month = build_month($this->{-cyear}, $this->{-cmonth});
+	my $weekday = 0;
+	my $ty      = 4;
+	foreach my $day (@month)
+	{
+	    unless (defined $day) { $weekday++; next }
+
+	    my ($dx, $dy) = ($weekday*3, $ty);
+
+	    if ($x >= $dx and $x < $dx+2 and $y == $dy) {
+		$this->{-cday} = $day;
+		$this->date_select(1);
+		$this->focus();
+		last;
+	    }
+
+	    $weekday++;
+	    if ($weekday == 7) {
+		$weekday = 0;
+		$ty++;
+	    }
+	}
+    }
+
+    # Click on the year?
+    elsif ($y == 0 and 
+	   $x > ($this->canvaswidth-5) and
+	   $x < $this->canvaswidth) 
+    {
+        # Select year
+	if ( $event->{-bstate} == BUTTON3_CLICKED() ) {
+	    $this->date_nextyear;
+	} else {
+	    $this->date_prevyear;
+	}
+	$this->focus();
+    }
+    
+    # Click on the month?
+    elsif ( $y == 0 and 
+	    $x >= 0 and
+	    $x < length($months[$this->{-cmonth}]) )
+    {
+	if ( $event->{-bstate} == BUTTON3_CLICKED() ) {
+	    $this->date_nextmonth;
+	} else {
+	    $this->date_prevmonth;
+	}
+	$this->focus();
+    }
+
+
+    
+    return $this;
+}
 
 sub get()
 {
-	my $this = shift;
-	$this->make_sane_date();
-	return sprintf("%04d-%02d-%02d", 
-		       $this->{-year}, $this->{-month}, $this->{-day});
-}
-
-sub focus()
-{
-	my $this = shift;
-	return $this->generic_focus(
-		undef,
-		NO_CONTROLKEYS,
-		CURSOR_INVISIBLE
-	);
+    my $this = shift;
+    $this->make_sane_date();
+    return sprintf("%04d-%02d-%02d", 
+               $this->{-year}, $this->{-month}, $this->{-day});
 }
 
 # ----------------------------------------------------------------------
@@ -460,96 +545,95 @@ my @days_in_month = (undef,31,28,31,30,31,30,31,31,30,31,30,31);
 
 sub is_julian ($$;)
 {
-	my ($year, $month) = @_;
-	return $year < 1752 or ($year == 1752 and $month <= 9);
+    my ($year, $month) = @_;
+    return $year < 1752 or ($year == 1752 and $month <= 9);
 }
 
 sub day_of_week($$$;)
 {
-	my $year  = shift;
-	my $month = shift;
-	my $day   = shift;
+    my $year  = shift;
+    my $month = shift;
+    my $day   = shift;
 
-	my $a = int( (14 - $month)/12 );
-	my $y = $year - $a;
-	my $m = $month + (12 * $a) - 2;
-	my $day_of_week;
-	if (is_julian($year, $month)) 
-	{
-		$day_of_week = (
-				5 
-				+ $day 
-				+ $y + int($y/4) 
-				+ int(31*$m/12)	
-			       ) % 7;
-	} else {
-		$day_of_week = (
-				$day 
-				+ $y + int($y/4) 
-				- int($y/100) 
-				+ int($y/400) 
-				+ int(31*$m/12)
-			       ) % 7;
-	}
+    my $a = int( (14 - $month)/12 );
+    my $y = $year - $a;
+    my $m = $month + (12 * $a) - 2;
+    my $day_of_week;
+    if (is_julian($year, $month)) 
+    {
+        $day_of_week = (
+                5 
+                + $day 
+                + $y + int($y/4) 
+                + int(31*$m/12)    
+                   ) % 7;
+    } else {
+        $day_of_week = (
+                $day 
+                + $y + int($y/4) 
+                - int($y/100) 
+                + int($y/400) 
+                + int(31*$m/12)
+                   ) % 7;
+    }
 
-	return $day_of_week;
+    return $day_of_week;
 }
 
 sub days_in_month($$;) 
 {
-	my $year  = shift;
-	my $month = shift;
+    my $year  = shift;
+    my $month = shift;
 
-	if($month == 2 and is_leap_year($year)) {
-		return 29;
-	} else {
-		return $days_in_month[$month];
-	}
+    if($month == 2 and is_leap_year($year)) {
+        return 29;
+    } else {
+        return $days_in_month[$month];
+    }
 }
 
 sub is_leap_year($;)
 {
-	my $year = shift;
+    my $year = shift;
 
-	if (is_julian($year,1)) {
-		return 1 if $year % 4 == 0;
-	} else {
-		return 1 if ($year % 4 == 0 and $year % 100 != 0) 
-                  	    or $year % 400 == 0;
-	}
-	return 0;
+    if (is_julian($year,1)) {
+        return 1 if $year % 4 == 0;
+    } else {
+        return 1 if ($year % 4 == 0 and $year % 100 != 0) 
+                          or $year % 400 == 0;
+    }
+    return 0;
 }
 
 sub build_month ($$;)
 {
-	my $year  = shift;
-	my $month = shift;
+    my $year  = shift;
+    my $month = shift;
 
-	my $first_weekday = day_of_week($year, $month, 1);
-	my $number_of_days = days_in_month($year, $month);
-	
-	if ($year == 1752 and $month == 9) {
-		$number_of_days = 19;
-	}
+    my $first_weekday = day_of_week($year, $month, 1);
+    my $number_of_days = days_in_month($year, $month);
+    
+    if ($year == 1752 and $month == 9) {
+        $number_of_days = 19;
+    }
 
-	my @month = ();
-	for (1..$first_weekday) {
-		push @month, undef;
-	}
+    my @month = ();
+    for (1..$first_weekday) {
+        push @month, undef;
+    }
 
-	my $realday = 1;
-	for( my $day = 1; $day <= $number_of_days; $day++ )
-	{
-		push @month, $realday;
-		if ($year == 1752 and $month == 9 and $realday == 2) {
-			$realday = 13;
-		}
-		$realday++;
-	}
+    my $realday = 1;
+    for( my $day = 1; $day <= $number_of_days; $day++ )
+    {
+        push @month, $realday;
+        if ($year == 1752 and $month == 9 and $realday == 2) {
+            $realday = 13;
+        }
+        $realday++;
+    }
 
-	return @month;
+    return @month;
 }
-
 
 1;
 
@@ -577,7 +661,7 @@ Curses::UI::Calendar - Create and manipulate calendar widgets
 
     my $calendar = $win->add(
         'mycalendar', 'Calendar',
-	-date    => '2002-1-14'
+    -date    => '2002-1-14'
     );
 
     $calendar->focus();
@@ -589,7 +673,7 @@ Curses::UI::Calendar - Create and manipulate calendar widgets
 Curses::UI::Calendar is a widget that can be used to create 
 a calendar in which the user can select a date. The calendar
 widget looks like this:
-	
+    
   +----------------------+
   | mmm dd          yyyy | 
   +----------------------+
@@ -706,8 +790,8 @@ This method can be used to set the B<-onchange> event handler
 
 =item * <B<tab>>
 
-Call the 'return' routine. This will have the menubar
-loose its focus and return the value 'RETURN' to
+Call the 'loose-focus' routine. This will have the menubar
+loose its focus and return the value 'LOOSE_FOCUS' to
 the calling routine.
 
 =item * <B<enter>>, <B<space>>

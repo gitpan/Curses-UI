@@ -9,6 +9,8 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: fix dox
+
 package Curses::UI::Radiobuttonbox;
 
 use strict;
@@ -17,36 +19,39 @@ use Curses::UI::Common;
 use Curses::UI::Listbox;
 use Curses::UI::Widget;
 
-use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Listbox);
-$VERSION = '1.00';
-	
+use vars qw(
+    $VERSION 
+    @ISA
+);
+
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::Listbox
+);
+    
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		%userargs,
-		-radio => 1,
-		-multi => 0,
-	);
+    my %args = ( 
+        %userargs,
+        -radio     => 1, # Force radiobuttons
+        -multi     => 0, # Force no multiselect
+    );
 
-	# Compute the needed with if -width is undefined.
-	# The extra 4 positions are for the radiobutton drawing. 
-	$args{-width} = 4 + width_by_windowscrwidth(maxlabelwidth(%args), %args)
-		unless defined $args{-width};
+    # Compute the needed with if -width is undefined.
+    # The extra 4 positions are for the radiobutton drawing. 
+    $args{-width} = 4 + width_by_windowscrwidth(maxlabelwidth(%args), %args)
+        unless defined $args{-width};
 
-	# Compute the needed height if -height is undefined.
-	$args{-height} = height_by_windowscrheight(@{$args{-values}}, %args)
-		unless defined $args{-height};
+    # Create the entry.
+    my $this = $class->SUPER::new( %args);
 
-	# Create the entry.
-	my $this = $class->SUPER::new( %args);
-
-	return bless $this, $class;
+    return $this;
 }
 
 1;

@@ -9,6 +9,8 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: fix dox
+
 package Curses::UI::Window;
 
 use strict;
@@ -16,77 +18,71 @@ use Curses;
 use Curses::UI::Container;
 use Curses::UI::Common;
 
-use vars qw($VERSION @ISA);
-$VERSION = '1.00';
-@ISA = qw(Curses::UI::Container);
+use vars qw(
+    $VERSION 
+    @ISA
+);
+
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::Container
+);
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	# Create the window.
-	my $this = $class->SUPER::new( 
-		-width => undef,
-		-height => undef,
-		-x => 0, -y => 0,
-		-centered => 0,
+    # Create the window.
+    my $this = $class->SUPER::new( 
+        -width     => undef,
+        -height    => undef,
+        -x         => 0, 
+        -y         => 0,
+        -centered  => 0,     # Center the window in the display?
 
-		%userargs,
+        %userargs,
 
-		-assubwin => 1,
-	);
+        -nocursor  => 1,     # This widget does not use a cursor
+        -assubwin  => 1,     # Always constructed as a subwindow
+    );
 
-	return bless $this, $class;
+    return $this;
 }
 
 sub layout ()
 {
-	my $this = shift;
+    my $this = shift;
 
-	return $this if $Curses::UI::screen_too_small;
+    # Compute the coordinates of the Window if
+    # it has to be centered.
+    if ($this->{-centered})
+    {
+        # The maximum available space on the screen.
+        my $avail_width = $ENV{COLS};
+        my $avail_height = $ENV{LINES};
 
-	# Compute the coordinates of the Window if
-	# it has to be centered.
-	if ($this->{-centered})
-	{
-		# The maximum available space on the screen.
-		my $avail_width = $ENV{COLS};
-		my $avail_height = $ENV{LINES};
+        # Compute the coordinates for the widget.
+        my $w = $this->{-width} || 1;
+        my $h = $this->{-height} || 1;
+        my $x = int(($avail_width - $w) / 2);
+        my $y = int(($avail_height - $h) / 2);
+        $x = 0 if $x < 0;
+        $y = 0 if $y < 0;
+        $this->{-x} = $x; 
+        $this->{-y} = $y; 
+    }
 
-		# Compute the coordinates for the widget.
-		my $w = $this->{-width} || 1;
-		my $h = $this->{-height} || 1;
-		my $x = int(($avail_width - $w) / 2);
-		my $y = int(($avail_height - $h) / 2);
-		$x = 0 if $x < 0;
-		$y = 0 if $y < 0;
-		$this->{-x} = $x; 
-		$this->{-y} = $y; 
-	}
+    $this->SUPER::layout or return;
 
-        $this->SUPER::layout;
-
-	return $this;
+    return $this;
 }
 
-sub raise() { shift()->ontop() }
-sub ontop()
-{
-	my $this = shift;
-	$this->root->ontop($this, 1);
-}
-
-sub is_ontop()
-{
-	my $this = shift;
-	$this->root->window_is_ontop($this);
-}
 
 1;
-
 
 =pod
 
@@ -174,15 +170,16 @@ false value. The default is not to center a window. Example:
 These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget>
 for an explanation of these.
 
-=item * B<ontop> ( ) / B<raise> ( )
+=item * B<modalfocus> ( )
 
-This method brings the window on top of the other 
-windows.
+If this method is called, the window will get modal focus. This means
+that all events will be sent to this window. By calling the
+B<loose_focus> method, the window will loose its focus.
 
-=item * B<is_ontop> ( )
+=item * B<loose_focus> ( )
 
-This method will return a true value if the window is
-currently on top.
+This method will have the window loose its focus (using this method
+you can also let a modal focused window loose its focus).
 
 =back
 

@@ -1,3 +1,14 @@
+BUGS:
+=====
+
+- Curses on solaris will have output frozen if keypresses
+  arive during updating or drawing or so. It's best seen in the
+  progressbar dialog demo. If you press a key halfway, the
+  screen will freeze. The application hower, will continue
+  running! ---> bug in curses that was shipped with the
+  system. Using ncurses -> OK! I do not know if there is
+  a workaround for this.
+
 TODO list for Curses::UI:
 =========================
 
@@ -15,11 +26,37 @@ TODO list for Curses::UI:
   support, but it's not really finished yet. Or I just don't get
   it myself yet :-)
 
-- Replace the current -callback system with some kind of timer 
-  system.
-
 - Move root(), parent() and rootscr() from Common.pm to Widget.pm?
 
-- Make Popupmenu a Label descendant. This makes the widget a bit
-  more simple and it makes perfect sense to do so (it didn't back
-  then when I created it, but now I'm wondering why :-).
+- Make the listbox scrollable to the right (or have the current
+  selected entry scroll to the right if requested).
+
+- Create a treeview widget. 
+
+- Create a table view widget.
+
+- Build a website for Curses::UI
+
+- Enable shortcuts for the Menubar (this is now possible with the
+  new event distribution scheme)
+
+- Color support would be nice.
+
+- Resizing ... barhhhhghgh.....
+
+- Make Label wrap text, but add no scrolling if there's to
+  much text.
+
+- Create textentry dialog.
+
+- Mouse support:
+  - make scrollbars interactive 
+  - mouse in texteditor to clickposition for multi line editors
+  - doubleclick on file in FileBrowser dialog may close the dialog.
+
+- Extend the Menubar:
+  - disabled menuitems
+  - separator lines
+  - checkboxed optionmenus
+  - etc.
+

@@ -15,139 +15,171 @@ use strict;
 use Curses;
 use Curses::UI::Common;
 use Curses::UI::Window;
-use Curses::UI::Buttonbox; # for compute_buttonwidth()
 
-use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Window Curses::UI::Common);
-$VERSION = '1.04';
+use vars qw(
+    $VERSION 
+    @ISA
+);
+
+@ISA = qw(
+    Curses::UI::Window
+    Curses::UI::Common
+);
+
+$VERSION = '1.10';
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-	my %userargs = @_;
-	keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		-border		=> 1,
-		-message	=> '',		# The message to show
-		-ipad		=> 1, 
+    my %args = ( 
+        -border       => 1,
+        -message      => '',        # The message to show
+        -ipad         => 1, 
 
-		%userargs,
+        %userargs,
 
-		-titleinverse	=> 1,
-		-centered	=> 1,
-	);
-	
-	my $this = $class->SUPER::new(%args);
-	
-	$this->add('message', 'TextViewer',
-		-border 	=> 1,
-		-vscrollbar 	=> 1,
-		-wrapping 	=> 1,
-		-padbottom 	=> 2,
-		-text   	=> $this->{-message},
-	);	
+        -titleinverse => 1,
+        -centered     => 1,
+    );
 
-	# Create a hash with arguments that may be passed to 	
-	# the Buttonbox class.
-	my %buttonargs = (
-		-buttonalignment => 'right',
-	);
-	foreach my $arg (qw(-buttons -selected -buttonalignment)) { 
-		$buttonargs{$arg} = $this->{$arg} 
-			if exists $this->{$arg}; 
-	}
-	my $b = $this->add('buttons', 'Buttonbox',
-		-y    => -1,
-		%buttonargs
-	);
-	
-	$this->layout;
-	return bless $this, $class;
+    # Create a new object, but remember the current
+    # screen_too_small setting. The width needed for the
+    # buttons can only be computed in the second run
+    # of focus() and we do not want the first run to
+    # set screen_too_small to a true value because
+    # of this.
+    #
+    my $remember = $Curses::UI::screen_too_small;
+    my $this = $class->SUPER::new(%args);
+    
+    $this->add('message', 'TextViewer',
+        -border      => 1,
+        -vscrollbar  => 1,
+        -wrapping    => 1,
+        -padbottom   => 2,
+        -text        => $this->{-message},
+    );    
+
+    # Create a hash with arguments that may be passed to     
+    # the Buttonbox class.
+    my %buttonargs = (
+        -buttonalignment => 'right',
+    );
+    foreach my $arg (qw(-buttons -selected -buttonalignment)) { 
+        $buttonargs{$arg} = $this->{$arg} 
+            if exists $this->{$arg}; 
+    }
+    my $b = $this->add(
+       'buttons', 'Buttonbox',
+       -y => -1,
+       %buttonargs
+    );
+
+    # Let the window in which the buttons are loose focus
+    # if a button is pressed.
+    $b->set_routine( 'press-button', sub { 
+        my $this = shift;
+        my $parent = $this->parent;
+        $parent->loose_focus();
+    } );
+
+    # Restore screen_too_small (see above) and
+    # start the second layout pass.
+    $Curses::UI::screen_too_small = $remember;
+    $this->layout;
+
+    # Set the initial focus to the buttons.
+    $b->focus;
+    
+    return bless $this, $class;
 }
 
+# TODO delete_curses_windows
 sub layout()
 {
-	my $this = shift;
-	return $this if $Curses::UI::screen_too_small;
+    my $this = shift;
+    return $this if $Curses::UI::screen_too_small;
 
-	# The maximum available space on the screen.
-	my $avail_width = $ENV{COLS};
-	my $avail_height = $ENV{LINES};
+    # The maximum available space on the screen.
+    my $avail_width = $ENV{COLS};
+    my $avail_height = $ENV{LINES};
 
-	# Compute the maximum available space for the message.
+    # Compute the maximum available space for the message.
 
-	$this->process_padding;
+    $this->process_padding;
 
-	my $avail_textwidth  = $avail_width;
-	$avail_textwidth  -= 2; # border for the textviewer
-	$avail_textwidth  -= 2 if $this->{-border};
-	$avail_textwidth  -= $this->{-ipadleft} - $this->{-ipadright};
+    my $avail_textwidth  = $avail_width;
+    $avail_textwidth  -= 2; # border for the textviewer
+    $avail_textwidth  -= 2 if $this->{-border};
+    $avail_textwidth  -= $this->{-ipadleft} - $this->{-ipadright};
 
-	my $avail_textheight = $avail_height;
-	$avail_textheight -= 2; # border for the textviewer
-	$avail_textheight -= 2; # empty line and line of buttons
-	$avail_textheight -= 2 if $this->{-border};
-	$avail_textheight -= $this->{-ipadtop} - $this->{-ipadbottom};
+    my $avail_textheight = $avail_height;
+    $avail_textheight -= 2; # border for the textviewer
+    $avail_textheight -= 2; # empty line and line of buttons
+    $avail_textheight -= 2 if $this->{-border};
+    $avail_textheight -= $this->{-ipadtop} - $this->{-ipadbottom};
 
-	# Break up the message in separate lines if neccessary.
-	my @lines = ();
-	foreach (split (/\n/,  $this->{-message})) {
-		push @lines, @{text_wrap($_, $avail_textwidth)};
-	}
+    # Break up the message in separate lines if neccessary.
+    my @lines = ();
+    foreach (split (/\n/,  $this->{-message})) {
+        push @lines, @{text_wrap($_, $avail_textwidth)};
+    }
 
-	# Compute the longest line in the message / buttons.
-	my $longest_line = 0;
-	foreach (@lines) { 
-		$longest_line = length($_) 
-			if (length($_) > $longest_line);
-	}
-	my $button_width = compute_buttonwidth($this->{-buttons});
-	$longest_line = $button_width if $longest_line < $button_width;
+    # Compute the longest line in the message.
+    my $longest_line = 0;
+    foreach (@lines) { 
+        $longest_line = length($_) 
+            if (length($_) > $longest_line);
+    }
 
-	# Check if there is enough space to show the widget.
-	if ($avail_textheight < 1 or $avail_textwidth < $longest_line) {
-		$Curses::UI::screen_too_small = 1;
-		return $this;
-	}
+    # Compute the width of the buttons (if the buttons
+    # object is available. This is not the case just after
+    # new() calls SUPER::new()).
+    my $buttons = $this->getobj('buttons');
+    my $button_width = 0;
+    if (defined $buttons) {
+        $button_width = $buttons->compute_buttonwidth;
+    }
 
-	# Compute the size of the widget.
+    # Decide what is the longest line.
+    $longest_line = $button_width if $longest_line < $button_width;
 
-	my $w = $longest_line;
-	$w += 2; # border of textviewer
-	$w += 2; # extra width for preventing wrapping of text
-	$w += 2 if $this->{-border};
-	$w += $this->{-ipadleft} + $this->{-ipadright}; 
+    # Check if there is enough space to show the widget.
+    if ($avail_textheight < 1 or $avail_textwidth < $longest_line) {
+        $Curses::UI::screen_too_small = 1;
+        return $this;
+    }
 
-	my $h = @lines;
-	$h += 2; # empty line + line of buttons
-	$h += 2; # border of textviewer
-	$h += 2 if $this->{-border};
-	$h += $this->{-ipadtop} + $this->{-ipadbottom}; 
+    # Compute the size of the widget.
 
-	$this->{-width} = $w;
-	$this->{-height} = $h;
+    my $w = $longest_line;
+    $w += 2; # border of textviewer
+    $w += 2; # extra width for preventing wrapping of text
+    $w += 2 if $this->{-border};
+    $w += $this->{-ipadleft} + $this->{-ipadright}; 
 
-	$this->SUPER::layout;
-	
-	return $this;
-}
+    my $h = @lines;
+    $h += 2; # empty line + line of buttons
+    $h += 2; # border of textviewer
+    $h += 2 if $this->{-border};
+    $h += $this->{-ipadtop} + $this->{-ipadbottom}; 
 
-sub focus()
-{
-	my $this = shift;
-	$this->show;
-        $this->draw;
-	$this->focus_to_object('buttons');
-        $this->SUPER::focus;
-	return 'LEAVE_CONTAINER';
+    $this->{-width} = $w;
+    $this->{-height} = $h;
+
+    $this->SUPER::layout;
+    
+    return $this;
 }
 
 sub get()
 {
-	my $this = shift;
-	$this->getobj('buttons')->get;
+    my $this = shift;
+    $this->getobj('buttons')->get;
 }
 
 1;
@@ -167,8 +199,8 @@ Curses::UI::Dialog::Basic - Create and manipulate basic dialogs
     +----Curses::UI::Container
             |
             +----Curses::UI::Window
-                    |
-                    +----Curses::UI::Dialog::Basic
+            |
+            +----Curses::UI::Dialog::Basic
 
 
 =head1 SYNOPSIS
@@ -181,7 +213,7 @@ Curses::UI::Dialog::Basic - Create and manipulate basic dialogs
     # -------------
     my $dialog = $win->add(
         'mydialog', 'Dialog::Basic',
-	-message   => 'Hello, world!'
+    -message   => 'Hello, world!'
     );
     $dialog->focus;
     $win->delete('mydialog');

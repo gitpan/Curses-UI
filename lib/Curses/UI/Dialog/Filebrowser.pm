@@ -17,435 +17,428 @@ use Curses::UI::Window;
 use Curses::UI::Common;
 use Cwd;
 
-use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Window Curses::UI::Common);
-$VERSION = '1.06';
+use vars qw(
+    $VERSION 
+    @ISA
+);
+
+@ISA = qw(
+    Curses::UI::Window
+    Curses::UI::Common
+);
+
+$VERSION = '1.10';
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		-title 		 => 'Select file',
-		-path		 => undef,	
-		-file		 => '', 
-		-show_hidden     => 0,
-		-mask	     	 => undef,
-		-mask_selected 	 => 0,
-		-editfilename 	 => 0,
+    my %args = ( 
+        -title          => undef,
+        -path           => undef,    
+        -file           => '', 
+        -show_hidden    => 0,
+        -mask           => undef,
+        -mask_selected  => 0,
+        -editfilename   => 0,
 
-		%userargs,
+        %userargs,
 
-		-border 	 => 1,
-		-centered        => 1,
-		-titleinverse 	 => 0,
-		-ipad		 => 1,
-		-selected_cache  => {},
-	);
+        -border         => 1,
+        -centered       => 1,
+        -titleinverse   => 0,
+        -ipad           => 1,
+        -selected_cache => {},
+    );
 
-	# Does -file contain a path? Then do some splitting.
-	if (defined $args{-file} and $args{-file} =~ m|/|) 
-	{
-		my $file = "";
-		my $path = "";
+    # Does -file contain a path? Then do some splitting.
+    if (defined $args{-file} and $args{-file} =~ m|/|) 
+    {
+        my $file = "";
+        my $path = "";
 
-		my @path = split /\//, $args{-file};
-		$file = pop @path;
-		if (@path) {
-			$path = join "/", @path;
-		}
-		$args{-path} = $path;
-		$args{-file} = $file;
-	}
+        my @path = split /\//, $args{-file};
+        $file = pop @path;
+        if (@path) {
+            $path = join "/", @path;
+        }
+        $args{-path} = $path;
+        $args{-file} = $file;
+    }
 
-	# Does -path not contain a path? Then use the 
-	# current working directory.
-	if (not defined $args{-path} or $args{-path} =~ /^\s*$/)
-	{
-		$args{-path} = cwd;
-	}
+    # Does -path not contain a path? Then use the 
+    # current working directory.
+    if (not defined $args{-path} or $args{-path} =~ /^\s*$/) {
+        $args{-path} = cwd;
+    }
 
-	my $this = $class->SUPER::new(%args);
-	$this->layout();
+    my $this = $class->SUPER::new(%args);
+    $this->layout();
+    
+    my $l = $this->root->lang;
 
-	# Start at home? Goto the homedirectory of the current user
-	# if the -path is not defined.
-	$this->goto_homedirectory unless defined $this->{-path};
+    # Start at home? Goto the homedirectory of the current user
+    # if the -path is not defined.
+    $this->goto_homedirectory unless defined $this->{-path};
 
-	my $buttons = $this->add(
-		'buttons', 'Buttonbox',
-		-y 		 => -1,
-		-x		 => 0,
-		-width 		 => undef, 
-		-buttonalignment => 'right',
-		-buttons 	 => [ 'ok', 'cancel' ],
-	);
-	$buttons->set_routine('return', \&return);
+    my $buttons = $this->add(
+        'buttons', 'Buttonbox',
+        -y               => -1,
+        -x               => 0,
+        -width           => undef, 
+        -buttonalignment => 'right',
+        -buttons         => [ 'ok', 'cancel' ],
+    );
 
-	my $dirbrowser = $this->add(
-		'dirbrowser', 'Listbox',
-		-y 		 => 0,
-		-border 	 => 1,
-		-width 		 => int(($this->screenwidth - 3)/2),
-		-padbottom 	 => 6,
-		-values 	 => [],
-		-vscrollbar 	 => 1,
-		-labels		 => { '..' => '.. (One directory up)' } 
-	);	
-	$dirbrowser->set_routine('option-select',\&dirselect);
-	$dirbrowser->set_routine('goto-homedirectory',\&select_homedirectory);
-	$dirbrowser->set_binding('goto-homedirectory', '~');
-	
-	my $filebrowser = $this->add(
-		'filebrowser', 'Listbox',
-		-y 		 => 0,
-		-x 		 => $this->getobj('dirbrowser')->width + 1,
-		-border 	 => 1,
-		-padbottom 	 => 6,
-		-vscrollbar 	 => 1,
-		-values 	 => ["info.txt","passwd"],
-	);	
-	$filebrowser->set_routine('option-select', \&fileselect);
-	$filebrowser->set_routine('goto-homedirectory',\&select_homedirectory);
-	$filebrowser->set_binding('goto-homedirectory', '~');
+    # Let the window in which the buttons are loose focus
+    # if a button is pressed.
+    $buttons->set_routine( 'press-button', \&press_button_callback );
 
-	my $labeloffset = 1;
-	my $textoffset = 7;
+    my $one_up = $l->get('file_dirup');
+    my $dirbrowser = $this->add(
+        'dirbrowser', 'Listbox',
+        -y               => 0,
+        -border          => 1,
+        -width           => int(($this->canvaswidth - 3)/2),
+        -padbottom       => 6,
+        -values          => [],
+        -vscrollbar      => 1,
+        -labels          => { '..' => ".. ($one_up)" } 
+    );    
 
-	$this->add(
-		'pathlabel', 'Label',
-		-x 		 => $labeloffset, 
-		-y 		 => $this->screenheight - 5, 
-		-text		 => 'Path:',
-	);
-	$this->add(
-		'pathvalue', 'Label',
-		-x 		 => $textoffset,
-		-y 		 => $this->screenheight - 5, 
-		-width		 => $this->screenwidth - 6,
-		-text		 => $this->{-path},
-	);
+    $dirbrowser->set_routine('option-select',\&dirselect);
+    $dirbrowser->set_routine('goto-homedirectory',\&select_homedirectory);
+    $dirbrowser->set_binding('goto-homedirectory', '~');
+    
+    my $filebrowser = $this->add(
+        'filebrowser', 'Listbox',
+        -y               => 0,
+        -x               => $this->getobj('dirbrowser')->width + 1,
+        -border          => 1,
+        -padbottom       => 6,
+        -vscrollbar      => 1,
+        -values          => ["info.txt","passwd"],
+    );    
 
-	$this->add(
-		'filelabel', 'Label',
-		-x 		 => $labeloffset, 
-		-y 		 => $this->screenheight - 4, 
-		-text		 => 'File:',
-	);
-	
-	if ($this->{-editfilename})
-	{
-		$this->add(
-			'filevalue', 'TextEntry',
-			-x		 => $textoffset,
-			-y 		 => $this->screenheight - 4, 
-			-text		 => $this->{-file},
-			-width		 => 32,
-			-showlines	 => 1,
-			-border		 => 0,
-			-sbborder	 => 0,
-			-regexp		 => '/^[^\/]*$/',
-		);
-	} else {
-		$this->add(
-			'filevalue', 'Label',
-			-x 		 => $textoffset, 
-			-y 		 => $this->screenheight - 4, 
-			-text		 => $this->{-file},
-			-width		 => $this->screenwidth - 6,
-		);
-	}
+    $filebrowser->set_routine('option-select', \&fileselect);
+    $filebrowser->set_routine('goto-homedirectory',\&select_homedirectory);
+    $filebrowser->set_binding('goto-homedirectory', '~');
 
-	if (defined $this->{-mask} and ref $this->{-mask} eq 'ARRAY') 
-	{
-		$this->add(
-			'masklabel', 'Label',
-			-x 	 => $labeloffset,
-			-y 	 => $this->screenheight - 2,
-			-text 	 => 'Mask:',
-		);
+        # Get language specific data.
+    my $l_path = $l->get('file_path');
+    my $l_mask = $l->get('file_mask');
+    my $l_file = $l->get('file_file');
+    my $l_len  = $l->get('file_labelsize');
 
-		my @values = ();
-		my %labels = ();
-		my $i =0;
-		foreach my $mask (@{$this->{-mask}})
-		{
-			push @values, $mask->[0];
-			$labels{$mask->[0]} = $mask->[1];
-		}
+    my $labeloffset = 1;
+    my $textoffset = $l_len + 2;
 
-		my $maskbox = $this->add(
-			'maskbox', 'Popupmenu',
-			-x 	 => $textoffset,
-			-y 	 => $this->screenheight - 2,
-			-values  => \@values,
-			-labels  => \%labels,
-			-selected => $this->{-mask_selected},
-		);
-		$this->{-activemask} = $maskbox->get;
-		$maskbox->set_routine('option-select', \&maskbox_select);
-		$maskbox->set_routine('select-next',   \&maskbox_next);
-		$maskbox->set_routine('select-prev',   \&maskbox_prev);
-	}
+    $this->add(
+        'pathlabel', 'Label',
+        -x              => $labeloffset, 
+        -y              => $this->canvasheight - 5, 
+        -text           => $l_path,
+    );
+    $this->add(
+        'pathvalue', 'Label',
+        -x              => $textoffset,
+        -y              => $this->canvasheight - 5, 
+        -width          => $this->canvaswidth - 6,
+        -text           => $this->{-path},
+    );
 
-	$this->returnkeys(KEY_ESCAPE);
+    $this->add(
+        'filelabel', 'Label',
+        -x              => $labeloffset, 
+        -y              => $this->canvasheight - 4, 
+        -text           => $l_file,
+    );
+    
+    if ($this->{-editfilename})
+    {
+        $this->add(
+            'filevalue', 'TextEntry',
+            -x          => $textoffset,
+            -y          => $this->canvasheight - 4, 
+            -text       => $this->{-file},
+            -width      => 32,
+            -showlines  => 1,
+            -border     => 0,
+            -sbborder   => 0,
+            -regexp     => '/^[^\/]*$/',
+        );
+    } else {
+        $this->add(
+            'filevalue', 'Label',
+            -x          => $textoffset, 
+            -y          => $this->canvasheight - 4, 
+            -text       => $this->{-file},
+            -width      => $this->canvaswidth - 6,
+        );
+    }
 
-	$this->layout();
-	$this->get_dir;
-	return bless $this, $class;
+    if (defined $this->{-mask} and ref $this->{-mask} eq 'ARRAY') 
+    {
+        $this->add(
+            'masklabel', 'Label',
+            -x          => $labeloffset,
+            -y          => $this->canvasheight - 2,
+            -text       => $l_mask,
+        );
+
+        my @values = ();
+        my %labels = ();
+        my $i =0;
+        foreach my $mask (@{$this->{-mask}})
+        {
+            push @values, $mask->[0];
+            $labels{$mask->[0]} = $mask->[1];
+        }
+
+        my $maskbox = $this->add(
+            'maskbox', 'Popupmenu',
+            -x          => $textoffset,
+            -y          => $this->canvasheight - 2,
+            -values     => \@values,
+            -labels     => \%labels,
+            -selected   => $this->{-mask_selected},
+            -onchange   => \&maskbox_onchange,
+        );
+        $this->{-activemask} = $maskbox->get;
+    }
+
+    $this->set_binding(sub{
+        my $this = shift;
+        $this->getobj('buttons')->{-selected} = 1;
+        $this->loose_focus;
+    }, CUI_ESCAPE);
+
+    $this->layout();
+    $this->get_dir;
+
+    if ($this->{-editfilename}) {
+        $this->getobj('filevalue')->focus;
+    } else {
+        $this->getobj('filebrowser')->focus;
+    }
+
+    return bless $this, $class;
 }
 
 sub layout()
 {
-	my $this = shift;
+    my $this = shift;
 
-	my $w = 60;
-	my $h = 18;
-	$h += 2 if defined $this->{-mask};
-	$this->{-width} = $w,
-	$this->{-height} = $h,
+    my $w = 60;
+    my $h = 18;
+    $h += 2 if defined $this->{-mask};
+    $this->{-width} = $w,
+    $this->{-height} = $h,
 
-	$this->SUPER::layout();
+    $this->SUPER::layout() or return;
 
-	return $this;
+    return $this;
 }
 
 sub get_dir()
 {
-	my $this = shift;
+    my $this = shift;
 
-	# Get pathvalue, filevalue, dirbrowser and filebrowser objects.
-	my $pv = $this->getobj('pathvalue');
-	my $db = $this->getobj('dirbrowser');
-	my $fb = $this->getobj('filebrowser');
+    # Get pathvalue, filevalue, dirbrowser and filebrowser objects.
+    my $pv = $this->getobj('pathvalue');
+    my $db = $this->getobj('dirbrowser');
+    my $fb = $this->getobj('filebrowser');
 
-	my $path = $pv->text;
+    my $path = $pv->text;
 
-	# Resolve path.
-	$path =~ s|/+|/|g;
-	my @path = split /\//, $path;
-	my @resolved = ();
-	foreach my $dir (@path)
-	{
-		if ($dir eq '.') { next }
-		elsif ($dir eq '..') { pop @resolved if @resolved }
-		else { push @resolved, $dir }
-	}
-	$path = join "/", @resolved;
-	
-	# Catch totally bogus paths.
-	if (not -d $path) { $path = "/" }
-	
-	$pv->text($path);
-	
-	my @dirs = ();
-	my @files = ();
-	unless (opendir D, $path)
-	{
-		my $error = "Can't open the directory\n"
-		          . "$path\nError: $!";
-		return $this->root->error($error);
-	}
-	foreach my $f (sort readdir D)
-	{
-		next if $f =~ /^\.$|^\.\.$/;
-		next if $f =~ /^\./ and not $this->{-show_hidden};
-		push @dirs,  $f if -d "$path/$f";
-		if (-f "$path/$f")
-		{
-			$this->{-activemask} = '.' 
-				unless defined $this->{-activemask};
-			push @files, $f if $f =~ /$this->{-activemask}/i;
-		}
-	}
-	closedir D;
+    # Resolve path.
+    $path =~ s|/+|/|g;
+    my @path = split /\//, $path;
+    my @resolved = ();
+    foreach my $dir (@path)
+    {
+        if ($dir eq '.') { next }
+        elsif ($dir eq '..') { pop @resolved if @resolved }
+        else { push @resolved, $dir }
+    }
+    $path = join "/", @resolved;
+    
+    # Catch totally bogus paths.
+    if (not -d $path) { $path = "/" }
+    
+    $pv->text($path);
+    
+    my @dirs = ();
+    my @files = ();
+    unless (opendir D, $path)
+    {
+        my $l = $this->root->lang();
+        my $error = $l->get('file_err_opendir_pre')
+                  . $path
+                  . $l->get('file_err_opendir_post')
+                  . ":\n$!";
+        $this->root->error($error);
+        return;
+    }
+    foreach my $f (sort readdir D)
+    {
+        next if $f =~ /^\.$|^\.\.$/;
+        next if $f =~ /^\./ and not $this->{-show_hidden};
+        push @dirs,  $f if -d "$path/$f";
+        if (-f "$path/$f")
+        {
+            $this->{-activemask} = '.' 
+                unless defined $this->{-activemask};
+            push @files, $f if $f =~ /$this->{-activemask}/i;
+        }
+    }
+    closedir D;
 
-	unshift @dirs, ".." if $path ne '/';
-	
-	$db->{-values} = \@dirs;
-	$db->{-ypos} = $this->{-selected_cache}->{$path};
-	$db->{-ypos} = 0 unless defined $db->{-ypos};
-	$db->{-selected} = undef;
-	$db->layout_content->draw;
+    unshift @dirs, ".." if $path ne '/';
+    
+    $db->values(\@dirs);
+    $db->{-ypos} = $this->{-selected_cache}->{$path};
+    $db->{-ypos} = 0 unless defined $db->{-ypos};
+    $db->{-selected} = undef;
+    $db->layout_content->draw(1);
 
-	$fb->{-values} = \@files;
-	$fb->{-ypos} = $fb->{-yscrpos} = 0;
-	$fb->layout_content->draw;
-	
-	return $this;
+    $fb->values(\@files);
+    $fb->{-ypos} = $fb->{-yscrpos} = 0;
+    $fb->layout_content->draw(1);
+    
+    return $this;
 }
 
 # Set $this->{-path} to the homedirectory of the current user.
 sub goto_homedirectory()
 {
-	my $this = shift;
+    my $this = shift;
 
-	my @pw = getpwuid($>);	
-	if (@pw) {
-	    if (-d $pw[7]) {
-		$this->{-path} = $pw[7];
-	    } else {
-		$this->{-path} = '/';
-		return $this->root->error("Homedirectory $pw[7] not found");
-	    }
-	} else {
+    my @pw = getpwuid($>);    
+    if (@pw) {
+        if (-d $pw[7]) {
+	    $this->{-path} = $pw[7];
+        } else {
 	    $this->{-path} = '/';
-	    return $this->root->error("Can't find a passwd entry for uid $>");
-	}
+	    $this->root->error("Homedirectory $pw[7] not found");
+	    return;
+        }
+    } else {
+        $this->{-path} = '/';
+        $this->root->error("Can't find a passwd entry for uid $>");
+        return;
+    }
 
-	return $this;
+    return $this;
 }
 
 sub select_homedirectory()
 {
-	my $b = shift; # dir-/filebrowser
-	my $this = $b->parent;
-	my $pv = $this->getobj('pathvalue');
+    my $b = shift; # dir-/filebrowser
+    my $this = $b->parent;
+    my $pv = $this->getobj('pathvalue');
 
-	$this->goto_homedirectory or return $b;
-	$pv->text($this->{-path});
-	$this->get_dir;
+    $this->goto_homedirectory or return $b;
+    $pv->text($this->{-path});
+    $this->get_dir;
 
-	return $b;
+    return $b;
 }
 
 sub dirselect()
 {
-	my $db = shift; # dirbrowser
-	my $this = $db->parent;
-	my $fv = $this->getobj('filevalue');
-	my $pv = $this->getobj('pathvalue');
+    my $db = shift; # dirbrowser
+    my $this = $db->parent;
+    my $fv = $this->getobj('filevalue');
+    my $pv = $this->getobj('pathvalue');
 
-	# Find the new path.
-	my $add = $db->{-values}->[$db->{-ypos}];
-	my $savepath = $pv->text;
-	$this->{-selected_cache}->{$savepath} = $db->{-ypos};
-	$pv->text("/$savepath/$add");
+    # Find the new path.
+    my $add = $db->values->[$db->{-ypos}];
+    my $savepath = $pv->text;
+    $this->{-selected_cache}->{$savepath} = $db->{-ypos};
+    $pv->text("/$savepath/$add");
 
-	# Clear the filename field if the filename
-	# may not be edited.
-	$fv->text('') unless $this->{-editfilename};
+    # Clear the filename field if the filename
+    # may not be edited.
+    $fv->text('') unless $this->{-editfilename};
 
-	# Get the selected directory.
-	unless ($this->get_dir) {
-		$pv->text($savepath);
-	}
+    # Get the selected directory.
+    unless ($this->get_dir) {
+        $pv->text($savepath);
+    }
 
-	return $db;
+    return $db;
 }
 
 sub fileselect()
 {
-	my $filebrowser = shift;
-	my $this = $filebrowser->parent;
+    my $filebrowser = shift;
+    my $this = $filebrowser->parent;
 
-	my $file = $filebrowser->{-values}->[$filebrowser->{-ypos}];
-	$this->{-file} = $file;
-	$this->getobj('filevalue')->text("$file");
-	
-	$this->focus_to_object('buttons');
-	return 'STAY_AT_FOCUSPOSITION';
+    my $file = $filebrowser->values->[$filebrowser->{-ypos}];
+    $this->{-file} = $file;
+    $this->getobj('filevalue')->text("$file");
+    
+# TODO: find out if it is done by mouseclick. If yes, then do 
+# not change focus.
+# Doubleclick may also select the file.
+#    $this->getobj('buttons')->focus;
 }
 
-sub maskbox_select()
+sub maskbox_onchange()
 {
-	my $popup = shift;
-
-	# first parent is the Popupmenu
-	my $this = $popup->parent->parent; 
-
-	$popup->option_select;
-	$this->{-activemask} = $popup->get;
-	$this->get_dir;
-	return;
-}
-
-sub maskbox_prev()
-{
-	my $maskbox = shift; 
-	my $this = $maskbox->parent;
-	$maskbox->select_prev;
-	$this->{-activemask} = $maskbox->get;
-	$this->get_dir;
-	return $maskbox;	
-}
-sub maskbox_next()
-{
-	my $maskbox = shift; 
-	my $this = $maskbox->parent;
-	$maskbox->select_next;
-	$this->{-activemask} = $maskbox->get;
-	$this->get_dir;
-	return $maskbox;	
+    my $maskbox = shift; 
+    my $this = $maskbox->parent;
+    $this->{-activemask} = $maskbox->get;
+    $this->get_dir;
+    return $maskbox;    
 }
 
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
+    my $this = shift;
+    my $no_doupdate = shift || 0;
 
-        # Return immediately if this object is hidden.
-        return $this if $this->hidden;
-	
-	# Draw Window
-	$this->SUPER::draw(1);
+    # Draw Window
+    $this->SUPER::draw(1) or return $this;
 
-	$this->{-windowscr}->noutrefresh();
-	doupdate() unless $no_doupdate;
+    $this->{-canvasscr}->noutrefresh();
+    doupdate() unless $no_doupdate;
 
-	return $this;
+    return $this;
 }
 
 sub get()
 {
-	my $this = shift;
-	if ($this->getobj('buttons')->get) {
-		my $file = $this->getobj('pathvalue')->get
-			 . "/" 
-			 . $this->getobj('filevalue')->get;
-		$file =~ s|/+|/|g;
-		return $file;
-	} else {
-		return;
-	}
+    my $this = shift;
+    if ($this->getobj('buttons')->get) {
+        my $file = $this->getobj('pathvalue')->get
+                 . "/" 
+                 . $this->getobj('filevalue')->get;
+        $file =~ s|/+|/|g;
+        return $file;
+    } else {
+        return;
+    }
 }
 
-sub focus()
+sub press_button_callback()
 {
-	my $this = shift;
-	$this->show;
-	$this->SUPER::draw;
-	$this->focus_to_object(
-		defined $this->{-file} and $this->{-file} ne ''
-		? 'buttons'
-		: 'dirbrowser'
-	);
-	my ($return, $key) = $this->SUPER::focus;
-	
-	# Escape pressed? Then select the cancel button.
-	if ($key eq KEY_ESCAPE) {
-		$this->getobj('buttons')->{-selected} = 1;
-	}
+    my $buttons = shift;
+    my $this = $buttons->parent;
+    my $file = $this->get;
 
-	return $this;
-}
-
-sub return()
-{
-	my $buttons = shift;	
-	my $this = $buttons->parent();
-	my $file = $this->get;
-	my $ok_pressed = $this->getobj('buttons')->get;
-	if ($ok_pressed and $file =~ m|/$|)
-	{
-		$this->root->error("You have not yet selected a file!");
-		return 'STAY_AT_FOCUSPOSITION';
-	} else {
-		return 'LEAVE_CONTAINER';
-	}
+    my $ok_pressed = $buttons->get;
+    if ($ok_pressed and $file =~ m|/$|) {
+        my $l = $this->root->lang;
+        $this->root->error($l->get('file_err_nofileselected'));
+        return;
+    } else {
+        $this->loose_focus;
+    }
 }
 
 1;

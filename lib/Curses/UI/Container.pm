@@ -9,16 +9,25 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: update dox
+
 package Curses::UI::Container;
 
 use Curses;
-use Carp qw(confess);
 use Curses::UI::Widget;
 use Curses::UI::Common;
 
-use vars qw(@ISA $VERSION);
-@ISA = qw(Curses::UI::Widget Curses::UI::Common);
-$VERSION = "1.01";
+use vars qw(
+    @ISA 
+    $VERSION
+);
+
+$VERSION = "1.10";
+
+@ISA = qw(
+    Curses::UI::Widget 
+    Curses::UI::Common
+);
 
 # ----------------------------------------------------------------------
 # Public interface
@@ -27,394 +36,388 @@ $VERSION = "1.01";
 # Create a new Container object.
 sub new()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
-	my $this = $class->SUPER::new(%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	# Setup internal data storage.
-	$this->{-use}         	= {};	   # which modules are "use"d
-	$this->{-container}	= undef;   # container of objects
-	$this->{-focusorder} 	= [];  	   # focus order
-	$this->{-focusidx} 	= 0;   	   # focus index
-	$this->{-windoworder} 	= [];	   # window stacking order
-	$this->{-draworder} 	= [];  	   # draw order
+    my %args = (
+        %userargs,
 
-	return $this;
+        -id2object    => undef, # Id to object mapping
+        -object2id    => undef, # Object to id mapping
+        -focusorder   => [],    # The order in which objects get focused
+        -draworder    => [],    # The order in which objects get drawn
+        -focus        => 0,     # Value init
+    );
+
+    my $this = $class->SUPER::new(%args);
 }
 
-sub usemodule($;)
+DESTROY()
 {
-	my $this = shift;
-	my $class = shift;
-	
-	# Automatically load the required class.
-	if (not defined $this->{-use}->{$class})
-	{
-		my $cmd = "use $class";
-		eval $cmd;
-		confess "Error in loading $class module: $@" if $@;
-		$this->{-use}->{$class} = 1;
-	}
-
-	return $this;
+    my $this = shift;
+    $this->SUPER::delete_subwindows();
 }
 
 # Add an object to the container.
 sub add($@;)
 {
-	my $this = shift;
-	my $id = shift;
-	my $class = shift;
-	my %args = @_;
+    my $this = shift;
+    my $id = shift;
+    my $class = shift;
+    my %args = @_;
 
-	confess "The object id \"$id\" is already in use!"
-		if (defined $this->{-container}->{$id});
+    $this->root->fatalerror(
+	"The object id \"$id\" is already in use!"
+    ) if defined $id and 
+         defined $this->{-id2object}->{$id};
 
-	# Make it possible to specify WidgetType instead of
-	# Curses::UI::WidgetType.
-        $class = "Curses::UI::$class" 
-                if $class !~ /\:\:/ 
-                or $class =~ /^Dialog\:\:[^\:]+$/;
+    # If $id is not defined, create an auto-id.
+    if (not defined $id) 
+    {
+        my $i = 0;
+        my $id_pre = "__container_auto_id_";
+        do { $id = $id_pre . $i++ } 
+	    until (not defined $this->{-id2object}->{$id});
+    }
 
-	# Create a new object of the wanted class.
-	$this->usemodule($class);
-	my $object = $class->new(
-		%args,
-		-parent => $this
-	);
+    # Make it possible to specify WidgetType instead of
+    # Curses::UI::WidgetType.
+    $class = "Curses::UI::$class" 
+        if $class !~ /\:\:/ or 
+	   $class =~ /^Dialog\:\:[^\:]+$/;
 
-	# Store the object in this object.
-	$this->{-container}->{$id} = $object;
+    # Create a new object of the wanted class.
+    $this->root->usemodule($class);
+    my $object = $class->new(
+        %args,
+        -parent => $this
+    );
 
-	# Automatically create a focus- and draworder (last added = 
-	# last focus/draw). This can be overriden by the 
-	# set_focusorder() and set_draworder() functions.
-	push @{$this->{-focusorder}}, $id;
-	push @{$this->{-draworder}}, $id;
+    # Store the object.
+    $this->{-id2object}->{$id} = $object;
+    $this->{-object2id}->{$object} = $id; 
 
-	# If the added object is a (derived) Curses::UI::Window, 
-	# then remember it's order in the windoworder stack.
-	push @{$this->{-windoworder}}, $id 
-		if $object->isa('Curses::UI::Window'); 
+    # Automatically create a focus- and draworder (last added = 
+    # last focus/draw). This can be overriden by the 
+    # set_focusorder() and set_draworder() functions.
+    push @{$this->{-focusorder}}, $id;
+    unshift @{$this->{-draworder}}, $id;
 
-	# Return the created object.
-	return $object;
+    # Return the created object.
+    return $object;
 }
 
-# Delete the contained object with id=$id 
-# from the Container.
+# Delete the contained object with id=$id from the Container.
 sub delete(;$)
 {
-	my $this = shift;
-	my $id = shift;
-	
-	# Destroy object.
-	undef $this->{-container}->{$id};
-	delete $this->{-container}->{$id};
+    my $this = shift;
+    my $id = shift;
 
-	foreach my $param (qw(-focusorder -draworder -windoworder))
-	{
-		my $idx = $this->base_id2idx($param, $id);
-		splice(@{$this->{$param}}, $idx, 1)
-			if defined $idx;
-	}
+    return $this unless defined $this->{-id2object}->{$id};
 
-	return $this;
+    # Delete curses subwindows.
+    $this->{-id2object}->{$id}->delete_subwindows(); 
+   
+    # Destroy object.
+    undef $this->{-object2id}->{$this->{-id2object}->{$id}};
+    delete $this->{-object2id}->{$this->{-id2object}->{$id}};
+    undef $this->{-id2object}->{$id};
+    delete $this->{-id2object}->{$id};
+
+    foreach my $param (qw(-focusorder -draworder))
+    {
+        my $idx = $this->base_id2idx($param, $id);
+        splice(@{$this->{$param}}, $idx, 1)
+            if defined $idx;
+    }
+
+    return $this;
 }
+
+sub delete_subwindows()
+{
+    my $this = shift;
+    while (my ($id, $object) = each %{$this->{-id2object}}) {
+        $object->delete_subwindows();
+    }
+    $this->SUPER::delete_subwindows();
+    return $this;
+}
+
 
 # Draw the container and it's contained objects.
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
+    my $this = shift;
+    my $no_doupdate = shift || 0;
+    
+    # Draw the Widget.
+    $this->SUPER::draw(1) or return $this;
+    
+    # Draw all contained object.
+    foreach my $id (@{$this->{-draworder}}) {
+        $this->{-id2object}->{$id}->draw(1);
+    }
 
-        # Return immediately if this object is hidden.
-        return $this if $this->hidden;
-	
-	$this->root->check_for_too_small_screen();
-	
-	# Draw the Widget.
-	$this->SUPER::draw(1);
+    # Update the screen unless suppressed.
+    doupdate() unless $no_doupdate;
 
-	# Draw all contained object.
-	foreach my $id (@{$this->{-draworder}})
-	{
-		my $obj = $this->{-container}->{$id};
-		$obj->draw(1);
-	}
-
-	# Update the screen unless suppressed.
-	doupdate() unless $no_doupdate;
-
-	return $this;
-}
-
-# Create leave-container bindings for all contained objects, so we
-# have an easy way of creating global keys for leaving the
-# container.
-sub returnkeys(@;)
-{
-	my $this = shift;
-
-	# Get list of keys on which to return.
-	my @keys = @_; 
-
-	# Return immediately if this Container has no contained objects.
-	return $this unless defined $this->{-container};
-
-	foreach my $key (@keys) {
-		while (my ($id, $obj) = each %{$this->{-container}}) {
-			$obj->{-routines}->{'leave-container'} = 'LEAVE_CONTAINER';
-			$obj->set_binding('leave-container', @keys);
-		}
-	}
-
-	return $this;
-}
-
-sub layout_from_scratch()
-{
-	my $this = shift;
-	$this->root->layout;
+    return $this;
 }
 
 sub layout()
 {
-	my $this = shift;
-	$this->SUPER::layout();
-	return $this if $Curses::UI::screen_too_small;
-	$this->layout_contained_objects();
-	return $this;	
+    my $this = shift;
+    $this->SUPER::layout() or return;
+    $this->layout_contained_objects();
+    return $this;    
 }
 
 sub layout_contained_objects()
 {
-	my $this = shift;
+    my $this = shift;
 
-	# Layout all contained objects.
-	foreach my $id (@{$this->{-draworder}})
-	{
-		last if $Curses::screen_too_small;
-		my $obj = $this->{-container}->{$id};
-		$obj->{-parent} = $this;
-		$obj->layout();
-	}
+    # Layout all contained objects.
+    foreach my $id (@{$this->{-draworder}})
+    {
+        my $obj = $this->{-id2object}->{$id};
+        $obj->{-parent} = $this;
+        $obj->layout();
+    }
 
-	return $this;
+    return $this;
 }
 
 # Look if there are objects of a certain kind in the container.
 sub hasa($;)
 {
-	my $this = shift;
-	my $class = shift;
+    my $this = shift;
+    my $class = shift;
 
-	my $count = 0;
-	while (my ($id,$obj) = each %{$this->{-container}}) {
-		$count++ if ref $obj eq $class;
-	}
-	return $count;
-}
-
-# Recursive rebuild from the root up.
-sub rebuild_from_scratch()
-{
-	my $this = shift;
-	$this->rootscr->clear;
-	$this->rootscr->noutrefresh;
-	$this->root->rebuild;
-}
-
-# Recursive rebuild of the Container.
-sub rebuild()
-{
-	my $this = shift;
-	$this->ontop(undef, 1);
-}
-
-# Move a Window on top in the Container. Arguments:
-# - id    => the id of the window. To identify the current
-#            top Window an undefined value may be given
-# - force => force refreshing of the screen, even if there
-#            was no change in the window order.
-#
-# So: 
-# ontop(undef,1)
-#   basically a screen refresh command.
-# ontop('screen1')
-#   brings screen1 on top and doesn't do
-#   a redraw if screen1 is already on top. 
-#
-sub ontop($;$)
-{
-	my $this = shift;
-	my $id = shift;
-	my $force = shift || 0;
-	
-	# If we have a stack of no windows, return immediately.
-	return $this if @{$this->{-windoworder}} == 0;
-
-	# If we have a stack of only 1 window, the -windoworder
-	# will therefor never change. We'll make sure here that
-	# the window is drawn.
-	$force = 1 if @{$this->{-windoworder}} == 1;
-
-	# Id is a reference? Then a window object is passed.
-	# Try to find the id for this window object.
-	if (ref $id)
-	{
-		my $realid;
-		WINDOW: foreach my $win_id (@{$this->{-windoworder}})
-		{
-			my $obj = $this->getobj($win_id);
-			if ($id eq $obj)
-			{
-				$id = $win_id;
-				last WINDOW;
-			}
-		}
-	}
-
-	# No id given? Then take the current frontwindow.
-	$id = $this->{-windoworder}->[-1]
-		unless defined $id;
-
-	# Find the object to move up front.
-	my $win = $this->getobj($id) or return;
-
-	# Window already up front or not?
-	my $has_moved = 0;
-	unless ($this->{-windoworder}->[-1] eq $id)
-	{
-		# No? Then first find the current index of 
-		# the window that has to be up front.
-		my $idx = $this->windoworder_id2idx($id);
-		confess "ontop(): $id: no such window" 
-			unless defined $idx;
-	
-		# Now re-arrange the windoworder.
-		splice(@{$this->{-windoworder}}, $idx, 1);
-		push @{$this->{-windoworder}}, $id;
-	
-		$has_moved = 1;
-	}
-
-	if ($force or $has_moved) {
-		$this->rootscr->erase;
-		$this->rootscr->noutrefresh;
-		foreach my $id (@{$this->{-windoworder}}) {
-			$this->getobj($id)->draw(1);
-		}
-		doupdate();
-	}
-
-	return $this;	
+    my $count = 0;
+    while (my ($id,$obj) = each %{$this->{-id2object}}) {
+        $count++ if ref $obj eq $class;
+    }
+    return $count;
 }
 
 sub window_is_ontop($;)
 {
-	my $this = shift;
-	my $win = shift;
+    my $this = shift;
+    my $win = shift;
 
-	# If we have a stack of no windows, return immediately.
-	return undef if @{$this->{-windoworder}} == 0;
+    # If we have a stack of no windows, return immediately.
+    return undef if @{$this->{-draworder}} == 0;
 
-	my $topwin = $this->{-windoworder}->[-1];
-	if (ref $win) { $topwin = $this->getobj($topwin) }
+    my $topwin = $this->{-draworder}->[-1];
+    if (ref $win) { $topwin = $this->getobj($topwin) }
 
-	return $topwin eq $win;
+    return $topwin eq $win;
 }
 
-sub focus()
+sub event_keypress($;)
 {
-	my $this = shift;
+    my $this = shift;
+    my $key = shift;
 
-	$this->draw;
-	$this->run_event('-onfocus');
-	
-	# If the container contains no objects, then return
-	# without focusing.
-	unless ($this->{-container})
-	{
-		$this->run_event('-onblur');
-		return ('LEAVE_CONTAINER', undef) 
-	}
-	
-	for (;;)
-	{
-		# Set the focus to the current focused 
-		# subobject of the container.
-		my ($ret, $key) = $this->focus_object;
+    # Try to run the event on this widget. Return
+    # unless the binding returns 'DELEGATE' which
+    # means that this widget should try to delegate
+    # the event to its contained object which has
+    # the focus.
+    # 
+    my $return = $this->process_bindings($key);
+    return $return 
+        unless defined $return and 
+                   $return eq 'DELEGATE';
 
-		# Leave focus for the container in place if 
-		# the subobject returned 'LEAVE_CONTAINER'. Also return 
-		# the last key that was pressed.
-		if ($ret eq 'LEAVE_CONTAINER')
-		{
-			$this->run_event('-onblur');
-			return ($ret,$key) 
-		}
+    # Get the current focused object and send the 
+    # keypress to it.
+    $obj = $this->getfocusobj;
+    if (defined $obj) {
+	return $obj->event_keypress($key);
+    } else {    
+	return 'DELEGATE';
+    }
+}
 
-		# Set the focus to the next subobject of the container,
-		# unless the subobject told the container not to do so.
-		$this->focus_to_next unless $ret eq 'STAY_AT_FOCUSPOSITION';
-	}
+sub focus_prev()
+{
+    my $this = shift;
+
+    # Return without doing anything if we do not
+    # have a focuslist.
+    return $this unless @{$this->{-focusorder}};
+                
+    # Find the current focused object id.
+    my $id = $this->{-draworder}->[-1];
+
+    # Find the current focusorder index.
+    my $idx = $this->focusorder_id2idx($id);
+
+    # Go to the previous object or wraparound.
+    if ( --$idx < 0) {
+        $idx = @{$this->{-focusorder}} - 1;
+    }
+
+    # Focus the previous object.    
+    $this->focus($this->{-focusorder}->[$idx], undef, -1);
+}
+
+sub focus_next()
+{
+    my $this = shift;
+
+    # Return without doing anything if we do not
+    # have a focuslist.
+    return $this unless @{$this->{-focusorder}};
+                
+    # Find the current focused object id.
+    my $id = $this->{-draworder}->[-1];
+
+    # Find the current focusorder index.
+    my $idx = $this->focusorder_id2idx($id);
+
+    # Go to the next object or wraparound.
+    if ( ++$idx > (@{$this->{-focusorder}}-1) ) {    
+        $idx = 0;
+    }
+
+    # Focus the next object.    
+    $this->focus($this->{-focusorder}->[$idx], undef, +1);
+}
+
+sub focus(;$$$)
+{
+    my $this      = shift;
+    my $focus_to  = shift;
+    my $forced    = shift || 0;
+    my $direction = shift || 1;
+
+    # The direction in which to look for other objects
+    # if this object is not focusable.
+    $direction = ($direction < 0 ? -1 : 1);
+
+    # Find the id for a object if the argument
+    # is an object.
+    my $new_id = ref $focus_to 
+	       ? $this->{-object2id}->{$focus_to} 
+	       : $focus_to;
+
+    if ($forced and not defined $new_id) {
+        $new_id = $this->{-draworder}->[-1]; 
+    }
+
+    # Do we need to change the focus inside the container?
+    if (defined $new_id)
+    {
+        # Find the currently focused object.
+        my $cur_id  = $this->{-draworder}->[-1];
+        my $cur_obj = $this->{-id2object}->{$cur_id}; 
+        
+        # Find the new focused object.
+        my $new_obj = $this->{-id2object}->{$new_id};
+        $this->root->fatalerror(
+	    "focus(): $this has no element with id='$new_id'" 
+        ) unless defined $new_obj;
+
+        # Can the new object be focused? If not, then
+        # try to find the first next object that can
+        # be focused.
+        unless ($new_obj->focusable)
+        {
+            my $idx = $start_idx = $this->focusorder_id2idx($cur_id);
+
+            undef $new_obj;
+            undef $new_id;
+
+            OBJECT: for(;;)
+            {
+                $idx += $direction;
+                $idx = 0 if $idx > @{$this->{-focusorder}}-1;
+                $idx = @{$this->{-focusorder}}-1 if $idx < 0;
+                last if $idx == $start_idx;
+
+                my $test_id  = $this->{-focusorder}->[$idx];
+                my $test_obj = $this->{-id2object}->{$test_id};
+                
+                if ($test_obj->focusable)
+                {
+                    $new_id  = $test_id;
+                    $new_obj = $test_obj;
+                    last OBJECT 
+                }
+
+            } 
+        }
+
+        # Change the draworder if a focusable objects was found.
+        if ($forced or defined $new_obj and $new_obj ne $cur_obj)
+        {
+            my $idx = $this->draworder_id2idx($new_id);
+            my $move = splice(@{$this->{-draworder}}, $idx, 1);
+            push @{$this->{-draworder}}, $move;
+
+            unless ($new_obj->{-has_modal_focus}) {
+		$cur_obj->event_onblur;
+            }
+	    $new_obj->event_onfocus;
+        }
+    }
+   
+    $this->SUPER::focus();
+}
+
+sub event_onfocus()
+{
+    my $this = shift;
+
+    # Do an onfocus event for this object.
+    $this->SUPER::event_onfocus;
+
+    # If there is a focused object within this
+    # container and this container is not a 
+    # container widget, then send an onfocus event to it.
+    unless ($this->isa('Curses::UI::ContainerWidget')) {
+        my $focused_object = $this->getfocusobj;
+        if (defined $focused_object) {
+            $focused_object->event_onfocus;
+        }
+    }
+
+    return $this;
 }
 
 sub set_focusorder(@;)
 {
-	my $this = shift;
-	my @order = @_;
-	$this->{-focusorder} = \@order;
-	return $this;
+    my $this = shift;
+    my @order = @_;
+    $this->{-focusorder} = \@order;
+    return $this;
 }
 
 sub set_draworder(@;)
 {
-	my $this = shift;
-	my @order = @_;
-	$this->{-draworder} = \@order;
-	return $this;
+    my $this = shift;
+    my @order = @_;
+    $this->{-draworder} = \@order;
+    return $this;
 }
 
 sub getobj($;)
 {
-	my $this = shift;
-	my $id = shift;
-	return $this->{-container}->{$id};
+    my $this = shift;
+    my $id = shift;
+    return $this->{-id2object}->{$id};
 }
 
 sub getfocusobj()
 {
-	my $this = shift;
-	$this->{-focusidx} = 0 unless defined $this->{-focusidx};
-	my $id = $this->{-focusorder}->[$this->{-focusidx}];
-	return (defined $id ? $this->getobj($id) : undef); 
-}
-
-sub focus_to_object(;$)
-{
-	my $this = shift;
-	my $id = shift;
-	
-	if (defined $id)
-	{
-		my $idx = $this->focusorder_id2idx($id);
-		$this->{-focusidx} = $idx;
-	}
-
-	$this->{-focusidx} = 0 
-		unless defined $this->{-focusidx};
-
-	return $this;
-}
-
-sub focus_object()
-{
-	my $this = shift;
-	$this->getfocusobj->focus;
+    my $this = shift;
+    my $id = $this->{-draworder}->[-1];
+    return (defined $id ? $this->getobj($id) : undef); 
 }
 
 # ----------------------------------------------------------------------
@@ -422,59 +425,26 @@ sub focus_object()
 # ----------------------------------------------------------------------
 
 sub draworder_id2idx($;)   {shift()->base_id2idx('-draworder' , shift())}
-sub windoworder_id2idx($;) {shift()->base_id2idx('-windoworder', shift())}
 sub focusorder_id2idx($;)  {shift()->base_id2idx('-focusorder', shift())}
 
 sub base_id2idx($;)
 {
-	my $this = shift;
-	my $param = shift;
-	my $id = shift;
-	
-	my $idx;
-	my $i = 0;
-	foreach my $win_id (@{$this->{$param}}) 
-	{
-		if ($win_id eq $id) { 
-			$idx = $i; 
-			last;
-		}
-		$i++;
-	}
-	return $idx;
+    my $this = shift;
+    my $param = shift;
+    my $id = shift;
+    
+    my $idx;
+    my $i = 0;
+    foreach my $win_id (@{$this->{$param}}) 
+    {
+        if ($win_id eq $id) { 
+            $idx = $i; 
+            last;
+        }
+        $i++;
+    }
+    return $idx;
 }
-
-sub focus_shift($;)
-{
-	my $this = shift;
-	my $direction = shift; 
-
-	$direction = ($direction > 0 ? +1 : -1);
-
-	# Save to prevent looping.
-	my $start_idx = $this->{-focusidx};
-
-	my $idx = $this->{-focusidx};
-	do {
-		$idx += $direction;
-		if ($idx > (@{$this->{-focusorder}}-1)) {
-			$idx = 0;
-		} elsif ($idx < 0) {
-			$idx = @{$this->{-focusorder}}-1;
-		}
-	} while(
-		$this->getobj($this->{-focusorder}->[$idx])->hidden
-		and not
-		$start_idx == $idx		
-	);
-
-	$this->{-focusidx} = $idx;
-	return $this;		
-}
-
-sub focus_to_next() { shift()->focus_shift(+1) }
-sub focus_to_prev() { shift()->focus_shift(-1) }
-
 
 =pod
 
@@ -555,7 +525,10 @@ This is the main method for this class. Using this method
 it is easy to add widgets to the container. 
 
 The ID is an identifier that you want to use for the
-added widget. This may be any string you want.
+added widget. This may be any string you want. If you
+do not need an ID, you may also us an undefined
+value. The container will automatically create
+an ID for you.
 
 The CLASS is the class which you want to add to the
 container. If CLASS does not contain '::' or CLASS
@@ -564,7 +537,7 @@ to it. This way you do not have to specifiy the full
 class name for widgets that are in the Curses::UI 
 hierarchy. It is not neccessary to call "use CLASS" 
 yourself. The B<add> method will call the B<usemodule>
-method (see below) to automatically load the module.
+method from Curses::UI to automatically load the module.
 
 The hash OPTIONS contains the options that you want to pass
 on to the new instance of CLASS.
@@ -592,12 +565,6 @@ more widgets of the class CLASS.
 =item * B<layout> ( )
 
 Layout the Container and all its contained widgets.
-
-=item * B<layout_from_scratch> ( )
-
-This will find the topmost container and call its 
-B<layout> method. This will recursively layout all
-nested containers.
 
 =item * B<draw> ( BOOLEAN )
 
@@ -645,11 +612,6 @@ widget with the given ID.
 This method returns the object reference of the contained
 widget which currently has the focus.
 
-=item * B<focus_to_object> ( ID )
-
-This method sets the focuspointer to the object with the
-given ID.
-
 =item * B<set_focusorder> ( IDLIST )
 
 Normally the order in which widgets get focused in a 
@@ -665,47 +627,6 @@ container is determined by the order in which they
 are added to the container. Use B<set_draworder> if you
 want a different draw order. IDLIST contains a list
 of id's.
-
-=item * B<rebuild> ( )
-
-This will redraw the Curses::UI::Window widgets
-(and descendants) that are in the container (internally
-this method calls B<ontop> (undef, 1)).
-
-=item * B<rebuild_from_scratch> ( )
-
-This will find the topmost container and call its 
-B<rebuild> method. This will recursively rebuild all
-nested containers.
-
-=item * B<ontop> ( WINDOW, BOOLEAN )
-
-If a container contains a number of Curses::UI::Window
-widgets (or descendants), the window stack order is 
-remembered. Using the B<ontop> method, the window with 
-the given WINDOW (its id or object reference)  can be brought 
-on top of the stack. If WINDOW is undefined, the 
-window that is currently on top will be used.
-
-If BOOLEAN is true the screen will always be redrawn.
-If BOOLEAN is false, the screen will only be redrawn if
-the WINDOW differs from the window that is currently
-on top.
-
-=item * B<window_is_ontop> ( WINDOW )
-
-This checks if the window that is specified by WINDOW (its
-id or object reference) is currently on top. Returns a 
-true value if this is the case.
-
-=item * B<returnkeys> ( KEYLIST )
-
-After you have added all the wanted widgets to the 
-container, you can add keybindings to each widget
-to have the container loose its focus. This is done
-by the B<returnkeys> method. KEYLIST is a list of
-keys on which the container must loose focus (see 
-also L<Curses::UI|Curses::UI>). 
 
 =item * B<loadmodule> ( CLASS )
 

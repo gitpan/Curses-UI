@@ -16,121 +16,126 @@ use Curses;
 use Curses::UI::Common;
 use Curses::UI::Window;
 
-use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Window Curses::UI::Common);
-$VERSION = '1.01';
+use vars qw(
+    $VERSION
+    @ISA
+);
+
+@ISA = qw(
+    Curses::UI::Window
+    Curses::UI::Common
+);
+
+$VERSION = '1.10';
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
         my %userargs = @_;
         keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		-nomessage 	 => 0,     # Do we want a message or not?
-		-message 	 => '',    # The message to show
-		-min		 => undef, # Arguments for the progressbar
-		-max		 => undef, 
-		-pos		 => undef, 
-		-nocenterline	 => undef, 
-		-nopercentage	 => undef, 
-		-ipad            => 1,     # Default widget settings
-		-border 	 => 1,     
-		-width           => 60,    
-		-height          => undef, 
+    my %args = ( 
+        -nomessage       => 0,     # Do we want a message or not?
+        -message         => '',    # The message to show
+        -min             => undef, # Arguments for the progressbar
+        -max             => undef, 
+        -pos             => undef, 
+        -nocenterline    => undef, 
+        -nopercentage    => undef, 
+        -ipad            => 1,     # Default widget settings
+        -border          => 1,     
+        -width           => 60,    
+        -height          => undef, 
 
-		%userargs,
+        %userargs,
 
-		-centered        => 1,
-	);
+        -centered        => 1,
+    );
 
-	my $this = $class->SUPER::new(%args);
+    my $this = $class->SUPER::new(%args);
 
-	unless ($args{-nomessage})
-	{
-		$this->add(
-			'label', 'Label',
-			-width => -1,
-			-text  => $this->{-message},
-			-intellidraw => 0,
-		);
-	}
+    unless ($args{-nomessage})
+    {
+        $this->add(
+            'label', 'Label',
+            -width       => -1,
+            -text        => $this->{-message},
+            -intellidraw => 0,
+        );
+    }
 
-	# Create the progress bar arguments.
-	my %pb_args = ();
-	foreach my $var (qw(-min -max -pos -nopercentage -nocenterline))
-	{
-		if (defined $this->{$var}) {
-			$pb_args{$var} = $this->{$var};
-		}
-	}
+    # Create the progress bar arguments.
+    my %pb_args = ();
+    foreach my $var (qw(-min -max -pos -nopercentage -nocenterline))
+    {
+        if (defined $this->{$var}) {
+            $pb_args{$var} = $this->{$var};
+        }
+    }
 
-	$this->add(
-		'progressbar', 'Progressbar',
-		-y => -1,
-		-width => -1,
-		%pb_args,
-		-intellidraw => 0,
-	);
+    $this->add(
+        'progressbar', 'Progressbar',
+        -y           => -1,
+        -width       => -1,
+        %pb_args,
+        -intellidraw => 0,
+    );
 
-	$this->layout();
+    $this->layout();
 
-	bless $this, $class;
+    bless $this, $class;
 }
+
+# There is no need to focus a progress dialog
+sub focus() {} ; 
 
 sub layout()
 {
-	my $this = shift;
+    my $this = shift;
 
-	if (not defined $this->{-height} 
-	    and defined $this->getobj('progressbar'))
-	{
-		# Space between progressbar and message.
-		my $need = ($this->{-nomessage} ? 0 : 1);
+    if (not defined $this->{-height} 
+        and defined $this->getobj('progressbar'))
+    {
+        # Space between progressbar and message.
+        my $need = ($this->{-nomessage} ? 0 : 1);
 
-		# The height for the message.
-		if (defined $this->getobj('label')) {
-			$need += $this->getobj('label')->height;
-		}
-		
-		# The height for the progressbar.
-		if (defined $this->getobj('progressbar')) {
-			my $pbheight = $this->getobj('progressbar')->height;
-			$need += $pbheight;
-		}
+        # The height for the message.
+        if (defined $this->getobj('label')) {
+            $need += $this->getobj('label')->height;
+        }
+        
+        # The height for the progressbar.
+        if (defined $this->getobj('progressbar')) {
+            my $pbheight = $this->getobj('progressbar')->height;
+            $need += $pbheight;
+        }
 
 
-		my $height = $this->height_by_windowscrheight($need, %$this);
-		$this->{-height} = $height;
-	}
+        my $height = $this->height_by_windowscrheight($need, %$this);
+        $this->{-height} = $height;
+    }
 
-	$this->SUPER::layout;
+    $this->SUPER::layout or return;
 
-	return $this;
+    return $this;
 }
 
 sub pos($;)
 {
-	my $this = shift;
-	my $pos = shift;
-	$this->getobj('progressbar')->pos($pos);
-	return $this;
+    my $this = shift;
+    my $pos = shift;
+    $this->getobj('progressbar')->pos($pos);
+    return $this;
 }
 
 sub message()
 {
-	my $this = shift;
-	return $this if $this->{-nomessage};
-	my $msg = shift;
-	$this->getobj('label')->text($msg);
-	return $this;
-}
-
-sub focus()
-{
-	my $this = shift;
-	return $this;
+    my $this = shift;
+    return $this if $this->{-nomessage};
+    my $msg = shift;
+    $this->getobj('label')->text($msg);
+    return $this;
 }
 
 1;
@@ -164,7 +169,7 @@ Curses::UI::Dialog::Progress - Create and manipulate progress dialogs
     # -------------
     my $dialog = $win->add(
         'mydialog', 'Dialog::Progress',
-	-max       => 100,
+    -max       => 100,
         -message   => 'Some message',
     );
 
@@ -177,7 +182,7 @@ Curses::UI::Dialog::Progress - Create and manipulate progress dialogs
     # The easy way (see Curses::UI documentation).
     # --------------------------------------------
     $cui->progress(
-	-max       => 100,
+    -max       => 100,
         -message   => 'Some message',
     );
     $cui->setprogress(10, 'Some other message');

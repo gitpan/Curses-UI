@@ -1,5 +1,6 @@
 # ----------------------------------------------------------------------
 # Curses::UI::Popupmenu
+# Curses::UI::PopupmenuListbox
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
 # This file is part of Curses::UI. Curses::UI is free software.
@@ -9,284 +10,356 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: fix dox
+
+# ----------------------------------------------------------------------
+# Windowable listbox
+# ----------------------------------------------------------------------
+
+package Curses::UI::PopupmenuListbox;
+
+use Curses;
+use Curses::UI::Listbox;
+use Curses::UI::Window;
+use Curses::UI::Common;
+
+use vars qw(
+    $VERSION
+    @ISA
+);
+
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::Listbox
+    Curses::UI::Window
+);
+
+sub new()
+{
+    my $class = shift;
+    my $this = $class->SUPER::new(@_);
+
+    # Do own option_select() method.
+    $this->set_routine('option-select', \&option_select);
+
+    return $this;
+}
+
+sub option_select()
+{
+    my $this = shift;
+    $this->SUPER::option_select();
+    $this->loose_focus;
+    return $this;
+}
+
+# Let Curses::UI->usemodule() believe that this module
+# was already loaded (usemodule() would else try to
+# require the non-existing file).
+#
+$INC{'Curses/UI/PopupmenuListbox.pm'} = $INC{'Curses/UI/Popupmenu.pm'};
+
+
+# ----------------------------------------------------------------------
+# The Popupmenu
+# ----------------------------------------------------------------------
+
 package Curses::UI::Popupmenu;
 
 use strict;
 use Curses;
 use Curses::UI::Common;
 use Curses::UI::Widget;
-use Curses::UI::Listbox;
-use Curses::UI::Label;
+use Curses::UI::Listbox; # for maxlabelwidth()
 
-use vars qw($VERSION @ISA);
-$VERSION = '1.05';
-@ISA = qw(Curses::UI::Widget Curses::UI::Common);
+use vars qw(
+    $VERSION 
+    @ISA
+);
+
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::Widget 
+);
 
 my %routines = (
-        'return'   	=> 'RETURN',
-        'open-popup'    => \&open_popup,
-	'select-next'	=> \&select_next,
-	'select-prev'	=> \&select_prev,
+    'loose-focus'    => \&loose_focus,
+    'open-popup'     => \&open_popup,
+    'select-next'    => \&select_next,
+    'select-prev'    => \&select_prev,
+    'mouse-button1'  => \&mouse_button1,
 );
 
 my %bindings = (
-	KEY_TAB()	=> 'return',
-        KEY_ENTER()     => 'open-popup',
-	KEY_RIGHT()	=> 'open-popup',
-	"l"		=> 'open-popup',
-	KEY_SPACE()	=> 'open-popup',
-	KEY_DOWN()	=> 'select-next',
-	"j"		=> 'select-next',
-	KEY_UP()	=> 'select-prev',
-	"k"		=> 'select-prev',
+    CUI_TAB()        => 'loose-focus',
+    KEY_BTAB()       => 'loose-focus',
+    KEY_ENTER()      => 'open-popup',
+    KEY_RIGHT()      => 'open-popup',
+    "l"              => 'open-popup',
+    CUI_SPACE()      => 'open-popup',
+    KEY_DOWN()       => 'select-next',
+    "j"              => 'select-next',
+    KEY_UP()         => 'select-prev',
+    "k"              => 'select-prev',
 );
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = (
-		-parent		 => undef,	# the parent window
-		-width		 => undef,	# the width of the checkbox
-		-x		 => 0,		# the horizontal position rel. to parent
-		-y		 => 0,		# the vertical position rel. to parent
-		-values		 => [],		# values
-		-labels		 => {},		# labels for the values
-		-selected	 => undef,	# the current selected value
-		-wraparound      => undef,      # wraparound? 
-		-sbborder	 => 1,		# square bracket border
-		-onchange        => undef,      # event handler
+    my %args = (
+        -parent       => undef,    # the parent window
+        -width        => undef,    # the width of the checkbox
+        -x            => 0,        # the horizontal position rel. to parent
+        -y            => 0,        # the vertical position rel. to parent
+        -values       => [],       # values
+        -labels       => {},       # labels for the values
+        -selected     => undef,    # the current selected value
+        -wraparound   => undef,    # wraparound? 
+        -sbborder     => 1,        # square bracket border
+        -onchange     => undef,    # event handler
 
-		-bindings	 => {%bindings},
-		-routines	 => {%routines},
+        %userargs,
 
-		%userargs,
-	
-		-focus		 => 0,
-	);
+        -bindings     => {%bindings},
+        -routines     => {%routines},
+    
+        -focus        => 0,        # value init
+        -nocursor     => 1,        # this widget does not use a cursor
+    );
 
-	# The windowscr height should be 1.
-	$args{-height} = height_by_windowscrheight(1,%args);
-	
-	# No width given? Then make the width large
-	# enough to contain the longest label.
-	$args{-width} = width_by_windowscrwidth(
-		maxlabelwidth(%args) + 1, 
-		-border => 1) unless defined $args{-width};
+    # The windowscr height should be 1.
+    $args{-height} = height_by_windowscrheight(1,%args);
+    
+    # No width given? Then make the width large
+    # enough to contain the longest label.
+    $args{-width} = width_by_windowscrwidth(
+        maxlabelwidth(%args) + 1, 
+        -border => 1
+    ) unless defined $args{-width};
 
-	my $this = $class->SUPER::new( %args );
+    my $this = $class->SUPER::new( %args );
 
-	# Create the Listbox. Layouting will be done
-	# in the layout routine.
+    $this->layout;
 
-	my %listbox_options = ();
-	foreach my $option (qw(-values -labels -selected -wraparound)) {	
-		$listbox_options{$option} = $this->{$option}
-			if defined $this->{$option};
-	}
+    if ($Curses::UI::ncurses_mouse) {
+	$this->set_mouse_binding('mouse-button1', BUTTON1_CLICKED());
+    }
 
-	my $listbox = new Curses::UI::Listbox(
-		-parent		=> $this,
-		-assubwin 	=> 0,
-		-border   	=> 1,
-		-vscrollbar 	=> 1,
-		%listbox_options
-	);
-	$this->{-listboxobject} = $listbox;
-	
-	$this->layout;
 
-	return bless $this, $class;
+    return $this;
 }
 
 sub onChange(;$)  { shift()->set_event('-onchange',  shift()) }
 
 sub layout()
 {
-	my $this = shift;
+    my $this = shift;
 
-	$this->delallwin();
-	$this->SUPER::layout();
-	return $this if $Curses::UI::screen_too_small;
+    $this->SUPER::layout() or return;
 
-	# Create the label on the widget.
-	my $label = new Curses::UI::Label(
-		-parent        => $this,
-		-paddingspaces => 1,
-		-x             => 0,
-		-y             => 0,
-		-intellidraw   => 0,
-	);
-	$this->{-labelobject} = $label;
+    # Compute the location and length of the listbox.
+    my $ll = height_by_windowscrheight(@{$this->{-values}}, -border=>1);
+    my $lx = $this->{-x} + $this->{-parent}->{-sx};
+    my $ly = $this->{-y} + $this->{-parent}->{-sy} + 1;
 
-	# Compute the location and length of the listbox.
-	my $ll = height_by_windowscrheight(@{$this->{-values}}, -border=>1);
-	my $lx = $this->{-x} + $this->{-parent}->{-sx};
-	my $ly = $this->{-y} + $this->{-parent}->{-sy} + 1;
+    # Don't let the listbox grow out of the screen.
+    if ($this->{-y}+$ll > $ENV{LINES}) {
+        $ll = $ENV{LINES} - $this->{-y};
+    }
 
-	# Don't let the listbox grow out of the screen.
-	if ($this->{-y}+$ll > $ENV{LINES}) {
-		$ll = $ENV{LINES} - $this->{-y};
-	}
+    # It's a bit small :-( Can we place it up-side-down?
+    my $lim = int($ENV{LINES}/2);
+    if ($ll < $lim and ($this->{-sy}+$this->{-y}) > $lim) {
+        $ll = height_by_windowscrheight(
+            @{$this->{-values}}, 
+            -border=>1
+        );
+        my $y = $this->{-y};
+        $y -= $ll - 1;
+        if ($y<0)
+        {
+            $y = 1;
+            $ll = $this->{-y};
+        }    
+        $ly = $y + $this->{-parent}->{-sy} - 1;
+    }
+        
+    # Store the listbox layout setup for later use.
+    $this->{-listbox}->{-x}      = $lx;
+    $this->{-listbox}->{-y}      = $ly;
+    $this->{-listbox}->{-width}  = $this->width;
+    $this->{-listbox}->{-height} = $ll;
 
-	# It's a bit small :-( Can we place it up-side-down?
-	my $lim = int($ENV{LINES}/2);
-	if ($ll < $lim and ($this->{-sy}+$this->{-y}) > $lim) {
-		$ll = height_by_windowscrheight(
-			@{$this->{-values}}, 
-			-border=>1
-		);
-		my $y = $this->{-y};
-		$y -= $ll - 1;
-		if ($y<0)
-		{
-			$y = 1;
-			$ll = $this->{-y};
-		}	
-		$ly = $y + $this->{-parent}->{-sy} - 1;
-	}
-		
-	# At the time the listbox is created, we do not
-	# yet have the listbox, but layout is already 
-	# called. So only layout the listbox if it exists.
-	#
-	if (defined $this->{-listboxobject}) {
-		my $lb = $this->{-listboxobject};
-		$lb->{-x}	= $lx;
-		$lb->{-y} 	= $ly;
-		$lb->{-width} 	= $this->width;
-		$lb->{-height}	= $ll;
-		$lb->layout;
-	}
-
-	return $this;
+    return $this;
 }
 
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
-		
-	# Draw the widget.
-	$this->SUPER::draw(1);
+    my $this = shift;
+    my $no_doupdate = shift || 0;
 
-	# Get the selected label.
-	my $sellabel = $this->{-listboxobject}->get_selectedlabel;
+    # Draw the widget.
+    $this->SUPER::draw(1) or return $this;
+        
+    # Get the selected label.
+    my $sellabel;
+    if (defined $this->{-selected})
+    {
+	$sellabel = $this->{-values}->[$this->{-selected}];
+	$sellabel = $this->{-labels}->{$sellabel} 
+	    if defined $this->{-labels}->{$sellabel};
+    }
 
-	if (defined $sellabel) # Found selection.
-	{ 
-		$this->{-labelobject}->reverse($this->{-focus});
-		$this->{-labelobject}->text($sellabel);
-	} 
-	else # No selection yet.
-	{
-		$this->{-labelobject}->reverse($this->{-focus});
-		$this->{-labelobject}->dim(not $this->{-focus});
-		my $width = $this->{-labelobject}->screenwidth;
-		$this->{-labelobject}->text("-"x$width);
+    $this->{-canvasscr}->attron(A_REVERSE) if $this->{-focus};
+    my $width = $this->canvaswidth;
+    if (defined $sellabel) 
+    { 
+	if (length($sellabel) > $width) {
+		$sellabel = substr(0, $width, $sellabel);
+		$sellabel =~ s/.$/\$/;
 	}
+    } 
+    else # No selection yet.
+    {
+        $this->{-canvasscr}->attron(A_DIM);
+        $sellabel = "-"x$width;
+    }
 
-	# Draw the label
-	$this->{-labelobject}->draw(1);
-	
-	$this->{-windowscr}->move(0,$this->screenwidth-1);
-	$this->{-windowscr}->noutrefresh;
-	doupdate() unless $no_doupdate;;
+    $this->{-canvasscr}->addstr(0,0, " "x$width);
+    $this->{-canvasscr}->addstr(0,0, $sellabel);
+    $this->{-canvasscr}->move(0,$this->canvaswidth-1);
+    $this->{-canvasscr}->attroff(A_DIM);
+    $this->{-canvasscr}->attroff(A_REVERSE);
 
-	return $this;
-}
+    $this->{-canvasscr}->noutrefresh;
+    doupdate() unless $no_doupdate;;
 
-sub focus()
-{
-	my $this = shift;
-
-	$this->generic_focus(
-		2,
-		NO_CONTROLKEYS,
-		CURSOR_INVISIBLE
-	);
+    return $this;
 }
 
 sub open_popup()
 {
-	my $this = shift;
-	my $pre_value = $this->get;
-        $this->{-listboxobject}->focus;
-	my $post_value = $this->get;
+    my $this = shift;
+    my $pre_value = $this->get;
 
-	$this->root->rebuild;
+    my %listbox_options = %{$this->{-listbox}};
+    foreach my $option (qw(
+	-values -labels 
+	-selected -wraparound
+    )) {    
+        $listbox_options{$option} = $this->{$option}
+            if defined $this->{$option};
+    }
 
-	if ((not defined $pre_value and 
+    my $id = '__popupmenu_listbox_$this';
+    my $listbox = $this->root->add(
+	$id, 'PopupmenuListbox',
+        -border         => 1,
+        -vscrollbar     => 1,
+        %listbox_options
+    );
+
+    $listbox->modalfocus;
+
+    my $post_value = $listbox->get;
+    $this->{-selected} = $listbox->{-selected};
+
+    if ((not defined $pre_value and 
              defined $post_value) or 
-	    (defined $pre_value and
+        (defined $pre_value and
             $pre_value ne $post_value)) {
-		$this->run_event('-onchange');
-	}
+        $this->run_event('-onchange');
+    }
 
-	return $this;
+    $this->root->delete($id);
+    $this->root->draw;
+
+    return $this;
 }
 
 sub get()
 {
-	my $this = shift;
-	$this->{-listboxobject}->get;
+    my $this = shift;
+
+    my $value;
+    if (defined $this->{-selected}) {
+	$value = $this->{-values}->[$this->{-selected}];
+    }
+
+    return $value;
 }
 
 sub select_next()
 {
-	my $this = shift;
-	
-	my $pre_value = $this->get;
-	unless (defined $this->{-listboxobject}->{-selected}) 
-	{
-		$this->{-listboxobject}->{-selected} = 0;
-	} else {
-		$this->{-listboxobject}->option_next;
-		$this->{-listboxobject}->option_select;
-	}
-	my $post_value = $this->get;
+    my $this = shift;
+    
+    my $pre_value = $this->get;
 
-	if (defined $pre_value and 
-            $pre_value ne $post_value) {
-		$this->run_event('-onchange');
+    if (defined $this->{-selected}) {
+	$this->{-selected}++;
+	if ( $this->{-selected} > (@{$this->{-values}}-1) ) {
+	    $this->{-selected} = @{$this->{-values}} - 1;
 	}
+    } else {
+    	$this->{-selected} = 0;
+    }
 
-	return $this;
+    my $post_value = $this->get;
+
+    if ((not defined $pre_value and defined $post_value) or 
+        (defined $pre_value and $pre_value ne $post_value)) {
+        $this->run_event('-onchange');
+    }
+
+    $this->schedule_draw(1);
+
+    return $this;
 }
 
 sub select_prev()
 {
-	my $this = shift;
+    my $this = shift;
 
-	my $pre_value = $this->get;
-	$this->{-listboxobject}->option_prev;
-	$this->{-listboxobject}->option_select;
-	my $post_value = $this->get;
+    my $pre_value = $this->get;
 
-	if (defined $pre_value and 
-            $pre_value ne $post_value) {
-		$this->run_event('-onchange');
-	}
+    if (defined $this->{-selected}) {
+        $this->{-selected}--;
+	$this->{-selected} = 0 if $this->{-selected} <= 0;
+    } else {
+        $this->{-selected} = @{$this->{-values}} - 1;
+    }
+    
+    my $post_value = $this->get;
 
-	return $this;
+    if ((not defined $pre_value and defined $post_value) or 
+        (defined $pre_value and $pre_value ne $post_value)) {
+        $this->run_event('-onchange');
+    }
+
+    $this->schedule_draw(1);
+
+    return $this;
 }
 
-sub set_routine()
+sub mouse_button1($$$;)
 {
-	my $this = shift;
-	my $binding = shift;
-	my $routine = shift;
+    my $this  = shift;
+    my $event = shift;
+    my $x     = shift;
+    my $y     = shift;
 
-	# Delegate set_binding to listboxobject if needed.
-	if (not defined $this->{-routines}->{$binding}) {
-		$this->{-listboxobject}->set_routine($binding, $routine);
-	} else {
-		$this->SUPER::set_routine($binding, $routine);
-	}
+    unless ($this->{-focus}) {
+        $this->focus;
+    }
+    $this->open_popup;
 }
+
 
 1;
 
@@ -440,7 +513,7 @@ for the popup listbox that can be opened by this widget.
 
 =item * <B<tab>>
 
-Call the 'return' routine. This will have the widget 
+Call the 'loose-focus' routine. This will have the widget 
 loose its focus.
 
 =item * <B<enter>>, <B<cursor-right>, <B<l>>, <B<space>>
@@ -473,7 +546,7 @@ get selected.
 The bindings for the popup listbox are the same as the bindings
 for the Listbox widget. So take a look at 
 L<Curses::UI::Listbox|Curses::UI::Listbox> for a description
-of these. The difference is that the 'return' and 'option-select'
+of these. The difference is that the 'loose-focus' and 'option-select'
 routine will have the popup listbox to close. If the routine
 'option-select' is called, the active item will get selected.
 

@@ -1,12 +1,26 @@
-Package       : Curses::UI
-Author        : Maurice Makaay
-E-mailaddress : maurice@gitaar.net
-Licence       : Curses::UI is free software and it is distributed 
-                under the same license as perl itself.
-Code maturity : The code is still in its alfa stage, so interfaces
-                might change during development. Though beta stage
-                is coming up soon!
-                
+==============================================================================
+           _____                                       _   _  _
+          |  ___| _   _ _ __ ____  ___  ____          | | | || |
+          | |    | | | | '__'  __|' _ `'  __|  _   _  | | | || |
+          | |    | | | | |  | |__  |_| | |__  |_| |_| | | | || |
+          | |    | | | | |  |___ |  __/|__  |  _   _  | | | || |
+          | |___ | |_| | |   __| | |_,  __| | |_| |_| | |_| || |
+          |_____| \___/|_|  |____,\___,|____,          \___/ |_|
+
+             A curses based user interface framework in perl
+
+       Copyright (c) 2001-2002 Maurice Makaay (maurice@gitaar.net)
+		           All rights reserved.
+
+   This package is free software and is provided "as is" without express
+    or implied warranty. It may be used, redistributed and/or modified
+                  under the same terms as perl itself.
+
+==============================================================================
+
+WARNING: Due to a lot of code reorganisation, the pod documentation
+         is currently not up-to-date. I'll fix this as soon as
+	 possible! 
 
 Please do let me know if you find these modules useful and let me
 know if any appliction is built using them. If you have a nice
@@ -20,30 +34,41 @@ What is Curses::UI?
 A UI framework based on the curses library. Curses::UI contains
 several widgets which can be used to build a user interface:
 
-- Widget (widget base element)
+- Buttonbox 
 - Calendar
+- Checkbox
 - Container (container base element)
-- Window
 - Label
 - Listbox 
-- Radiobuttonbox
+- Menubar
 - PasswordEntry
 - Popupmenu (a.k.a. pulldown- or dropdown menu)
 - Progressbar
-- Buttonbox 
-- Checkbox
-- Menubar (uses MenuListbox)
+- Radiobuttonbox
 - Texteditor (has features like word wrapping and undo)
-- Textviewer
 - Textentry
+- Textviewer
+- Widget (widget base element)
+- Window
 
 There are also a couple of dialog windows available:
 
-- Standard dialog window (message + buttons)
+- Basic dialog window 
 - Error dialog window
 - Filebrowser 
-- Status window (no interaction so actually not a dialog)
-- Progress window (no interaction so actually not a dialog)
+- Status window 
+- Progress window
+- Calendar dialog window
+
+Curses::UI can easily be configured to use a specific language.
+If you want a language that is not yet supported, please let me
+know. If you want to translate the needed strings, I'll add 
+the language to the distribution. Currently the following languages
+are supported:
+
+- English
+- Dutch
+
 
 Examples:
 =========
@@ -68,36 +93,21 @@ Patches are even better :-)
 Some random features:
 =====================
 
-- Only basic curses library calls are used, so the Curses::UI
-  modules will work on non-ncurses systems (they were developed on 
-  a Solaris 5.8 system without ncurses);
+- Curses::UI is compatible with the standard curses library. 
+  So it will work on non-ncurses systems. 
 
-- Applications that are built using these modules will guard for
-  the WINCH signal (window resize) and resize the used widgets
-  if the window resizes. I haven't figured out what to do
-  if the screen is too smal to show one or more of the widgets. 
-  Right now, the application will die. But that, of course, isn't 
-  the most elegant way to handle this exception ;-) 
+- Curses::UI programs can be controlled using the mouse (if
+  ncurses is installed and your terminal communicates with it).
+
+- Curses::UI uses a perl-Tk like MainLoop(). You add windows
+  and widgets, define relationships through bindings and events
+  and MainLoop() will take care of the rest for you! :-)
 
 - The Curses::UI::ListBox widget is searchable using a "less"-like
   system. So if a listbox widget has focus, pressing "/" or "?"
   will invoke a search on the contents of the listbox. Since the
   listbox is also used for radiobuttons, popupboxes and menulistboxes,
   all these are automatically searschable as well;
-
-- The texteditor supports word wrapping, but the word wrapping can
-  also be disabled (using CTRL+W). If word wrapping is enabled, 
-  hard returns can be enabled or disabled using CTRL+R. If hard
-  returns are enabled, a diamond character will show the positions
-  of hard returns. Some emacs bindings are supported (CTRL+B =
-  cursor back, CTRL+F = cursor forward, CTRL+P = cursor up, 
-  CTRL+N = cursor down, CTRL+A = beginning of line, CTRL+E = end
-  of line, CTRL+D = delete character, CTRL+K = delete till end of line).
-  Made an error? No problem. CTRL+Z will undo up to 20 steps (can 
-  be configured to go further back). A maximum length for the
-  text? No problem! The TextEntry widget is a texteditor which has
-  been told that it only contains a single line. So all texteditor
-  features are available in the TextEntry (as far as applicable);
 
 - The base element of most widgets (Curses::UI::Widget) has the 
   ability of showing "scrollbars" for both the x- and y-direction. 
@@ -109,5 +119,24 @@ Some random features:
   with scrollbars on them.
   
   
+
+Credits:
+========
+
+Esther Bronk   : (my girl) For being so patient while I was harassing 
+                 her about the beauty of curses based user interfaces 
+	         and for providing me the initial idea for Curses::UI 
+	         (so basically it was her own fault :-).
+
+InterNLnet     : (my employer) For the enthousiasm and support that I got
+                 from my collegues and for sponsoring this project
+	         (I got to play hooky :-) See: http://www.internl.net/
+
+William Setzer : Author of the Perl5 Curses extension, the module on 
+                 which Curses::UI is built.
+
+Nick Slussar   : For criticizing my software and for bringing 
+                 up new ideas.
+
 
 

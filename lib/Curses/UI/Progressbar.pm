@@ -9,6 +9,8 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: fix dox
+
 package Curses::UI::Progressbar;
 
 use strict;
@@ -16,120 +18,133 @@ use Curses;
 use Curses::UI::Common;
 use Curses::UI::Widget;
 
-use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::Widget Curses::UI::Common);
-$VERSION = '1.00';
+use vars qw(
+    $VERSION  
+    @ISA
+);
+
+@ISA = qw(
+    Curses::UI::Widget 
+    Curses::UI::Common
+);
+
+$VERSION = '1.10';
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
         my %userargs = @_;
         keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		-min          => 0,	# minimal value	
-		-max          => 100,	# maximum value	
-		-pos	      => 0,	# the current position
-		-nopercentage => 0,     # show the percentage or not?
-		-nocenterline => 0,     # show the center line or not?
-		-border	      => 1,
+    my %args = ( 
+        -min          => 0,    # minimal value    
+        -max          => 100,  # maximum value    
+        -pos          => 0,    # the current position
+        -nopercentage => 0,    # show the percentage or not?
+        -nocenterline => 0,    # show the center line or not?
+        -showvalue    => 0,    # show value instead of percentage
+        -border       => 1,
 
-		%userargs,	
-	);
+        %userargs,    
+    
+        -focusable    => 0,
+        -nocursor     => 1,
+    );
 
-	# Check that the lowest value comes first.
-	if ($args{-min} > $args{-max}) {
-		my $tmp = $args{-min};
-		$args{-min} = $args{-max};	
-		$args{-max} = $tmp;
-	}
+    # Check that the lowest value comes first.
+    if ($args{-min} > $args{-max}) 
+    {
+        my $tmp = $args{-min};
+        $args{-min} = $args{-max};    
+        $args{-max} = $tmp;
+    }
 
-	my $height = height_by_windowscrheight(1, %args);
-	$args{-height} = $height;
+    my $height = height_by_windowscrheight(1, %args);
+    $args{-height} = $height;
 
-	my $this = $class->SUPER::new( %args );	
-	bless $this, $class;
+    my $this = $class->SUPER::new( %args );    
+    return $this;
 }
 
 sub get()
 {
-	my $this = shift;
-	return $this->{-pos};
+    my $this = shift;
+    return $this->{-pos};
 }
 
 sub pos(;$)
 {
-	my $this = shift;
-	my $pos = shift || 0;
-	$this->{-pos} = $pos;	
-	$this->intellidraw;
-	return $this;
+    my $this = shift;
+    my $pos = shift || 0;
+    $this->{-pos} = $pos;    
+    $this->intellidraw;
+    return $this;
 }
 
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
-	
-	eval { curs_set(0) }; # not available on every system.
-	
-        # Return immediately if this object is hidden.
-        return $this if $this->hidden;
+    my $this = shift;
+    my $no_doupdate = shift || 0;
+    
+    # Draw the widget
+    $this->SUPER::draw(1) or return $this;
 
-	# Draw the widget
-	$this->SUPER::draw(1);
+    # Check bounds for the position.
+    $this->{-pos} = $this->{-max} if $this->{-pos} > $this->{-max};
+    $this->{-pos} = $this->{-min} if $this->{-pos} < $this->{-min};
 
-	# Check bounds for the position.
-	$this->{-pos} = $this->{-max} if $this->{-pos} > $this->{-max};
-	$this->{-pos} = $this->{-min} if $this->{-pos} < $this->{-min};
+    # Compute percentage
+    my $perc = ($this->{-pos}-$this->{-min})
+                /($this->{-max}-$this->{-min})*100;
 
-	# Compute percentage
-	my $perc = ($this->{-pos}-$this->{-min})
-		   /($this->{-max}-$this->{-min})*100;
+    # Compute the number of blocks to draw. Only draw
+    # no blocks or all blocks if resp. the min. or the
+    # max. value is set.
+    my $blocks = int($perc * $this->canvaswidth / 100);
+    if ($blocks == 0 and 
+	$this->{-pos} != $this->{-min}) { $blocks++ }
+    if ($blocks == $this->canvaswidth and 
+	$this->{-pos} != $this->{-max}) { $blocks-- }
+    
+    # Draw center line
+    $this->{-canvasscr}->addstr(0, 0, "-"x$this->canvaswidth)
+        unless $this->{-nocenterline};
 
-	# Compute the number of blocks to draw. Only draw
-	# no blocks or all blocks if resp. the min. or the
-	# max. value is set.
-	my $blocks = int($perc * $this->screenwidth / 100);
-	if ($blocks == 0 
-	    and $this->{-pos} != $this->{-min}) { $blocks++ }
-	if ($blocks == $this->screenwidth 
-	    and $this->{-pos} != $this->{-max}) { $blocks-- }
-	
-	# Draw center line
-	$this->{-windowscr}->addstr(0, 0, "-"x$this->screenwidth)
-		unless $this->{-nocenterline};
+    # Draw blocks.
+    $this->{-canvasscr}->attron(A_REVERSE);
+    $this->{-canvasscr}->addstr(0, 0, " "x$blocks);
+    $this->{-canvasscr}->attroff(A_REVERSE);
 
-	# Draw blocks.
-	$this->{-windowscr}->attron(A_REVERSE);
-	$this->{-windowscr}->addstr(0, 0, " "x$blocks);
-	$this->{-windowscr}->attroff(A_REVERSE);
+    # Draw percentage
+    if (not $this->{-nopercentage} or $this->{-showvalue})
+    {
+        my $str;
+        if ($this->{-showvalue}) {
+            $str = " $this->{-pos} ";
+        } else {
+            $str = " " . int($perc) . "% ";
+        }
 
-	# Draw percentage
-	unless ($this->{-nopercentage})
-	{
-		$perc = int($perc); 
-		my $str = " $perc% ";
-		my $len = length($str);
-		my $xpos = int(($this->screenwidth - $len)/2);
-		my $revlen = $blocks - $xpos;
-		$revlen = 0 if $revlen < 0;
-		$revlen = $len if $revlen > $len; 
-		my $rev = substr($str, 0, $revlen);
-		my $norev = substr($str, $revlen, $len-$revlen);
-		$this->{-windowscr}->attron(A_REVERSE);
-		$this->{-windowscr}->addstr(0, $xpos, $rev);
-		$this->{-windowscr}->attroff(A_REVERSE);
-		$this->{-windowscr}->addstr(0, $xpos+$revlen, $norev);
-	}
+        my $len = length($str);
+        my $xpos = int(($this->canvaswidth - $len)/2);
+        my $revlen = $blocks - $xpos;
+        $revlen = 0 if $revlen < 0;
+        $revlen = $len if $revlen > $len; 
+        my $rev = substr($str, 0, $revlen);
+        my $norev = substr($str, $revlen, $len-$revlen);
+        $this->{-canvasscr}->attron(A_REVERSE);
+        $this->{-canvasscr}->addstr(0, $xpos, $rev);
+        $this->{-canvasscr}->attroff(A_REVERSE);
+        $this->{-canvasscr}->addstr(0, $xpos+$revlen, $norev);
+    }
 
-	$this->{-windowscr}->move(0,$this->screenwidth-1);
-	
-	$this->{-windowscr}->noutrefresh();
-	doupdate() unless $no_doupdate;
+    $this->{-canvasscr}->move(0,$this->canvaswidth-1);
+    
+    $this->{-canvasscr}->noutrefresh();
+    doupdate() unless $no_doupdate;
 
-	return $this;
+    return $this;
 }
 
 
@@ -216,6 +231,11 @@ bar.
 This option controls if a percentage indicator should
 be drawn in the widget. The default for the BOOLEAN 
 value is false, so a percentage incdicator will be drawn.
+
+=item * B<-showvalue> < BOOLEAN >
+
+If this option is set to a true value, the current
+position value will be drawn in the widget.
 
 =item * B<-nocenterline> < BOOLEAN >
 

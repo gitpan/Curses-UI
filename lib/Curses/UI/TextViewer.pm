@@ -9,6 +9,8 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: fix dox
+
 package Curses::UI::TextViewer;
 
 use strict;
@@ -16,22 +18,29 @@ use Curses;
 use Curses::UI::Common;
 use Curses::UI::TextEditor;
 
-use vars qw($VERSION @ISA);
-@ISA = qw(Curses::UI::TextEditor);
-$VERSION = '1.01';
-	
+use vars qw(
+    $VERSION 
+    @ISA
+);
+
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::TextEditor
+);
+
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = ( 
-		%userargs,
-		-readonly	 => 1,
-	);
-	return $class->SUPER::new( %args);
+    my %args = ( 
+        %userargs,
+        -readonly     => 1,
+    );
+    return $class->SUPER::new( %args);
 }
 
 1;
@@ -62,7 +71,7 @@ Curses::UI::TextViewer - Create and manipulate textviewer widgets
 
     my $textviewer = $win->add( 
         'mytextviewer', 'TextViewer',
-	-text => "Hello, world!\n"
+    -text => "Hello, world!\n"
                . "Goodbye, world!"
     );
 

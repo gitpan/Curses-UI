@@ -13,349 +13,418 @@ package Curses::UI::Buttonbox;
 
 use strict;
 use Curses;
-use Carp qw(confess);
 use Curses::UI::Widget;
 use Curses::UI::Common;
 
-use vars qw($VERSION @ISA @EXPORT);
-$VERSION = '1.01';
+use vars qw(
+    $VERSION 
+    @ISA 
+);
 
-require Exporter;
-@ISA = qw(Curses::UI::Widget Exporter Curses::UI::Common);
-@EXPORT = qw(compute_buttonwidth);
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::Widget
+    Curses::UI::Common
+);
 
 # Definition of the most common buttons.
 my %buttondef = (
-	'ok'	=> {
-			-label    => '< OK >',
-			-value    => 1,
-			-onpress  => undef,
-			-shortcut => 'o',
-		   },
-	'cancel'=> {
-			-label    => '< Cancel >',
-			-value    => 0,
-			-onpress  => undef,
-			-shortcut => 'c',
-		   }, 
-	'yes'	=> {
-			-label    => '< yes >',
-			-value    => 1,
-			-onpress  => undef,
-			-shortcut => 'y',
-		   },
-	'no'    => {
-			-label    => '< No >',
-			-value    => 0,
-			-onpress  => undef,
-			-shortcut => 'n',
-		   }, 
-	
+    'ok'    => {
+                -label    => '< OK >',
+                -value    => 1,
+                -onpress  => undef,
+                -shortcut => 'o',
+            },
+    'cancel'=> {
+                -label    => '< Cancel >',
+                -value    => 0,
+                -onpress  => undef,
+                -shortcut => 'c',
+            }, 
+    'yes'   => {
+                -label    => '< yes >',
+                -value    => 1,
+                -onpress  => undef,
+                -shortcut => 'y',
+            },
+    'no'    => {
+                -label    => '< No >',
+                -value    => 0,
+                -onpress  => undef,
+                -shortcut => 'n',
+            }, 
+    
 );
 
 # The default button to use if no buttons were defined.
 my $default_btn = [ 'ok' ];
 
 my %routines = (
-	'press-button'  => \&press_button,
-	'return' 	=> 'LEAVE_CONTAINER',
-	'loose-focus'	=> 'LOOSE_FOCUS',
-	'next'		=> \&next_button,
-	'previous'	=> \&previous_button,
-	'shortcut'	=> \&shortcut,  
+    'press-button' => \&press_button,
+    'loose-focus'  => \&loose_focus,
+    'next'         => \&next_button,
+    'previous'     => \&previous_button,
+    'shortcut'     => \&shortcut,  
+    'focus-shift'  => \&focus_shift,
+    'mouse-button1'=> \&mouse_button1,
 );
 
 my %bindings = (
-	KEY_ENTER()	=> 'press-button',
-	KEY_SPACE()	=> 'press-button',
-	KEY_LEFT()	=> 'previous',
-	'h'		=> 'previous',
-	KEY_RIGHT()	=> 'next',
-	'l'		=> 'next',
-	''		=> 'shortcut',
-	
+    CUI_TAB()      => 'focus-shift',
+    KEY_BTAB()     => 'focus-shift',
+    KEY_ENTER()    => 'press-button',
+    CUI_SPACE()    => 'press-button',
+    KEY_LEFT()     => 'previous',
+    'h'            => 'previous',
+    KEY_RIGHT()    => 'next',
+    'l'            => 'next',
+    ''             => 'shortcut',
 );
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-	my %userargs = @_;
-	keys_to_lowercase(\%userargs);
-	
-	my %args = (
-		-parent		 => undef,	  # the parent window
-		-buttons 	 => $default_btn, # buttons (arrayref)
-		-buttonalignment => undef,  	  # left / middle / right
-		-selected 	 => 0,		  # which selected
-		-width		 => undef,	  # the width of the buttons widget
-		-x		 => 0,		  # the horizontal position rel. to parent
-		-y		 => 0,		  # the vertical position rel. to parent
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
+    
+    my %args = (
+        -parent          => undef,        # the parent window
+        -buttons         => $default_btn, # buttons (arrayref)
+        -buttonalignment => undef,        # left / middle / right
+        -selected        => 0,            # which selected
+        -width           => undef,        # the width of the buttons widget
+        -x               => 0,            # the horizontal pos rel. to parent
+        -y               => 0,            # the vertical pos rel. to parent
 
-		-mayloosefocus	 => 1,		  # Enable TAB to loose focus?
-		-routines	 => {%routines},
-		-bindings	 => {%bindings},
+        %userargs,
 
-		%userargs,
+        -routines        => {%routines},
+        -bindings        => {%bindings},
 
-		-focus		 => 0,
-	);
+        -focus           => 0,            # init value
+        -nocursor        => 1,            # this widget does not use a cursor
+    );
 
-	# The windowscr height should be 1.
-	$args{-height} = height_by_windowscrheight(1,%args);
+    # The windowscr height should be 1.
+    $args{-height} = height_by_windowscrheight(1,%args);
 
-	# Process button definitions.
-	$args{-buttons} = process_buttondefs($args{-buttons});
+    # Create the widget.
+    my $this = $class->SUPER::new( %args );
+    
+    # Process button definitions.
+    $this->process_buttondefs;
 
-	# Create the widget.
-	my $this = $class->SUPER::new( %args );
+    $this->layout();
 
-	$this->layout();
+    if ($Curses::UI::ncurses_mouse) {
+        $this->set_mouse_binding('mouse-button1', BUTTON1_CLICKED());
+    }
 
-	return bless $this, $class;
+    return $this;
 }
 
 
-sub process_buttondefs($;)
+sub process_buttondefs()
 {
-	my $buttons = shift;
+    my $this    = shift;
 
-	# Process button types.
-	my @buttons = ();
-	foreach my $button (@$buttons)
-	{
-		if (ref $button eq 'HASH') {
-			# noop
-		}
-		elsif (not ref $button) {
-			my $realbutton = $buttondef{$button};
-			unless (defined $realbutton) {
-				confess "Invalid button type: $button";
-			}
-			$button = $realbutton;
-		} else {
-			confess "Invalid button definition (it should " 
-			      . "be a hash reference, but is a "
-			      . (ref $button) . " reference."; 
-		}
+    my $buttons = $this->{-buttons};
 
-		keys_to_lowercase($button);
-		push @buttons, $button;
-	}
+    # Process button types.
+    my @buttons = ();
+    foreach my $button (@$buttons)
+    {
+        if (ref $button eq 'HASH') {
+            # noop, this is a completed button definition
+        } elsif (not ref $button) {
+            my $realbutton = $buttondef{$button};
+            unless (defined $realbutton) {
+                $this->root->fatalerror(
+                    "process_buttondefs(): Invalid button type.\n"
+		  . "No definition found for '$button'"
+                );
+            }
 
-	return \@buttons;
+            # Check for language support.
+	    my $lang_spec = $this->root->lang->get("button_$button");
+	    if ($lang_spec) {
+		my ($shortcut, $label) = split /\:/, $lang_spec, 2;
+		$realbutton->{-label} = "< $label >";
+		$realbutton->{-shortcut} = $shortcut;
+	    }
+
+            $button = $realbutton;
+
+        } else {
+            $this->root->fatalerror(
+                "Invalid button definition.\n"
+	      . "It should be a HASH reference,\n"
+	      . "but is a " . (ref $button) . " reference."
+	    );
+        }
+
+        keys_to_lowercase($button);
+        push @buttons, $button;
+    }
+
+    $this->{-buttons} =  \@buttons;
+    return $this;
 }
 
 sub layout()
 {
-	my $this = shift;
+    my $this = shift;
 
-	$this->SUPER::layout();
-	return $this if $Curses::UI::screen_too_small;
+    $this->SUPER::layout() or return;
 
-	# Compute the space that is needed for the buttons.
-	my $xneed = compute_buttonwidth($this->{-buttons});
-	
-	if ( $xneed > $this->screenwidth ) {	
-		$Curses::UI::screen_too_small++;
-		return $this;
-	}
+    # Compute the space that is needed for the buttons.
+    my $xneed = $this->compute_buttonwidth;
+    
+    if ( $xneed > $this->canvaswidth ) 
+    {
+        $Curses::UI::screen_too_small++;
+        return $this;
+    }
 
-	# Compute the x location of the buttons.
-	my $xpos = 0;
-	if (defined $this->{-buttonalignment})
-	{
-	    if ($this->{-buttonalignment} eq 'right') {
-		$xpos = $this->screenwidth - $xneed;
-	    } elsif ($this->{-buttonalignment} eq 'middle') {
-		$xpos = int (($this->screenwidth-$xneed)/2);
-	    }
-	}
-	$this->{-xpos} = $xpos;
+    # Compute the x location of the buttons.
+    my $xpos = 0;
+    if (defined $this->{-buttonalignment})
+    {
+        if ($this->{-buttonalignment} eq 'right') {
+            $xpos = $this->canvaswidth - $xneed;
+        } elsif ($this->{-buttonalignment} eq 'middle') {
+            $xpos = int (($this->canvaswidth-$xneed)/2);
+        }
+    }
+    $this->{-xpos} = $xpos;
 
-	$this->{-max_selected} = @{$this->{-buttons}} - 1;
+    $this->{-max_selected} = @{$this->{-buttons}} - 1;
 
-	# May loose focus? Create bindings.
-	$this->set_binding('loose-focus', "\t")
-		if $this->{-mayloosefocus};
+    # Make shortcuts all upper-case.    
+    foreach my $button (@{$this->{-buttons}}) {
+        if (defined $button->{-shortcut}) {
+            $button->{-shortcut} = uc $button->{-shortcut};
+        }
+    }
 
-	# Make shortcuts all upper-case.	
-	foreach my $button (@{$this->{-buttons}}) {
-		if (defined $button->{-shortcut}) {
-			$button->{-shortcut} = uc $button->{-shortcut};
-		}
-	}
-
-	return $this;
+    return $this;
 }
 
 sub get_selected_button()
 {
-	my $this = shift;
-	my $selected = $this->{-selected}; 
-	my $button = $this->{-buttons}->[$selected];
-	return $button;
+    my $this = shift;
+    my $selected = $this->{-selected}; 
+    my $button = $this->{-buttons}->[$selected];
+    return $button;
 }
 
 sub get()
 {
-	my $this = shift;
-	my $button = $this->get_selected_button;
-	if (defined $button->{-value}) {
-		return $button->{-value};
-	} else {
-		return $this->{-selected};
-	}
-}
-
-sub focus()
-{
-	my $this = shift;
-	return $this->generic_focus(
-		undef,
-		NO_CONTROLKEYS,
-		CURSOR_INVISIBLE
-	);
+    my $this = shift;
+    my $button = $this->get_selected_button;
+    if (defined $button->{-value}) {
+        return $button->{-value};
+    } else {
+        return $this->{-selected};
+    }
 }
 
 sub next_button()
 {
-	my $this = shift;
-	$this->{-selected}++;
-	return $this;
+    my $this = shift;
+    $this->{-selected}++;
+    $this->schedule_draw(1);
+    return $this;
 }
 
 sub previous_button()
 {
-	my $this = shift;
-	$this->{-selected}--;
-	return $this;
+    my $this = shift;
+    $this->{-selected}--;
+    $this->schedule_draw(1);
+    return $this;
+}
+
+# Focus the next button. If the last button was 
+# selected, let the buttonbox loose focus.
+sub focus_shift()
+{
+    my $this = shift;
+    my $key  = shift;
+
+    if ( $key eq KEY_BTAB() )
+    {
+	$this->previous_button();
+	if ($this->{-selected} < 0)
+	{
+#	    $this->schedule_draw(0);
+	    $this->{-selected} = $this->{-max_selected};
+	    $this->do_routine('loose-focus', $key);
+	}
+    } else {
+	$this->next_button();
+	if ($this->{-selected} > $this->{-max_selected})
+	{
+#	    $this->schedule_draw(0);
+	    $this->{-selected} = 0;
+	    $this->do_routine('loose-focus', $key);
+	}
+    }
+
+    return $this;
 }
 
 sub press_button()
 {
-	my $this = shift;
-	my $button = $this->get_selected_button;
-	my $command = $button->{-onpress};
-	if (defined $command and ref $command eq 'CODE') {
-		$command->($this);
-	}	
-
-	return $this->do_routine('return', undef);
+    my $this = shift;
+    my $button = $this->get_selected_button;
+    my $command = $button->{-onpress};
+    $this->schedule_draw(1);
+    if (defined $command and ref $command eq 'CODE') {
+        $command->($this);
+    }    
+    return $this;
 }
 
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
-		
-        # Return immediately if this object is hidden.
-        return $this if $this->hidden;
+    my $this = shift;
+    my $no_doupdate = shift || 0;
 
-	# Check if active element isn't out of bounds.
-	$this->{-selected} = 0 unless defined $this->{-selected};
-	$this->{-selected} = 0 if $this->{-selected} < 0; 
-	$this->{-selected} = $this->{-max_selected} 
-		if $this->{-selected} > $this->{-max_selected};
+    # Draw the widget.
+    $this->SUPER::draw(1) or return $this;
+    
+    # Check if active element isn't out of bounds.
+    $this->{-selected} = 0 unless defined $this->{-selected};
+    $this->{-selected} = 0 if $this->{-selected} < 0; 
+    $this->{-selected} = $this->{-max_selected} 
+        if $this->{-selected} > $this->{-max_selected};
 
-	# Draw the widget.
-	$this->SUPER::draw(1);
-	
-	# Draw the buttons.
-	my $id = 0;
-	my $x  = 0;
-	my $cursor_x = 0;
-	foreach my $button (@{$this->{-buttons}})
-	{
-		# Make the focused button reverse.
-		if ($this->{-focus} and defined $this->{-selected} 
-		     and $id == $this->{-selected}) {
-			$this->{-windowscr}->attron(A_REVERSE);
-		}
+    # Draw the buttons.
+    my $id = 0;
+    my $x  = 0;
+    my $cursor_x = 0;
+    foreach my $button (@{$this->{-buttons}})
+    {
+        # Make the focused button reverse.
+        if ($this->{-focus} and defined $this->{-selected} 
+             and $id == $this->{-selected}) {
+            $this->{-canvasscr}->attron(A_REVERSE);
+        }
 
-		# Draw the button.
-		$this->{-windowscr}->addstr(
-			0,
-			$this->{-xpos} + $x,
-			$button->{-label}
-		);	
+        # Draw the button.
+        $this->{-canvasscr}->addstr(
+            0, $this->{-xpos} + $x, 
+            $button->{-label}
+        );    
 
-		
-		# Draw shortcut if available.
-		my $sc = $button->{-shortcut};
-		if (defined $sc)
-		{
-			my $pos = index(uc $button->{-label}, $sc);
-			if ($pos >= 0)
-			{
-				my $letter = substr($button->{-label}, $pos, 1); 
-				$this->{-windowscr}->attron(A_UNDERLINE);
-				$this->{-windowscr}->addch(
-					0,
-					$this->{-xpos} + $x + $pos,
-					$letter
-				);
-				$this->{-windowscr}->attroff(A_UNDERLINE);
-			}
-		}
+        # Draw shortcut if available.
+        my $sc = $button->{-shortcut};
+        if (defined $sc)
+        {
+            my $pos = index(uc $button->{-label}, $sc);
+            if ($pos >= 0)
+            {
+                my $letter = substr($button->{-label}, $pos, 1); 
+                $this->{-canvasscr}->attron(A_UNDERLINE);
+                $this->{-canvasscr}->addch(
+                    0, $this->{-xpos} + $x + $pos,
+                    $letter
+                );
+                $this->{-canvasscr}->attroff(A_UNDERLINE);
+            }
+        }
 
-		$x += 1 + length($button->{-label});
-		$this->{-windowscr}->attroff(A_REVERSE) if $this->{-focus};
-		
-		$id++;
-	}
-	$this->{-windowscr}->move(0,0);
-	$this->{-windowscr}->noutrefresh;
-	doupdate() unless $no_doupdate;
+        $x += 1 + length($button->{-label});
+        $this->{-canvasscr}->attroff(A_REVERSE) if $this->{-focus};
+        
+        $id++;
+    }
+    $this->{-canvasscr}->move(0,0);
+    $this->{-canvasscr}->noutrefresh;
+    doupdate() unless $no_doupdate;
 
-	return $this;
+    return $this;
+}
+
+sub mouse_button1($$$$;)
+{
+    my $this  = shift;
+    my $event = shift;
+    my $x     = shift;
+    my $y     = shift;
+
+    my $idx = 0;
+    my $bx  = $this->{-xpos};
+
+    # Clicked left of the buttons?
+    return $this if $x < $bx;
+
+    # Find the button on which was clicked.
+    foreach my $button (@{$this->{-buttons}}) {
+        $bx += length($button->{-label});
+	if ($bx > $x) { last }
+	if ($bx == $x) { $idx = undef; last }
+	$bx += 1;
+	$idx++;
+    }
+    undef $idx if defined $idx and 
+		  $idx > (@{$this->{-buttons}} - 1);
+
+    if (defined $idx) {
+	$this->{-selected} = $idx;
+	$this->focus();
+	$this->do_routine('press-button', $event);
+    }
 }
 
 sub compute_buttonwidth($;)
 {
-        my $buttons = shift;
-        $buttons = $default_btn unless defined $buttons;
-	$buttons = process_buttondefs($buttons);
+    my $this    = shift;
 
-        # Spaces
-        my $width = @$buttons - 1;
+    $this->process_buttondefs;
 
-        # Buttons
-        foreach my $button (@$buttons) {
-                $width += length($button->{-label});
-        }
+    # Spaces
+    my $width = @{$this->{-buttons}} - 1;
 
-        return $width;
+    # Buttons
+    foreach my $button (@{$this->{-buttons}}) {
+        $width += length($button->{-label});
+    }
+
+    return $width;
 }
 
 sub shortcut()
 {
-	my $this = shift;
-	my $key = uc shift;
-	
-	# Walk through shortcuts to see if the pressed key
-	# is in the list of -shortcuts.
-	my $idx = 0;
-	my $found_idx;
-	SHORTCUT: foreach my $button (@{$this->{-buttons}})
-	{
-		my $sc = $button->{-shortcut};
-		if (defined $sc and $sc eq $key)
-		{
-			$found_idx = $idx;
-			last SHORTCUT;
-		}
-		$idx++;
-	}
+    my $this = shift;
+    my $key = uc shift;
+    
+    # Walk through shortcuts to see if the pressed key
+    # is in the list of -shortcuts.
+    my $idx = 0;
+    my $found_idx;
+    SHORTCUT: foreach my $button (@{$this->{-buttons}})
+    {
+        my $sc = $button->{-shortcut};
+        if (defined $sc and $sc eq $key)
+        {
+            $found_idx = $idx;
+            last SHORTCUT;
+        }
+        $idx++;
+    }
 
-	# Shortcut found?
-	if (defined $found_idx) 
-	{
-		$this->{-selected} = $found_idx;
-		return $this->process_bindings(KEY_ENTER());
-	}
+    # Shortcut found?
+    if (defined $found_idx) 
+    {
+        $this->{-selected} = $found_idx;
+        return $this->process_bindings(KEY_ENTER());
+    }
 
-	return $this;
+    return $this;
 }
 
 1;
@@ -519,12 +588,6 @@ You can specify how the buttons should be aligned in the
 widget. Available values for VALUE are 'left', 'middle' 
 and 'right'.
 
-=item * B<-mayloosefocus> < BOOLEAN >
-
-By default a buttons widget may loose its focus using the
-<tab> key. By setting BOOLEAN to a false value,
-this binding can be disabled.
-
 =back
 
 
@@ -567,23 +630,15 @@ returned.
 
 =over 4
 
-=item * <B<tab>>
-
-TODO: fix docs on this...
-Call the 'loose-focus' routine. This will have the widget 
-loose its focus. If you do not want the widget to loose 
-its focus, you can disable this binding by using the
-B<-mayloosefocus> option (see above).
-END TODO
-
 =item * <B<enter>>, <B<space>> 
 
-Call the 'return' routine. By default this routine will have the
+TODO: Fix dox
+Call the 'loose-focus' routine. By default this routine will have the
 container in which the widget is loose its focus. If you do
 not like this behaviour, then you can have it loose focus itself
 by calling:
 
-    $buttonswidget->set_routine('return', 'RETURN');
+    $buttonswidget->set_routine('loose-focus', 'RETURN');
 
 For an explanation of B<set_routine>, see 
 L<Curses::UI::Widget|Curses::UI::Widget>.

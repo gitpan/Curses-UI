@@ -9,166 +9,189 @@
 # e-mail: maurice@gitaar.net
 # ----------------------------------------------------------------------
 
+# TODO: update docs
+
 package Curses::UI::Checkbox;
 
 use strict;
 use Curses;
 use Curses::UI::Label;
-use Curses::UI::Common;
 use Curses::UI::Widget;
+use Curses::UI::Common;
 
-use vars qw($VERSION @ISA);
-$VERSION = '1.00';
-@ISA = qw(Curses::UI::Container Curses::UI::Common);
+use vars qw(
+    $VERSION 
+    @ISA
+);
+
+$VERSION = '1.10';
+
+@ISA = qw(
+    Curses::UI::ContainerWidget 
+);
 
 my %routines = (
-        'return'   	=> 'RETURN',
-        'uncheck'       => \&uncheck,
-        'check'      	=> \&check,
-        'toggle'      	=> \&toggle,
+    'loose-focus'       => \&loose_focus,
+    'uncheck'           => \&uncheck,
+    'check'             => \&check,
+    'toggle'            => \&toggle,
+    'mouse-button1'	=> \&mouse_button1,
 );
 
 my %bindings = (
-        KEY_ENTER()     => 'return',
-	KEY_TAB()	=> 'return',
-        KEY_SPACE()     => 'toggle',
-        '0'             => 'uncheck',
-        'n'             => 'uncheck',
-        '1'             => 'check',
-        'y'             => 'check',
+    KEY_ENTER()         => 'loose-focus',
+    CUI_TAB()           => 'loose-focus',
+    KEY_BTAB()          => 'loose-focus',
+    CUI_SPACE()         => 'toggle',
+    '0'                 => 'uncheck',
+    'n'                 => 'uncheck',
+    '1'                 => 'check',
+    'y'                 => 'check',
 );
 
 sub new ()
 {
-	my $class = shift;
+    my $class = shift;
 
-        my %userargs = @_;
-        keys_to_lowercase(\%userargs);
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
 
-	my %args = (
-		-parent		 => undef,	# the parent window
-		-width		 => undef,	# the width of the checkbox
-		-x		 => 0,		# the horizontal position rel. to parent
-		-y		 => 0,		# the vertical position rel. to parent
-		-checked	 => 0,		# checked or not?
-		-label		 => '',		# the label text
-		-onchange	 => undef,	# event handler
+    my %args = (
+        -parent         => undef,    # the parent window
+        -width          => undef,    # the width of the checkbox
+        -x              => 0,        # the horizontal pos. rel. to parent
+        -y              => 0,        # the vertical pos. rel. to parent
+        -checked        => 0,        # checked or not?
+        -label          => '',       # the label text
+        -onchange       => undef,    # event handler
 
-		-bindings	 => {%bindings},
-		-routines	 => {%routines},
+        %userargs,
+    
+        -bindings       => {%bindings},
+        -routines       => {%routines},
 
-		%userargs,
-	
-		-focus		 => 0,
-	);
+        -focus          => 0,        # value init
+        -nocursor       => 0,        # this widget uses a cursor
+    );
 
-	# The windowscr height should be 1.
-	$args{-height} = height_by_windowscrheight(1,%args);
-	
-	# No width given? Then make the width the same size
-	# as the label + checkbox.
-	$args{-width} = width_by_windowscrwidth(4 + length($args{-label}),%args)
-		unless defined $args{-width};
-	
-	my $this = $class->SUPER::new( %args );
-	
-	# Create the label on the widget.
-	$this->add(
-		'label', 'Label',
-		-text        => $this->{-label},
-		-x           => 4,
-		-y           => 0,
-		-intellidraw => 0,
-	);
+    # The windowscr height should be 1.
+    $args{-height} = height_by_windowscrheight(1,%args);
+    
+    # No width given? Then make the width the same size
+    # as the label + checkbox.
+    $args{-width} = width_by_windowscrwidth(4 + length($args{-label}),%args)
+        unless defined $args{-width};
+    
+    my $this = $class->SUPER::new( %args );
+    
+    # Create the label on the widget.
+    $this->add(
+        'label', 'Label',
+        -text           => $this->{-label},
+        -x              => 4,
+        -y              => 0,
+        -intellidraw    => 0,
+    );
 
-	$this->layout;
+    $this->layout;
 
-	return bless $this, $class;
+    if ($Curses::UI::ncurses_mouse) {
+        $this->set_mouse_binding('mouse-button1', BUTTON1_CLICKED());
+    }
+
+    return $this;
 }
 
 sub onChange(;$)  { shift()->set_event('-onchange',  shift()) }
 
 sub layout()
 {
-	my $this = shift;
-	return $this if $Curses::UI::screen_too_small;
+    my $this = shift;
 
-	my $label = $this->getobj('label');
-	if (defined $label)
-	{
-		my $lh = $label->{-height};
-		$lh = 1 if $lh <= 0;	
-		$this->{-height} = $lh;
-	}
+    my $label = $this->getobj('label');
+    if (defined $label)
+    {
+        my $lh = $label->{-height};
+        $lh = 1 if $lh <= 0;    
+        $this->{-height} = $lh;
+    }
 
-	$this->SUPER::layout;
-	return $this;
+    $this->SUPER::layout or return;
+    return $this;
 }
 
 sub draw(;$)
 {
-	my $this = shift;
-	my $no_doupdate = shift || 0;
+    my $this = shift;
+    my $no_doupdate = shift || 0;
+        
+    # Draw the widget.
+    $this->SUPER::draw(1) or return $this;
 
-        # Return immediately if this object is hidden.
-        return $this if $this->hidden;
-		
-	# Draw the widget.
-	$this->SUPER::draw(1);
+    # Draw the checkbox.
+    $this->{-canvasscr}->attron(A_BOLD) if $this->{-focus};    
+    $this->{-canvasscr}->addstr(0, 0, '[ ]');
+    $this->{-canvasscr}->addstr(0, 1, 'X') if $this->{-checked};
+    $this->{-canvasscr}->attroff(A_BOLD) if $this->{-focus};    
 
-	# Draw the checkbox.
-	$this->{-windowscr}->attron(A_BOLD) if $this->{-focus};	
-	$this->{-windowscr}->addstr(0, 0, '[ ]');
-	$this->{-windowscr}->addstr(0, 1, 'X') if $this->{-checked};
-	$this->{-windowscr}->attroff(A_BOLD) if $this->{-focus};	
+    $this->{-canvasscr}->move(0,1);
+    $this->{-canvasscr}->noutrefresh();
+    doupdate() unless $no_doupdate;
 
-	$this->{-windowscr}->move(0,1);
-	$this->{-windowscr}->noutrefresh();
-	doupdate() unless $no_doupdate;
-
-	return $this;
-}
-
-sub focus()
-{
-	my $this = shift;
-	$this->generic_focus(
-		undef,
-		NO_CONTROLKEYS,
-		CURSOR_VISIBLE
-	);
+    return $this;
 }
 
 sub uncheck()
 {
-	my $this = shift;
-	my $changed = ($this->{-checked} ? 1 : 0);
-	$this->{-checked} = 0;
-	$this->run_event('-onchange') if $changed;
-	$this->intellidraw;
+    my $this = shift;
+    my $changed = ($this->{-checked} ? 1 : 0);
+    $this->{-checked} = 0;
+    if ($changed) 
+    {
+        $this->run_event('-onchange');
+        $this->schedule_draw(1);
+    }
+    return $this;
 }
 
 sub check()
 {
-	my $this = shift;
-	my $changed = ($this->{-checked} ? 0 : 1);
-	$this->{-checked} = 1;
-	$this->run_event('-onchange') if $changed;
-	$this->intellidraw;
+    my $this = shift;
+    my $changed = ($this->{-checked} ? 0 : 1);
+    $this->{-checked} = 1;
+    if ($changed) 
+    {
+        $this->run_event('-onchange');
+        $this->schedule_draw(1);
+    }
+    return $this;
 }
 
 sub toggle()
 {
-	my $this = shift;
-	$this->{-checked} = ! $this->{-checked};
-	$this->run_event('-onchange');
-	$this->intellidraw;
+    my $this = shift;
+    $this->{-checked} = !$this->{-checked};
+    $this->run_event('-onchange');
+    $this->schedule_draw(1);
+}
+
+sub mouse_button1($$$$;)
+{
+    my $this  = shift;
+    my $event = shift;
+    my $x     = shift;
+    my $y     = shift;
+
+    $this->focus();
+    $this->toggle();
+
+    return $this;
 }
 
 sub get()
 {
-	my $this = shift;
-	return $this->{-checked};
+    my $this = shift;
+    return $this->{-checked};
 }
 
 1;
@@ -320,7 +343,7 @@ This method can be used to set the B<-onchange> event handler
 
 =item * <B<tab>>, <B<enter>>
 
-Call the 'return' routine. This will have the widget 
+Call the 'loose-focus' routine. This will have the widget 
 loose its focus.
 
 =item * <B<space>>
