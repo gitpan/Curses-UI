@@ -1,5 +1,17 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.96
+============
+		- Added -keydelay option to new()
+		- Fixed Listbox docs again
+		- Fixed focusing bug in connection with mouse support
+		- Applied patches by Vitaliy Sennikov
+	        - Doc patches by Alexey Tourbin
+		- Slovak translation by Marek Grac
+		- Removed test.pl, added note on demos to INSTALL
+		- Removed COLOR_TODO
+		- Added Coverage (Devel::Cover report)
+
 Version 0.95
 ============
 		- Fixes to the RT#6770 patch to unbreak listbox

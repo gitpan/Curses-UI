@@ -1,6 +1,6 @@
 BUGS
 Changes
-COLOR_TODO
+Coverage
 CREDITS
 examples/color_editor
 examples/demo-add
@@ -8,6 +8,7 @@ examples/demo-buttonbox
 examples/demo-color
 examples/demo-cuml
 examples/demo-language
+examples/demo-notebook
 examples/demo-widgets
 examples/editor
 examples/hello_world
@@ -45,6 +46,7 @@ lib/Curses/UI/Language/portuguese.pm
 lib/Curses/UI/Language/russian.pm
 lib/Curses/UI/Language/spanish.pm
 lib/Curses/UI/Language/turkish.pm
+lib/Curses/UI/Language/slovak.pm
 lib/Curses/UI/Listbox.pm
 lib/Curses/UI/Menubar.pm
 lib/Curses/UI/PasswordEntry.pm
@@ -53,7 +55,6 @@ lib/Curses/UI/Progressbar.pm
 lib/Curses/UI/Radiobuttonbox.pm
 lib/Curses/UI/Searchable.pm
 lib/Curses/UI/TextEditor.pm
-lib/Curses/UI/TextEditor.pm.orig
 lib/Curses/UI/TextEntry.pm
 lib/Curses/UI/TextViewer.pm
 lib/Curses/UI/Tutorial.pod
@@ -75,11 +76,10 @@ t/09label.t
 t/10texteditor.t
 t/11listbox.t
 t/12gpm_handler.t
+t/13notebook.t
 t/98misc.t
 t/99template.t
 t/fakelib/Curses.pm
 t/lorem.pl
-test.pl
 TODO
-examples/demo-notebook
-t/13notebook.t
+

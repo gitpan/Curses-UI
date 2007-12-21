@@ -1,0 +1,37 @@
+TEST COVERAGE FOR Curses::UI 0.96
+
+---------------------------- ------ ------ ------ ------ ------ ------ ------
+File                           stmt   bran   cond    sub    pod   time  total
+---------------------------- ------ ------ ------ ------ ------ ------ ------
+...ib/Curses/UI/Buttonbox.pm    7.6    0.0    0.0   26.3   28.6    0.1    7.2
+...lib/Curses/UI/Calendar.pm    5.4    0.0    0.0   15.2   21.4    0.1    4.6
+...lib/Curses/UI/Checkbox.pm   20.9    0.0    0.0   37.5   80.0    0.1   21.9
+...Curses/UI/Dialog/Basic.pm   19.0    0.0    0.0   55.6  100.0    0.2   20.2
+...ses/UI/Dialog/Calendar.pm   29.0    0.0    n/a   46.2   75.0    0.1   31.0
+...s/UI/Dialog/Dirbrowser.pm   12.5    0.0    0.0   35.3   40.0    0.1   12.5
+...Curses/UI/Dialog/Error.pm   42.9    0.0    0.0   71.4  100.0    0.1   42.3
+.../UI/Dialog/Filebrowser.pm    9.3    0.0    0.0   33.3   36.4    0.1    9.2
+...ses/UI/Dialog/Progress.pm   29.4    0.0    0.0   50.0  100.0    0.2   29.4
+...ses/UI/Dialog/Question.pm   17.2    0.0    0.0   55.6  100.0    0.1   18.5
+...urses/UI/Dialog/Status.pm   38.5    0.0    n/a   55.6  100.0    0.1   37.5
+.../lib/Curses/UI/Menubar.pm   14.6    0.0    0.0   42.4   22.2    0.7   13.6
+...urses/UI/PasswordEntry.pm   71.4    n/a    n/a   83.3  100.0    0.1   75.0
+...ib/Curses/UI/Popupmenu.pm   21.0    0.0    0.0   50.0   66.7    0.1   17.6
+.../Curses/UI/Progressbar.pm   20.5    0.0    0.0   55.6  100.0    0.1   19.2
+...rses/UI/Radiobuttonbox.pm   72.0    0.0    n/a   85.7  100.0    0.1   71.4
+lib/Curses/UI.pm               38.1   26.7   10.4   41.9   53.8   35.8   35.2
+lib/Curses/UI/Color.pm         43.9    4.2    n/a   55.6   80.0    2.2   36.8
+lib/Curses/UI/Common.pm        39.6   18.4    9.6   70.0   60.0   10.5   31.8
+lib/Curses/UI/Container.pm     38.2   27.1   27.8   51.9   50.0    3.5   36.2
+lib/Curses/UI/Label.pm         76.3   45.5   30.0   61.1   84.6    1.2   65.4
+lib/Curses/UI/Language.pm      72.4   69.2   44.4   60.0    0.0   10.8   65.0
+lib/Curses/UI/Listbox.pm       33.5   16.9    9.4   48.8   54.5    1.8   29.2
+lib/Curses/UI/Notebook.pm      57.7   40.4   17.1   85.7   92.9    3.3   49.2
+lib/Curses/UI/Searchable.pm    18.2    0.0    0.0   40.9   14.3    0.5   17.1
+lib/Curses/UI/TextEditor.pm    29.8   21.8   24.6   29.8   19.6    3.6   26.8
+lib/Curses/UI/TextEntry.pm     60.0    0.0    0.0   83.3  100.0    0.2   56.8
+lib/Curses/UI/TextViewer.pm    75.0    n/a    n/a   83.3  100.0    0.1   77.8
+lib/Curses/UI/Widget.pm        40.5   27.6   25.7   44.8   57.9   23.2   36.5
+lib/Curses/UI/Window.pm        70.6   37.5    0.0  100.0  100.0    1.1   65.5
+Total                          31.6   18.9   12.6   46.9   50.8  100.0   29.0
+---------------------------- ------ ------ ------ ------ ------ ------ ------

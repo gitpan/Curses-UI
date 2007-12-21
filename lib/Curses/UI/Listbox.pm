@@ -2,6 +2,7 @@
 # Curses::UI::Listbox
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# (c) 2003-2005 by Marcus Thiesen.
 # This file is part of Curses::UI. Curses::UI is free software.
 # You can redistribute it and/or modify it under the same terms
 # as perl itself.
@@ -436,7 +437,7 @@ sub draw(;$)
 sub option_last()
 {
     my $this = shift;
-    $this->{-ypos} = @{$this->{-values}} - 1;
+    $this->{-ypos} = $this->{-max_selected};
     $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
@@ -449,7 +450,11 @@ sub option_nextpage()
         $this->dobeep;
         return $this;
     }
-    $this->{-ypos} += $this->canvasheight - 1;
+    if ($this->{-ypos} + $this->canvasheight - 1 >= $this->{-max_selected}) { 
+    	$this->{-ypos} = $this->{-max_selected};
+		} else {
+    	$this->{-ypos} += $this->canvasheight - 1;
+		}
     $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
@@ -462,7 +467,11 @@ sub option_prevpage()
         $this->dobeep;
         return $this;
     }
-    $this->{-ypos} -= $this->canvasheight - 1;
+    if ($this->{-ypos} - $this->canvasheight - 1 < 0) {
+    	$this->{-ypos} = 0;
+		} else {
+    	$this->{-ypos} -= $this->canvasheight - 1;
+		}
     $this->run_event('-onselchange');
     $this->schedule_draw(1);
     return $this;
@@ -619,6 +628,8 @@ sub mouse_button1($$$;)
     my $event = shift;
     my $x     = shift;
     my $y     = shift;
+
+    return unless $this->{-focusable};
 
     $this->layout_content;
 
@@ -817,7 +828,7 @@ L<Curses::UI::Widget|Curses::UI::Widget>.
 
 =over 4
 
-=item * B<-values> < LIST >
+=item * B<-values> < ARRAYREF >
 
 This option sets the values to use. 
 Unless a label is set for the value (see B<-labels>), 
@@ -936,7 +947,7 @@ last item in LIST will be selected
 This method clears the selected objects of a multi and radiobutton
 listbox.
 
-=item * B<values> ( LIST )
+=item * B<values> ( ARRAYREF )
 
 This method sets the values to use. 
 

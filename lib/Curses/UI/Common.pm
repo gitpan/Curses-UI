@@ -2,6 +2,7 @@
 # Curses::UI::Common
 #
 # (c) 2001-2002 by Maurice Makaay. All rights reserved.
+# (c) 2003-2005 by Marcus Thiesen et al.
 # This file is part of Curses::UI. Curses::UI is free software.
 # You can redistribute it and/or modify it under the same terms
 # as perl itself.
@@ -265,8 +266,20 @@ sub text_draw($$;)
                 elsif ($type eq 'underline') { $this->{-canvasscr}->attroff(A_UNDERLINE); }
                 elsif ($type eq 'blink')     { $this->{-canvasscr}->attroff(A_BLINK);     }
                 elsif ($type eq 'dim')       { $this->{-canvasscr}->attroff(A_DIM);       }
-            }
-            else {
+			# Tags: (see, man 5 terminfo)
+			#   |  <4_ACS_VLINE>  --  Vertical line (4 items).
+			#   -- <5_ACS_HLINE>  --  Horizontal line (5 items).
+			#   `  <12_ACS_TTEE>  --  Tee pointing down (12 items).
+			#   ~  <ACS_BTEE>     --  Tee pointing up (1 item).
+			#   +  <ACS_PLUS>     --  Large plus or crossover (1 item).
+			# ------------------------------------------------------------------
+			} elsif ($token =~ m/^<(\d*)_?(ACS_HLINE|ACS_VLINE|ACS_TTEE|ACS_BTEE|ACS_PLUS)>$/s) {
+				no strict 'refs';
+				my $scrlen = ($1 || 1);
+				my $type = &{ $2 };
+				$this->{-canvasscr}->hline( $y, $x, $type, $scrlen );
+				$x += $scrlen;
+			} else {
                 $this->{-canvasscr}->addstr($y, $x, $token);
                 $x += length($token);
             }

@@ -1,15 +1,3 @@
-## ----------------------------------------------------------------------
-# Curses::UI
-#
-# (c) 2001-2002 by Maurice Makaay. All rights reserved.
-# This file is part of Curses::UI. Curses::UI is free software.
-# You can redistribute it and/or modify it under the same terms
-# as perl itself.
-#
-# Currently maintained by Marcus Thiesen
-# e-mail: marcus@cpan.thiesenweb.de
-# ----------------------------------------------------------------------
-
 package Curses::UI;
 
 # If we do not know a terminal type, then imply VT100.
@@ -24,26 +12,61 @@ use FileHandle;
 use Term::ReadKey;
 require Exporter;
 
-use vars qw(
-    $VERSION 
-    @ISA
-    @EXPORT
-);
-
-$VERSION = 0.95;
+use vars qw( $VERSION @ISA @EXPORT );
 
 @EXPORT = qw(
     MainLoop
 );
 
 @ISA = qw(
-    Curses::UI::Container 
+    Curses::UI::Container
     Curses::UI::Common
 );
 
+=head1 NAME
+
+Curses::UI - A curses based OO user interface framework
+
+=head1 VERSION
+
+Version 0.96
+
+=cut
+
+$VERSION = 0.96;
+
+=head1 SYNOPSIS
+
+    use Curses::UI;
+
+    # create a new C::UI object
+    my $cui = new Curses::UI ( -clear_on_exit => 1,
+                               -debug => $debug,
+                             );
+
+    # this is where we gloss over setting up all the widgets and data
+    # structures :)
+
+    # start the event loop
+    $cui->mainloop;
+
+=head1 DESCRIPTION
+
+
+
+=head1 TUTORIAL
+
+L<Curses::UI::Tutorial>
+
+Also see the C<examples> directory of the source distribution.
+
+=cut
+
+
+
 $Curses::UI::rootobject       = undef;
-$Curses::UI::debug            = 0; 
-$Curses::UI::screen_too_small = 0; 
+$Curses::UI::debug            = 0;
+$Curses::UI::screen_too_small = 0;
 $Curses::UI::initialized      = 0;
 $Curses::UI::color_support    = 0;
 $Curses::UI::color_object     = 0;
@@ -68,8 +91,11 @@ if ($ENV{"TERM"} ne "xterm") {
     print STDERR "DEBUG: Detected mouse support value is $Curses::UI::ncurses_mouse\n" if
 	$Curses::UI::debug;
 }
- 
 
+
+=head1 METHODS
+
+=cut
 # ----------------------------------------------------------------------
 # Constructor
 # ----------------------------------------------------------------------
@@ -86,22 +112,24 @@ sub new()
         -clear_on_exit => 0,     # Clear screen if program exits?
         -cursor_mode   => 0,     # What is the current cursor_mode?
 	-debug         => undef, # Turn on debugging mode?
+	-keydelay      => 0,     # Track seconds since last keystroke?
 	-language      => undef, # Which language to use?
 	-mouse_support => 1,     # Do we want mouse support
 	-overlapping   => 1,     # Whether overlapping widgets are supported
 	-color_support => 0,
-	-default_colors=> 1, 
+	-default_colors=> 1,
         #user data
         -userdata       => undef,    #user internal data
- 
-        %userargs,
+
+	%userargs,
 
 	-read_timeout   => -1,    # full blocking read by default
 	-scheduled_code => [],
 	-added_code     => {},
+        -lastkey        => 0,     # Last keypress time (set in mainloop)
     );
 
-    $Curses::UI::debug = $args{-debug} 
+    $Curses::UI::debug = $args{-debug}
         if defined $args{-debug};
 
     $Curses::UI::ncurses_mouse = $args{-mouse_support}
@@ -130,7 +158,7 @@ sub new()
     $Curses::UI::color_support = $args{-color_support} if
 	defined $args{-color_support};
 
-    $this->layout();    
+    $this->layout();
 
     return $this;
 }
@@ -139,8 +167,8 @@ sub new()
 # Destructor
 # ----------------------------------------------------------------------
 
-DESTROY 
-{ 
+DESTROY
+{
     my $this = shift;
     my $scr = $this->{-canvasscr};
     $scr->delwin() if (defined($scr));
@@ -166,8 +194,8 @@ sub lang(;$)          { shift()->accessor('-language_object', shift()) }
 sub overlapping(;$)   { shift()->accessor('-overlapping',     shift()) }
 
 # TODO: document
-sub debug(;$)         
-{ 
+sub debug(;$)
+{
     my $this  = shift;
     my $value = shift;
     $Curses::UI::debug = $this->accessor('-debug', $value);
@@ -202,7 +230,7 @@ sub layout()
     # Mouse events if possible
     my $old = 0;
     my $mmreturn;
-    if ( $Curses::UI::ncurses_mouse ) 
+    if ( $Curses::UI::ncurses_mouse )
     {
 	print STDERR "DEBUG: ncurses mouse events are enabled\n"
 	    if $Curses::UI::debug;
@@ -211,9 +239,9 @@ sub layout()
 	if ($Curses::UI::debug) {
 	    print STDERR "DEBUG: mousemak returned $mmreturn\n";
 	    print STDERR "DEBUG: Old is now $old\n";
-	    print STDERR "DEBUG: mousemask() failed: $@\n" if $@; 
+	    print STDERR "DEBUG: mousemask() failed: $@\n" if $@;
 	}
-    }   
+    }
 
     # find the terminal size.
     my ($cols,$lines) = GetTerminalSize;
@@ -229,18 +257,18 @@ sub layout()
     # Curses::UI widget, regarding size, location and
     # drawing area. This will make it possible for
     # child windows / widgets to layout and draw themselves.
-    #    
+    #
     $this->{-width}  = $this->{-w} = $this->{-bw} = $cols;
     $this->{-height} = $this->{-h} = $this->{-bh} = $lines;
     $this->{-x}      = $this->{-y} = 0;
     $this->{-canvasscr} = $root;
 
-    # Walk through all contained objects and let them 
+    # Walk through all contained objects and let them
     # layout themselves.
     $this->layout_contained_objects;
-    
+
     $Curses::UI::initialized = 1;
-    return $this;    
+    return $this;
 }
 
 sub layout_new()
@@ -258,19 +286,19 @@ sub layout_new()
     # Curses::UI widget, regarding size, location and
     # drawing area. This will make it possible for
     # child windows / widgets to layout and draw themselves.
-    #    
+    #
     $this->{-width}  = $this->{-w} = $this->{-bw} = $cols;
     $this->{-height} = $this->{-h} = $this->{-bh} = $lines;
     $this->{-x}      = $this->{-y} = 0;
 #    $this->{-canvasscr} = $root;
 
-    # Walk through all contained objects and let them 
+    # Walk through all contained objects and let them
     # layout themselves.
     $this->layout_contained_objects;
-    
+
     $Curses::UI::initialized = 1;
     $this->draw();
-    return $this;    
+    return $this;
 }
 
 
@@ -296,9 +324,9 @@ sub mainloop ()
     doupdate();
 
     # Inifinite event loop.
-    for(;;) 
-    { 
-        $this->do_one_event 
+    for(;;)
+    {
+        $this->do_one_event
     }
 }
 
@@ -308,7 +336,7 @@ sub do_one_event(;$)
     my $this = shift;
     my $object = shift;
     $object = $this unless defined $object;
-        
+
     eval {curs_set($this->{-cursor_mode})};
 
     # gpm mouse?
@@ -323,6 +351,9 @@ sub do_one_event(;$)
         $key = $this->get_key($this->{-read_timeout});
     }
     $this->{-feedkey} = undef;
+
+    # If there was a keypress, set -lastkey
+    $this->{-lastkey} = time() unless ($key eq '-1');
 
     # ncurses sends KEY_RESIZE() key on resize. Ignore this key.
     # TODO: Try to redraw and layout everything anew
@@ -360,8 +391,8 @@ sub do_one_event(;$)
     # enable modal focusing. 
     #
     $object->event_keypress($key) unless $key eq '-1';
-        
-    # Execute timer code.
+
+    # Execute timer code
     $this->do_timer;
 
     # Execute one scheduled event;
@@ -443,7 +474,7 @@ sub draw()
     my $this = shift;
     my $no_doupdate = shift || 0;
 
-    if ($Curses::UI::screen_too_small) 
+    if ($Curses::UI::screen_too_small)
     {
         my $s = $this->{-canvasscr};
         $s->clear;
@@ -471,7 +502,7 @@ sub feedkey()
 sub flushkeys()
 {
     my $this = shift;
-    
+
     my $key = '';
     my @k = ();
     until ( $key eq "-1" ) {
@@ -479,6 +510,18 @@ sub flushkeys()
     }
 }
 
+# Returns 0 if less than -keydelay seconds have elapsed since the last
+# user action. Returns the number of elapsed seconds otherwise.
+sub keydelay()
+{
+    my $this = shift;
+
+    my $time = time();
+    my $elapsed = $time - $this->{-lastkey};
+
+    return 0 if ($elapsed < $this->{-keydelay});
+    return $elapsed;
+}
 
 # ----------------------------------------------------------------------
 # Timed event handling
@@ -489,7 +532,7 @@ sub set_read_timeout()
     my $this = shift;
 
     my $new_timeout = -1;
-    TIMER: while (my ($id, $config) = each %{$this->{-timers}}) 
+    TIMER: while (my ($id, $config) = each %{$this->{-timers}})
     {
         # Skip timer if it is disabled.
         next TIMER unless $config->{-enabled};
@@ -537,7 +580,7 @@ sub disable_timer($;)
     my ($this,$id) = @_;
     if (defined $this->{-timers}->{$id}) {
         $this->{-timers}->{$id}->{-enabled} = 0;
-    }    
+    }
     $this->set_read_timeout;
     return $this;
 }
@@ -547,7 +590,7 @@ sub enable_timer($;)
     my ($this,$id) = @_;
     if (defined $this->{-timers}->{$id}) {
         $this->{-timers}->{$id}->{-enabled} = 1;
-    }    
+    }
     $this->set_read_timeout;
     return $this;
 }
@@ -557,7 +600,7 @@ sub delete_timer($;)
     my ($this,$id) = @_;
     if (defined $this->{-timers}->{$id}) {
         delete $this->{-timers}->{$id};
-    }    
+    }
     $this->set_read_timeout;
     return $this;
 }
@@ -568,6 +611,11 @@ sub do_timer()
 
     my $now = time();
     my $timers_done = 0;
+
+    # Short-circuit timers if the keydelay hasn't elapsed
+    if ($this->{-keydelay}) {
+        return $this unless $this->keydelay;
+    }
 
     TIMER: while (my ($id, $config) = each %{$this->{-timers}}) 
     {
@@ -582,7 +630,7 @@ sub do_timer()
         }
 
         if ($config->{-lastrun} <= ($now - $config->{-time})) 
-        { 
+        {
             $config->{-callback}->($this);
             $config->{-lastrun} = $now;
             $timers_done++;
@@ -590,11 +638,11 @@ sub do_timer()
     }
 
     # Bring the cursor back to the focused object by
-    # redrawing it. Due to drawing other objects, it might 
+    # redrawing it. Due to drawing other objects, it might
     # have moved to another widget or screen location.
     #
     $this->focus_path(-1)->draw if $timers_done;
-        
+
     return $this;
 }
 
@@ -644,7 +692,7 @@ sub handle_mouse_event()
 
     # Get the objects at the mouse event position.
     my $tree = $this->object_at_xy($object, $MEVENT{-x}, $MEVENT{-y});
-   
+
     # Walk through the object tree, top object first.
     foreach my $object (reverse @$tree)
     {
@@ -680,7 +728,7 @@ sub handle_gpm_mouse_event()
 
     # Get the objects at the mouse event position.
     my $tree = $this->object_at_xy($object, $MEVENT{-x}, $MEVENT{-y});
-   
+
     # Walk through the object tree, top object first.
     foreach my $object (reverse @$tree)
     {
@@ -746,7 +794,7 @@ sub fatalerror($$;$)
     my $exit  = shift;
 
     $exit = 1 unless defined $exit;
-    chomp $error; 
+    chomp $error;
     $error .= "\n";
 
     my $s = $this->{-canvasscr};
@@ -760,11 +808,11 @@ sub fatalerror($$;$)
     doupdate();
 
     $this->flushkeys();
-    for (;;) 
+    for (;;)
     {
 	$key = $this->get_key();
 	last if $key ne "-1";
-    } 
+    }
 
     exit($exit);
 }
@@ -776,13 +824,13 @@ sub usemodule($;)
 
     # Create class filename.
     my $file = $class;
-    $file =~ s|::|/|g; 
+    $file =~ s|::|/|g;
     $file .= '.pm';
 
     # Automatically load the required class.
     if (not defined $INC{$file})
     {
-        eval 
+        eval
 	{
             require $file;
             $class->import;
@@ -825,11 +873,11 @@ sub add()
     my $id = shift;
     my $class = shift;
     my %args = @_;
-    
+
     # Make it possible to specify WidgetType instead of
     # Curses::UI::WidgetType.
-    $class = "Curses::UI::$class" 
-        if $class !~ /\:\:/ or 
+    $class = "Curses::UI::$class"
+        if $class !~ /\:\:/ or
            $class =~ /^Dialog\:\:[^\:]+$/;
 
     $this->usemodule($class);
@@ -885,7 +933,7 @@ sub tempdialog()
 #
 sub process_args()
 {
-    my $this = shift;        
+    my $this = shift;
     my $ifone = shift;
     if (@_ == 1) { @_ = ($ifone => $_[0]) }
     return @_;
@@ -953,17 +1001,17 @@ sub savefilebrowser()
 {
     my $this = shift;
     my %args = $this->process_args('-title', @_);
-    
+
     my $l = $this->root->lang;
 
     # Create title.
     $args{-title} = $l->get('file_savetitle')
 	unless defined $args{-title};
-    
+
     # Select a file to save to.
     my $file = $this->filebrowser(-editfilename => 1, %args);
     return unless defined $file;
-    
+
     # Check if the file exists. Ask for overwrite
     # permission if it does.
     if (-e $file)
@@ -980,7 +1028,7 @@ sub savefilebrowser()
         );
         return unless $overwrite;
     }
-    
+
     return $file;
 }
 
@@ -1010,8 +1058,8 @@ sub status($;)
 
     $this->delete($status_id);
     $this->add($status_id, 'Dialog::Status', %args)->draw;
-    
-    return $this;    
+
+    return $this;
 }
 
 sub nostatus()
@@ -1030,7 +1078,7 @@ sub progress()
 
     $this->add(
         "__progress_$this",
-        'Dialog::Progress', 
+        'Dialog::Progress',
         %args
     );
     $this->draw;
@@ -1069,10 +1117,10 @@ sub noprogress()
     return $this;
 }
 
-sub leave_curses() 
+sub leave_curses()
 {
     my $this = shift;
-    def_prog_mode(); 
+    def_prog_mode();
     endwin();
 }
 
@@ -1092,41 +1140,25 @@ sub color() {
 sub set_color {
     my $this = shift;
     my $co   = shift;
-    
+
     $Curses::UI::color_object = $co;
 }
 
 1;
 
 
-=pod
-
-=head1 NAME
-
-Curses::UI - A curses based OO user interface framework
-
-=head1 SYNOPSIS
-
-Here's the obligatory "Hello, world!" example.
-
-    use Curses::UI;
-    my $cui = new Curses::UI;
-    $cui->dialog("Hello, world!");
-
-
 
 
 =head1 DESCRIPTION
 
-Curses::UI can be used for the development of curses
-based user interfaces. Currently, it contains the 
-following classes:
+Curses::UI can be used for the development of curses based user
+interfaces. Currently, it contains the following classes:
 
 B<Base elements>
 
 =over 4
 
-=item * L<Curses::UI::Widget|Curses::UI::Widget>
+=item * L<Curses::UI::Widget>
 
 =item * L<Curses::UI::Container|Curses::UI::Container>
 
@@ -1204,40 +1236,44 @@ B<Support classes>
 =item B<-compat> < BOOLEAN >
 
 If the B<-compat> option is set to a true value, the Curses::UI
-program will run in compatibility mode. This means that only
-very simple characters will be used for creating the widgets.
-By default this option is set to false.
+program will run in compatibility mode. This means that only very
+simple characters will be used for creating the widgets.  By default
+this option is set to false.
 
 =item B<-clear_on_exit> < BOOLEAN >
 
-If the B<-clear_on_exit> option is set to a true value,
-a Curses::UI program will call the "clear" program on exit
-(through the DESTROY method of Curses::UI). By default
-this option is set to false.
+If the B<-clear_on_exit> option is set to a true value, a Curses::UI
+program will call the "clear" program on exit (through the DESTROY
+method of Curses::UI). By default this option is set to false.
 
 =item B<-mouse_support> < BOOLEAN >
 
-If the B<-mouse_support> option is set to a false value
-mouse support will be disabled. This is used to override
-the auto determined value and to disable mouse support.
+If the B<-mouse_support> option is set to a false value mouse support
+will be disabled. This is used to override the auto determined value
+and to disable mouse support.
 
 =item B<-userdata> < SCALAR >
 
-This option specifies a user data that can be retrieved with
-the B<userdata>() method.  It is usefull to store application's
-internal data that otherwise would not be accessible in callbacks.
+This option specifies a user data that can be retrieved with the
+B<userdata>() method.  It is useful to store application's internal
+data that otherwise would not be accessible in callbacks.
+
+=item B<-keydelay> < SCALAR >
+
+If B<-keydelay> is set to a positive integer, Curses::UI will track
+the time of the user's last input and prevent timer events from
+occurring for SCALAR seconds after the user's last action. By default
+this option is set to '0', which disables user action timing.
 
 =item B<-color_support> < BOOLEAN >
 
-If this option is set to a true value Curses::UI will try to
-determine if color is available on the terminal and if so enable
-it.
+If this option is set to a true value Curses::UI will try to determine
+if color is available on the terminal and if so enable it.
 
 =item B<-default_colors> < BOOLEAN >
 
-If -default_colors is set to a true value Curses::UI will try
-to enable color support without changing the original terminal
-settings.
+If -default_colors is set to a true value Curses::UI will try to
+enable color support without changing the original terminal settings.
 
 
 =back
@@ -1255,13 +1291,12 @@ for Curses::UI.
 
 =item B<new> ( OPTIONS )
 
-Create a new Curses::UI instance. See the OPTIONS section above 
-to find out what options can be used.
+Create a new Curses::UI instance. See the OPTIONS section above to
+find out what options can be used.
 
 =item B<leave_curses> ( )
 
-Temporarily leaves curses mode and recovers normal terminal
-mode.
+Temporarily leaves curses mode and recovers normal terminal mode.
 
 =item B<reset_curses> ( )
 
@@ -1272,8 +1307,8 @@ Return to curses mode after B<leave_curses()>.
 The B<add> method of Curses::UI is almost the same as the B<add>
 method of Curses::UI::Container. The difference is that Curses::UI
 will only accept classes that are (descendants) of the
-Curses::UI::Window class. For the rest of the information
-see L<Curses::UI::Container|Curses::UI::Container>.
+Curses::UI::Window class. For the rest of the information see
+L<Curses::UI::Container|Curses::UI::Container>.
 
 =item B<mainloop> ( )
 
@@ -1285,9 +1320,9 @@ Same as B<mainloop>, for Tk compatibility.
 
 =item B<schedule_event> ( CODE )
 
-The schedule_event method adds a method to the mainloop. This
-method is executed one time after the input handler has run and
-deleted from the mainloop afterwards.
+The schedule_event method adds a method to the mainloop. This method
+is executed one time after the input handler has run and deleted from
+the mainloop afterwards.
 
 =item B<add_callback> ( ID, CODE)
 
@@ -1304,47 +1339,53 @@ Loads the with CLASSNAME given module.
 
 =item B<userdata> ( [ SCALAR ] )
 
-This method will return the user internal data stored in the UI object.
-If a SCALAR parameter is specified it will also set the current user
-data to it.
+This method will return the user internal data stored in the UI
+object.  If a SCALAR parameter is specified it will also set the
+current user data to it.
+
+=item B<keydelay> ( )
+
+This method is used internally to control timer events when the
+B<-keydelay> option is set, but it can be called directly it to find
+out if the required amount of time has passed since the user's last
+action. B<keydelay>() will return 0 if insufficent time has passed,
+and will return the number of elapsed seconds otherwise.
 
 =item B<layout> ( )
 
 The layout method of Curses::UI will try to find out the size of the
-screen. After that it will call the B<layout> routine of every 
+screen. After that it will call the B<layout> routine of every
 contained object. So running B<layout> on a Curses::UI object will
-effectively layout the complete application. Normally you will not 
+effectively layout the complete application. Normally you will not
 have to call this method directly.
 
 =item B<compat> ( [BOOLEAN] )
 
-The B<-compat> option will be set to the BOOLEAN value, unless
-BOOLEAN is omitted. The method returns the current value 
-for B<-compat>.
+The B<-compat> option will be set to the BOOLEAN value, unless BOOLEAN
+is omitted. The method returns the current value for B<-compat>.
 
 =item B<clear_on_exit> ( [BOOLEAN] )
 
 The B<-clear_on_exit> option will be set to the BOOLEAN value, unless
-BOOLEAN is omitted. The method returns the current value 
-for B<-clear_on_exit>.
+BOOLEAN is omitted. The method returns the current value for
+B<-clear_on_exit>.
 
 =item B<dialog> ( MESSAGE or OPTIONS )
 
-Use the B<dialog> method to show a dialog window. If you only
-provide a single argument, this argument will be used as the 
-message to show. Example:
+Use the B<dialog> method to show a dialog window. If you only provide
+a single argument, this argument will be used as the message to
+show. Example:
 
-    $cui->dialog("Hello, world!"); 
+    $cui->dialog("Hello, world!");
 
-If you want to have some more control over the dialog window, you
-will have to provide more arguments (for an explanation of the 
-arguments that can be used, see 
-L<Curses::UI::Dialog::Basic|Curses::UI::Dialog::Basic>. 
-Example:
+If you want to have some more control over the dialog window, you will
+have to provide more arguments (for an explanation of the arguments
+that can be used, see
+L<Curses::UI::Dialog::Basic|Curses::UI::Dialog::Basic>.  Example:
 
     my $yes = $cui->dialog(
         -message => "Hello, world?",
-        -buttons => ['< Yes >','< No >'],
+        -buttons =3D> ['yes','no'],
         -values  => [1,0],
         -title   => 'Question',
     );
@@ -1356,19 +1397,19 @@ Example:
 
 =item B<error> ( MESSAGE or OPTIONS )
 
-The B<error> method will create an error dialog. This is 
-basically a Curses::UI::Dialog::Basic, but it has an ASCII-art
-exclamation sign drawn left to the message. For the rest 
-it's just like B<dialog>. Example:
+The B<error> method will create an error dialog. This is basically a
+Curses::UI::Dialog::Basic, but it has an ASCII-art exclamation sign
+drawn left to the message. For the rest it's just like
+B<dialog>. Example:
 
     $cui->error("It's the end of the\n"
                ."world as we know it!");
 
 =item B<filebrowser> ( OPTIONS )
 
-The B<filebrowser> method will create a file browser
-dialog. For an explanation of the arguments that can be 
-used, see L<Curses::UI::Dialog::Filebrowser|Curses::UI::Dialog::Filebrowser>.
+The B<filebrowser> method will create a file browser dialog. For an
+explanation of the arguments that can be used, see
+L<Curses::UI::Dialog::Filebrowser|Curses::UI::Dialog::Filebrowser>.
 Example:
 
     my $file = $cui->filebrowser(
@@ -1378,41 +1419,38 @@ Example:
 
     # Filebrowser will return undef
     # if no file was selected.
-    if (defined $file) { 
+    if (defined $file) {
         unless (open F, ">$file") {
             print F "Hello, world!\n";
             close F;
     } else {
-            $cui->error("Error on writing to "
-                       ."\"$file\":\n$!");
+        $cui->error(qq(Error on writing to "$file":\n$!));
     }
-    } 
 
 =item B<loadfilebrowser>( OPTIONS )
 
 =item B<savefilebrowser>( OPTIONS )
 
-These two methods will create file browser dialogs as well.
-The difference is that these will have the dialogs set up
-correctly for loading and saving files. Moreover, the save
-dialog will check if the selected file exists or not. If it
-does exist, it will show an overwrite confirmation to check
-if the user really wants to overwrite the selected file.
+These two methods will create file browser dialogs as well.  The
+difference is that these will have the dialogs set up correctly for
+loading and saving files. Moreover, the save dialog will check if the
+selected file exists or not. If it does exist, it will show an
+overwrite confirmation to check if the user really wants to overwrite
+the selected file.
 
 =item B<status> ( MESSAGE )
 
 =item B<nostatus> ( )
 
-Using these methods it's easy to provide status information for
-the user of your program. The status dialog is a dialog with 
-only a label on it. The status dialog doesn't really get the
-focus. It's only used to display some information. If you need
-more than one status, you can call B<status> subsequently.
-Any existing status dialog will be cleaned up and a new one
-will be created.
+Using these methods it's easy to provide status information for the
+user of your program. The status dialog is a dialog with only a label
+on it. The status dialog doesn't really get the focus. It's only used
+to display some information. If you need more than one status, you can
+call B<status> subsequently.  Any existing status dialog will be
+cleaned up and a new one will be created.
 
-If you are finished, you can delete the status dialog by calling
-the B<nostatus> method. Example:
+If you are finished, you can delete the status dialog by calling the
+B<nostatus> method. Example:
 
     $cui->status("Saying hello to the world...");
     # code for saying "Hello, world!"
@@ -1428,36 +1466,36 @@ the B<nostatus> method. Example:
 
 =item B<noprogress> ( )
 
-Using these methods it's easy to provide progress information
-to the user. The progress dialog is a dialog with an optional
-label on it and a progress bar. Similar to the status dialog,
-this dialog does not get the focus. 
+Using these methods it's easy to provide progress information to the
+user. The progress dialog is a dialog with an optional label on it and
+a progress bar. Similar to the status dialog, this dialog does not get
+the focus.
 
-Using the B<progress> method, a new progress dialog can be 
-created (see also 
-L<Curses::IU::Dialog::Progress|Curses::UI::Dialog::Progress>). 
-This method takes the same arguments as the Curses::IU::Dialog::Progress 
+Using the B<progress> method, a new progress dialog can be created
+(see also
+L<Curses::IU::Dialog::Progress|Curses::UI::Dialog::Progress>).  This
+method takes the same arguments as the Curses::IU::Dialog::Progress
 class.
 
-After that the progress can be set using B<setprogress>. This 
-method takes one or two arguments. The first argument is the current
-position of the progressbar. The second argument is the message
-to show in the label. If one of these arguments is undefined,
-the current value will be kept. 
+After that the progress can be set using B<setprogress>. This method
+takes one or two arguments. The first argument is the current position
+of the progressbar. The second argument is the message to show in the
+label. If one of these arguments is undefined, the current value will
+be kept.
 
-If you are finished, you can delete the progress dialog by calling
-the B<noprogress> method. 
+If you are finished, you can delete the progress dialog by calling the
+B<noprogress> method.
 
 Example:
 
     $cui->progress(
         -max => 10,
-    -message => "Counting 10 seconds...",
+        -message => "Counting 10 seconds...",
     );
 
     for my $second (0..10) {
-    $cui->setprogress($second)
-    sleep 1;
+        $cui->setprogress($second)
+        sleep 1;
     }
 
     $cui->noprogress;
@@ -1468,33 +1506,44 @@ Returns the currently used Curses::UI::Color object
 
 =item B<set_color> ( OBJECT )
 
-Replaces the currently used Color object with an other. This
-can be used to fast change all colors in a Curses::UI application.
+Replaces the currently used Color object with an other. This can be
+used to fast change all colors in a Curses::UI application.
 
 =back
 
 
 =head1 SEE ALSO
 
-L<Curses>
-L<Curses::UI::Container>,
+=over
 
-=head1 BASIC TUTORIAL
+=item L<Curses>
 
-see 'perldoc Curses::UI::Tutorial'
+=item L<Curses::UI::Container>
 
-=head1 REFERENCES
+=item L<Curses::UI::POE> (a POE eventsystem and mainloop for Curses::UI)
 
-Curses::UI::POE is a POE eventsystem and mainloop for Curses::UI
+=back
 
+=head1 BUGS
+
+Please report any bugs or feature requests to
+C<bug-curses-ui@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Curses-UI>.  I will be
+notified, and then you'll automatically be notified of progress on
+your bug as I make changes.
 
 =head1 AUTHOR
 
-Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+Originally written by Maurice Makaay. Formerly maintained by Marcus Thiesen.
 
-Maintained by Marcus Thiesen (marcus@cpan.thiesenweb.de)
+Current maintainer: Shawn Boyette C<< <mdxi@cpan.org> >>
 
-This package is free software and is provided "as is" without express
-or implied warranty. It may be used, redistributed and/or modified
-under the same terms as perl itself.
+See the CREDITS file for additional information.
 
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2001-2002 Maurice Makaay; 2003-2006 Marcus Thiesen; 2007
+Shawn Boyette. All Rights Reserved.
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.

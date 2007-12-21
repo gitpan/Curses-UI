@@ -1,28 +1,27 @@
-==============================================================================
-           _____                                       _   _  _
-          |  ___| _   _ _ __ ____  ___  ____          | | | || |
-          | |    | | | | '__'  __|' _ `'  __|  _   _  | | | || |
-          | |    | | | | |  | |__  |_| | |__  |_| |_| | | | || |
-          | |    | | | | |  |___ |  __/|__  |  _   _  | | | || |
-          | |___ | |_| | |   __| | |_,  __| | |_| |_| | |_| || |
-          |_____| \___/|_|  |____,\___,|____,          \___/ |_|
+=====================================================================
+	 _____                                       _   _  _
+	|  ___| _   _ _ __ ____  ___  ____          | | | || |
+	| |    | | | | '__'  __|' _ `'  __|  _   _  | | | || |
+	| |    | | | | |  | |__  |_| | |__  |_| |_| | | | || |
+	| |    | | | | |  |___ |  __/|__  |  _   _  | | | || |
+	| |___ | |_| | |   __| | |_,  __| | |_| |_| | |_| || |
+	|_____| \___/|_|  |____,\___,|____,          \___/ |_|
 
-             A curses based user interface framework in perl
+	   A curses based user interface framework in perl
 
-          Maintained by Marcus Thiesen (marcus@cpan.thiesenweb.de)
-	       Copyright (c) 2001-2002 Maurice Makaay
-		           All rights reserved.
+	     Maintained by Shawn Boyette (mdxi@cpan.org)
+		Copyright (c) 2003-2006 Marcus Thiesen
+		Copyright (c) 2001-2002 Maurice Makaay
+			 All rights reserved.
 
-   This package is free software and is provided "as is" without express
-    or implied warranty. It may be used, redistributed and/or modified
-                  under the same terms as perl itself.
+This package is free software and is provided "as is" without express
+  or implied warranty. It may be used, redistributed and/or modified
+		 under the same terms as perl itself.
 
-==============================================================================
+=====================================================================
 
 Please do let me know if you find these modules useful and let me
-know if any application is built using them. If you have a nice
-example application, I would be most willing to add it to the 
-distribution.
+know if any application is built using them.
 
 
 What is Curses::UI?
@@ -71,6 +70,7 @@ are supported:
 - Polish
 - Portuguese
 - Norwegian
+- Slovak
 
 Examples:
 =========
@@ -119,6 +119,3 @@ Some random features:
   mimics a scrollbar I decided to call it a scrollbar (sounds 
   simple eh? :-). This ability makes it easy to create widgets
   with scrollbars on them.
-  
-  
- 

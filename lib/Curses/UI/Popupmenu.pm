@@ -433,9 +433,6 @@ If the popup window is opened, it looks something like this:
  +--------------+
 
 
-See exampes/demo-Curses::UI::Popupmenu in the distribution
-for a short demo.
-
 
 
 =head1 STANDARD OPTIONS

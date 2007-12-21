@@ -189,8 +189,8 @@ sub new ()
             -border     => 0,
             -sbborder   => 0,
             -regexp     => '/^[^\/]*$/',
-	    -bg          => $this->{-bg},
-            -fg          => $this->{-fg},
+	    -bg         => $this->{-bg},
+            -fg         => $this->{-fg},
 
         );
     } else {
@@ -200,8 +200,8 @@ sub new ()
 		   -y          => $this->canvasheight - 4, 
 		   -text       => $this->{-file},
 		   -width      => $this->canvaswidth - 6,
-		   -bg              => $this->{-bg},
-		   -fg              => $this->{-fg},
+		   -bg         => $this->{-bg},
+		   -fg         => $this->{-fg},
 		   );
     }
 
@@ -429,7 +429,7 @@ sub maskbox_onchange()
     my $this = $maskbox->parent;
     $this->{-activemask} = $maskbox->get;
     $this->get_dir;
-    return $maskbox;    
+    return $maskbox;
 }
 
 sub draw(;$)

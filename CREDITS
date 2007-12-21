@@ -38,8 +38,7 @@ William Setzer : Author of the Perl5 Curses extension, the module on
 Nick Slussar   : For criticizing my software and for bringing 
                  up new ideas.
 
-Marcus Thiesen : For taking over the development of Curses::UI, so I 
-		 can completely focus on finishing Curses::UI 2.0.
+Marcus Thiesen : For taking over the development of Curses::UI
 
 Raul Dias      : For putting effort into Curses::UI and submitting
 		 multiple patches.
@@ -60,3 +59,5 @@ Sebastian Desreux	: French translation
 Raul Dias		: Portuguese translation
 
 Vlad Tepes		: Norwegian translation
+
+Marek Grac		: Slovak translation

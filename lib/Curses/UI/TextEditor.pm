@@ -1114,6 +1114,8 @@ sub mouse_button1($$$$;)
     my $x     = shift;
     my $y     = shift;
 
+    return unless $this->{-focusable};
+
     # TODO: make this possible for multi line widgets.
     if ($this->{-singleline})
     {

@@ -4,7 +4,7 @@ WriteMakefile(
     NAME         => 'Curses::UI',
     VERSION_FROM => 'lib/Curses/UI.pm',
     DISTNAME     => 'Curses-UI',
-    PREREQ_PM    => { 
+    PREREQ_PM    => {
         'Curses'           => 0,
 	'Term::ReadKey'    => 0,
 	'Test::Pod'        => 0,

@@ -5,29 +5,25 @@ You will need to have the Curses and Term::ReadKey packages installed
 before installing Curses::UI. I recommend compiling Curses against
 the ncurses library.
 
-The current version of Curses.pm (1.07) has a bug if compiled with Perl 5.8.
-Take a look to http://cpan.thiesenweb.de to get a patch. A new Version
-of Curses.pm is expected to be released soon.
-
 This package uses MakeMaker in a standard way to build its Makefile. 
 In order to build it do the following:
 
 1. Unpack the source into a directory
-2. change the current directory to the source directory
-3. run "perl Makefile.PL"
-4. run "make"
-5. run "make test" or "make test INTERACTIVE_TEST=1" if you
-   want to test Curses::UI using an interactive program
-6. run "make install"
+2. Change the current directory to the source directory
+3. Run "perl Makefile.PL"
+4. Run "make"
+5. Run "make test"
+6. Optionally, run "./example/demo-widgets" for an interactive test
+7. Run "make install"
 
 Example:
 
-$ gunzip Curses-UI-x.xx.tar.gz
-$ tar xf Curses-UI-x.xx.tar.gz
+$ tar -xvf Curses-UI-x.xx.tar.gz
 $ cd Curses-UI-x.xx
 $ perl Makefile.PL
 $ make
-$ make test INTERACTIVE_TEST=1
+$ make test
+$ ./examples/demo-widgets
 $ make install
 
 
