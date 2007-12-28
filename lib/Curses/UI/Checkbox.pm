@@ -1,17 +1,3 @@
-# ----------------------------------------------------------------------
-# Curses::UI::Checkbox
-#
-# (c) 2001-2002 by Maurice Makaay. All rights reserved.
-# This file is part of Curses::UI. Curses::UI is free software.
-# You can redistribute it and/or modify it under the same terms
-# as perl itself.
-#
-# Currently maintained by Marcus Thiesen
-# e-mail: marcus@cpan.thiesenweb.de
-# ----------------------------------------------------------------------
-
-# TODO: update docs
-
 package Curses::UI::Checkbox;
 
 use strict;
@@ -20,216 +6,22 @@ use Curses::UI::Label;
 use Curses::UI::Widget;
 use Curses::UI::Common;
 
-use vars qw(
-    $VERSION 
-    @ISA
-);
+use vars qw( $VERSION @ISA );
 
-$VERSION = '1.10';
-
-@ISA = qw(
-    Curses::UI::ContainerWidget 
-);
-
-my %routines = (
-    'loose-focus'       => \&loose_focus,
-    'uncheck'           => \&uncheck,
-    'check'             => \&check,
-    'toggle'            => \&toggle,
-    'mouse-button1'	=> \&mouse_button1,
-);
-
-my %bindings = (
-    KEY_ENTER()         => 'loose-focus',
-    CUI_TAB()           => 'loose-focus',
-    KEY_BTAB()          => 'loose-focus',
-    CUI_SPACE()         => 'toggle',
-    '0'                 => 'uncheck',
-    'n'                 => 'uncheck',
-    '1'                 => 'check',
-    'y'                 => 'check',
-);
-
-sub new ()
-{
-    my $class = shift;
-
-    my %userargs = @_;
-    keys_to_lowercase(\%userargs);
-
-    my %args = (
-        -parent         => undef,    # the parent window
-        -width          => undef,    # the width of the checkbox
-        -x              => 0,        # the horizontal pos. rel. to parent
-        -y              => 0,        # the vertical pos. rel. to parent
-        -checked        => 0,        # checked or not?
-        -label          => '',       # the label text
-        -onchange       => undef,    # event handler
-
-	-bg             => -1,
-	-fg             => -1,
-
-
-        %userargs,
-    
-        -bindings       => {%bindings},
-        -routines       => {%routines},
-
-        -focus          => 0,        # value init
-        -nocursor       => 0,        # this widget uses a cursor
-    );
-
-    # The windowscr height should be 1.
-    $args{-height} = height_by_windowscrheight(1,%args);
-    
-    # No width given? Then make the width the same size
-    # as the label + checkbox.
-    $args{-width} = width_by_windowscrwidth(4 + length($args{-label}),%args)
-        unless defined $args{-width};
-    
-    my $this = $class->SUPER::new( %args );
-    
-    # Create the label on the widget.
-    $this->add(
-        'label', 'Label',
-        -text           => $this->{-label},
-        -x              => 4,
-        -y              => 0,
-        -intellidraw    => 0,
-        -bg             => $this->{-bg},
-        -fg             => $this->{-fg},
-    ) if $this->{-label};
-
-    $this->layout;
-
-    if ($Curses::UI::ncurses_mouse) {
-        $this->set_mouse_binding('mouse-button1', BUTTON1_CLICKED());
-    }
-
-    return $this;
-}
-
-sub event_onblur()
-{
-    my $this = shift;
-    $this->SUPER::event_onblur;
-    
-    $this->{-focus} = 0;
-    $this->draw();
-
-    return $this;
-}
-    
-sub onChange(;$)  { shift()->set_event('-onchange',  shift()) }
-
-sub layout()
-{
-    my $this = shift;
-
-    my $label = $this->getobj('label');
-    if (defined $label)
-    {
-        my $lh = $label->{-height};
-        $lh = 1 if $lh <= 0;    
-        $this->{-height} = $lh;
-    }
-
-    $this->SUPER::layout or return;
-    return $this;
-}
-
-sub draw(;$)
-{
-    my $this = shift;
-    my $no_doupdate = shift || 0;
-        
-    # Draw the widget.
-    $this->SUPER::draw(1) or return $this;
-
-    # Draw the checkbox.
-     if ($Curses::UI::color_support) {
-	my $co = $Curses::UI::color_object;
-	my $pair = $co->get_color_pair(
-			     $this->{-fg},
-			     $this->{-bg});
-
-	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
-
-    }
-
-    $this->{-canvasscr}->attron(A_BOLD) if $this->{-focus};    
-    $this->{-canvasscr}->addstr(0, 0, '[ ]');
-    $this->{-canvasscr}->addstr(0, 1, 'X') if $this->{-checked};
-    $this->{-canvasscr}->attroff(A_BOLD) if $this->{-focus};    
-
-    $this->{-canvasscr}->move(0,1);
-    $this->{-canvasscr}->noutrefresh();
-    doupdate() unless $no_doupdate;
-
-    return $this;
-}
-
-sub uncheck()
-{
-    my $this = shift;
-    my $changed = ($this->{-checked} ? 1 : 0);
-    $this->{-checked} = 0;
-    if ($changed) 
-    {
-        $this->run_event('-onchange');
-        $this->schedule_draw(1);
-    }
-    return $this;
-}
-
-sub check()
-{
-    my $this = shift;
-    my $changed = ($this->{-checked} ? 0 : 1);
-    $this->{-checked} = 1;
-    if ($changed) 
-    {
-        $this->run_event('-onchange');
-        $this->schedule_draw(1);
-    }
-    return $this;
-}
-
-sub toggle()
-{
-    my $this = shift;
-    $this->{-checked} = !$this->{-checked};
-    $this->run_event('-onchange');
-    $this->schedule_draw(1);
-}
-
-sub mouse_button1($$$$;)
-{
-    my $this  = shift;
-    my $event = shift;
-    my $x     = shift;
-    my $y     = shift;
-
-    $this->focus();
-    $this->toggle();
-
-    return $this;
-}
-
-sub get()
-{
-    my $this = shift;
-    return $this->{-checked};
-}
-
-1;
-
-
-=pod
+@ISA = qw( Curses::UI::ContainerWidget );
 
 =head1 NAME
 
 Curses::UI::Checkbox - Create and manipulate checkbox widgets
+
+
+=head1 VERSION
+
+Version 1.0011
+
+=cut
+
+$VERSION = '1.0011';
 
 =head1 CLASS HIERARCHY
 
@@ -237,8 +29,7 @@ Curses::UI::Checkbox - Create and manipulate checkbox widgets
     |
     +----Curses::UI::Container
             |
-            +----Curses::UI::Buttonbox
-
+            +----Curses::UI::Checkbox
 
 
 =head1 SYNOPSIS
@@ -259,155 +50,324 @@ Curses::UI::Checkbox - Create and manipulate checkbox widgets
 
 =head1 DESCRIPTION
 
-Curses::UI::Checkbox is a widget that can be used to create 
-a checkbox. A checkbox has a label which says what the 
-checkbox is about and in front of the label there is a
-box which can have an "X" in it. If the "X" is there, the
-checkbox is checked (B<get> will return a true value). If
-the box is empty, the checkbox is not checked (B<get> will
-return a false value). A checkbox looks like this:
+Curses::UI::Checkbox provides a checkbox widget.
 
-    [X] Say hello to the world
+A checkbox is a control for a boolean value (an on/off toggle). It
+consists of a box which will either be empty (indicating B<off> or
+B<false>) or contain an C<X> (indicating B<on> or B<true>). Following
+this is a text label which described the value being controlled.
 
-See exampes/demo-Curses::UI::Checkbox in the distribution
-for a short demo.
+    [X] This checkbox is on/true/checked/selected
+    [ ] This checkbox is off/false/unchecked/deselected
 
+See exampes/demo-Curses::UI::Checkbox in the distribution for a short
+demo.
 
+=cut
+
+my %routines = ( 'loose-focus'   => \&loose_focus,
+		 'uncheck'       => \&uncheck,
+		 'check'         => \&check,
+		 'toggle'        => \&toggle,
+		 'mouse-button1' => \&mouse_button1,
+	       );
+
+my %bindings = ( KEY_ENTER() => 'loose-focus',
+		 CUI_TAB()   => 'loose-focus',
+		 KEY_BTAB()  => 'loose-focus',
+		 CUI_SPACE() => 'toggle',
+		 '0'         => 'uncheck',
+		 'n'         => 'uncheck',
+		 '1'         => 'check',
+		 'y'         => 'check',
+	       );
 
 =head1 STANDARD OPTIONS
 
-B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, 
-B<-pad>, B<-padleft>, B<-padright>, B<-padtop>, B<-padbottom>,
-B<-ipad>, B<-ipadleft>, B<-ipadright>, B<-ipadtop>, B<-ipadbottom>,
-B<-title>, B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>,
-B<-onblur>
+B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, B<-pad>, B<-padleft>,
+B<-padright>, B<-padtop>, B<-padbottom>, B<-ipad>, B<-ipadleft>,
+B<-ipadright>, B<-ipadtop>, B<-ipadbottom>, B<-title>,
+B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>, B<-onblur>
 
-For an explanation of these standard options, see 
-L<Curses::UI::Widget|Curses::UI::Widget>.
-
-
+See L<Curses::UI::Widget|Curses::UI::Widget> for an explanation of
+these.
 
 
 =head1 WIDGET-SPECIFIC OPTIONS
 
-=over 4
+=head2 -label
 
-=item * B<-label> < TEXT >
+Sets the initial label for the checkbox widget to the passed string or
+value.
 
-This will set the text label for the checkbox widget 
-to TEXT.
+=head2 -checked
 
-=item * B<-checked> < BOOLEAN >
+Takes a boolean argument. Determines if the widget's initial state is
+checked or unchecked.  The default is false (unchecked).
 
-This option determines if at creation time the checkbox
-should be checked or not. By default this option is
-set to false, so the checkbox is not checked.
+=head2 -onchange
 
-=item * B<-onchange> < CODEREF >
+Expects a coderef and sets it as a callback for the widget. When the
+checkbox's state is changed, the given code will be executed.
 
-This sets the onChange event handler for the checkbox widget.
-If the checkbox is toggled, the code in CODEREF will be executed.
-It will get the widget reference as its argument.
+=cut
+
+sub new () {
+    my $class = shift;
+
+    my %userargs = @_;
+    keys_to_lowercase(\%userargs);
+
+    my %args = ( -parent    => undef,    # the parent window
+		 -width     => undef,    # the width of the checkbox
+		 -x         => 0,        # the horizontal pos. rel. to parent
+		 -y         => 0,        # the vertical pos. rel. to parent
+		 -checked   => 0,        # checked or not?
+		 -label     => '',       # the label text
+		 -onchange  => undef,    # event handler
+		 -bg        => -1,
+		 -fg        => -1,
+		 %userargs,
+		 -bindings  => {%bindings},
+		 -routines  => {%routines},
+
+		 -focus     => 0,        # value init
+		 -nocursor  => 0,        # this widget uses a cursor
+	       );
+
+    # The windowscr height should be 1.
+    $args{-height} = height_by_windowscrheight(1, %args);
+
+    # No width given? Then make the width the same size as the label +
+    # checkbox.
+    $args{-width} = width_by_windowscrwidth(4 + length($args{-label}),%args)
+        unless defined $args{-width};
+
+    my $this = $class->SUPER::new( %args );
+
+    # Create the label on the widget.
+    $this->add( 'label', 'Label',
+		-text        => $this->{-label},
+		-x           => 4,
+		-y           => 0,
+		-intellidraw => 0,
+		-bg          => $this->{-bg},
+		-fg          => $this->{-fg},
+	      ) if $this->{-label};
+
+    $this->layout;
+
+    $this->set_mouse_binding('mouse-button1', BUTTON1_CLICKED())
+      if ($Curses::UI::ncurses_mouse);
+
+    return $this;
+}
+
+
+=head1 STANDARD METHODS
+
+=over
+
+=item * C<layout>
+
+=item * C<draw(BOOLEAN)>
+
+=item * C<intellidraw>
+
+=item * C<focus>
+
+=item * C<onFocus( CODEREF )>
+
+=item * C<onBlur( CODEREF )>
 
 =back
 
+See L<Curses::UI::Widget|Curses::UI::Widget> for an explanation of
+these.
+
+=cut
+
+sub event_onblur() {
+    my $this = shift;
+    $this->SUPER::event_onblur;
+
+    $this->{-focus} = 0;
+    $this->draw();
+
+    return $this;
+}
+
+sub layout() {
+    my $this = shift;
+
+    my $label = $this->getobj('label');
+    if (defined $label) {
+        my $lh = $label->{-height};
+        $lh = 1 if $lh <= 0;
+        $this->{-height} = $lh;
+    }
+
+    $this->SUPER::layout or return;
+    return $this;
+}
+
+sub draw(;$) {
+    my $this = shift;
+    my $no_doupdate = shift || 0;
+
+    # Draw the widget.
+    $this->SUPER::draw(1) or return $this;
+
+    # Draw the checkbox.
+     if ($Curses::UI::color_support) {
+	my $co = $Curses::UI::color_object;
+	my $pair = $co->get_color_pair(
+			     $this->{-fg},
+			     $this->{-bg});
+	$this->{-canvasscr}->attron(COLOR_PAIR($pair));
+    }
+
+    $this->{-canvasscr}->attron(A_BOLD) if $this->{-focus};    
+    $this->{-canvasscr}->addstr(0, 0, '[ ]');
+    $this->{-canvasscr}->addstr(0, 1, 'X') if $this->{-checked};
+    $this->{-canvasscr}->attroff(A_BOLD) if $this->{-focus};    
+
+    $this->{-canvasscr}->move(0,1);
+    $this->{-canvasscr}->noutrefresh();
+    doupdate() unless $no_doupdate;
+
+    return $this;
+}
 
 
+=head1 WIDGET-SPECIFIC METHODS
 
-=head1 METHODS
+=head2 get
 
-=over 4
+Returns the current state of the checkbox (0 == unchecked, 1 ==
+checked).
 
-=item * B<new> ( OPTIONS )
+=cut
 
-=item * B<layout> ( )
+sub get() {
+    my $this = shift;
+    return $this->{-checked};
+}
 
-=item * B<draw> ( BOOLEAN )
+=head2 check
 
-=item * B<intellidraw> ( )
+Sets the checkbox to "checked".
 
-=item * B<focus> ( )
+=cut
 
-=item * B<onFocus> ( CODEREF )
+sub check() {
+    my $this = shift;
+    my $changed = ($this->{-checked} ? 0 : 1);
+    $this->{-checked} = 1;
+    if ($changed) {
+        $this->run_event('-onchange');
+        $this->schedule_draw(1);
+    }
+    return $this;
+}
 
-=item * B<onBlur> ( CODEREF )
+=head2 uncheck
 
-These are standard methods. See L<Curses::UI::Widget|Curses::UI::Widget> 
-for an explanation of these.
+Sets the checkbox to "unchecked".
 
-=item * B<get> ( )
+=cut
 
-This method will return the current state of the checkbox
-(0 = not checked, 1 = checked).
+sub uncheck() {
+    my $this = shift;
+    my $changed = ($this->{-checked} ? 1 : 0);
+    $this->{-checked} = 0;
+    if ($changed) {
+        $this->run_event('-onchange');
+        $this->schedule_draw(1);
+    }
+    return $this;
+}
 
-=item * B<check> ( )
+=head2 toggle
 
-This method can be used to set the checkbox to its checked state.
+Flip-flops the checkbox to its "other" state. If the checkbox is
+unchecked then it will become checked, and vice versa.
 
-=item * B<uncheck> ( )
+=cut
 
-This method can be used to set the checkbox to its unchecked state.
+sub toggle() {
+    my $this = shift;
+    $this->{-checked} = ($this->{-checked} ? 0 : 1);
+    $this->run_event('-onchange');
+    $this->schedule_draw(1);
+}
 
-=item * B<toggle> ( )
+=head2 onChange ( CODEREF )
 
-This method will set the checkbox in "the other state". This means
-that the checkbox will get checked if it is not and vice versa.
+This method can be used to set the C<-onchange> event handler (see
+above) after initialization of the checkbox.
 
-=item * B<onChange> ( CODEREF )
+=cut
 
-This method can be used to set the B<-onchange> event handler
-(see above) after initialization of the checkbox.
+sub onChange(;$)  { shift()->set_event('-onchange',  shift()) }
 
+sub mouse_button1($$$$;) {
+    my $this  = shift;
+    my $event = shift;
+    my $x     = shift;
+    my $y     = shift;
 
-=back
+    $this->focus();
+    $this->toggle();
 
-
-
+    return $this;
+}
 
 =head1 DEFAULT BINDINGS
 
-=over 4
+=over
 
-=item * <B<tab>>, <B<enter>>
+=item C<[TAB]>, C<[ENTER}>
 
-Call the 'loose-focus' routine. This will have the widget 
-loose its focus.
+Call the 'loose-focus' routine, causing the widget to lose focus.
 
-=item * <B<space>>
+=item C<[SPACE]>
 
-Call the 'toggle' routine (see the B<toggle> method). 
+Call the L</toggle> method.
 
-=item * <B<0>>, <B<n>>
+=item C<0>, C<n>
 
-Call the 'uncheck' routine (see the B<uncheck> method).
+Call the L</uncheck> method.
 
-=item * <B<1>>, <B<y>>
+=item C<1>, C<y>
 
-Call the 'check' routine (see the B<check> method).
+Call the L</check> method.
 
-=back 
-
-
-
+=back
 
 
 =head1 SEE ALSO
 
-L<Curses::UI|Curses::UI>, 
-L<Curses::UI::Widget|Curses::UI::Widget>, 
+L<Curses::UI|Curses::UI>,
+L<Curses::UI::Widget|Curses::UI::Widget>,
 L<Curses::UI::Common|Curses::UI::Common>
-
-
-
 
 =head1 AUTHOR
 
-Copyright (c) 2001-2002 Maurice Makaay. All rights reserved.
+Shawn Boyette C<< <mdxi@cpan.org> >>
 
-Maintained by Marcus Thiesen (marcus@cpan.thiesenweb.de)
+=head1 COPYRIGHT & LICENSE
 
+Copyright 2001-2002 Maurice Makaay; 2003-2006 Marcus Thiesen; 2007
+Shawn Boyette. All Rights Reserved.
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 This package is free software and is provided "as is" without express
 or implied warranty. It may be used, redistributed and/or modified
 under the same terms as perl itself.
 
+=cut
+
+1; # end of Curses::UI::Checkbox

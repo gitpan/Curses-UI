@@ -1,3 +1,7 @@
+=head1 NAME
+
+Curses::UI::Tutorial - Tutorial for the Curses::UI framework
+
 =head1 Introduction
 
 The intention of this tutorial is a quick overview of Curses::UI and

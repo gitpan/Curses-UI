@@ -1,5 +1,12 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.96_01
+===============
+	- Fixed bug in C::UI::Checkbox->get (RT#31916, Russ Allbery)
+	- Fixed doc bug in Tutorial.pod (rt#31918, Russ Allbery)
+	- Fixed doc bug in Checkbox.pm (rt#31917, Russ Allbery)
+	- Began POD overhaul and code reformatting
+
 Version 0.96
 ============
 		- Added -keydelay option to new()
