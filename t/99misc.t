@@ -1,8 +1,7 @@
-# -*- perl -*-
 use strict;
+use warnings;
+
 use Test::More tests => 2;
-use FindBin;
-use lib "$FindBin::RealBin/../lib";
 
 $ENV{LINES} = 25;
 $ENV{COLUMNS} = 80;

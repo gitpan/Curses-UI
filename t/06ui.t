@@ -1,6 +1,6 @@
-# -*- perl -*-
-use strict;
 use Test::More tests => 8;
+use strict;
+use warnings;
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";
 use lib "$FindBin::RealBin/../lib";

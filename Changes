@@ -1,5 +1,13 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.9602
+==============
+	- Using Module::Install now
+	- Removed effectively null t/99template.t which was causing
+	  FAILs for CPAN testers (to be replaced with more testing
+	  at a later date)
+	- Apologies for the weird previous version number
+
 Version 0.96_01
 ===============
 	- Fixed bug in C::UI::Checkbox->get (RT#31916, Russ Allbery)

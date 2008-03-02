@@ -47,15 +47,15 @@ sub new ()
         -textalignment   => undef,    # left / middle / right
         -bold            => 0,        # Special attributes
         -reverse         => 0,
-        -underline       => 0,    
+        -underline       => 0,
         -dim             => 0,
         -blink           => 0,
         -paddingspaces   => 0,        # Pad text with spaces?
 	-bg              => -1,
 	-fg              => -1,
-        
+
         %userargs,
-        
+
         -nocursor        => 1,        # This widget uses no cursor
         -focusable       => 0,        # This widget can't be focused
     );
@@ -75,16 +75,16 @@ sub new ()
         $l = 1 if $l <= 0;
         $args{-height} = height_by_windowscrheight($l, %args);
     }
-    
+
     # No width given? Then make the width the same size
     # as the text. No initial text? Then let
     # Curses::UI::Widget figure it out.
     $args{-width} = width_by_windowscrwidth($text_dimension[0], %args)
         unless defined $args{-width} or not defined $args{-text};
 
-    # If no text was defined (how silly...) we define an empty strin. 
+    # If no text was defined (how silly...) we define an empty string.
     $args{-text} = '' unless defined $args{-text};
-    
+
     # Create the widget.
     my $this = $class->SUPER::new( %args );
 
@@ -170,10 +170,10 @@ sub draw(;$)
 {
     my $this = shift;
     my $no_doupdate = shift || 0;
-        
+
     # Draw the widget.
     $this->SUPER::draw(1) or return $this;
-    
+
     # Clear all attributes.
     $this->{-canvasscr}->attroff(A_REVERSE);
     $this->{-canvasscr}->attroff(A_BOLD);
@@ -209,15 +209,15 @@ sub draw(;$)
             $line = substr($line, 0, $this->canvaswidth);
             $line =~ s/.$/\$/;
         } elsif ($this->{-paddingspaces}) {
-            $this->{-canvasscr}->addstr($ypos, 0, " "x$this->canvaswidth);    
-        } 
+            $this->{-canvasscr}->addstr($ypos, 0, " "x$this->canvaswidth);
+        }
 
         my $xpos = $this->compute_xpos($line);
         $this->{-canvasscr}->addstr($ypos, $xpos, $line);
 
         $ypos++;
     }
-    
+
     $this->{-canvasscr}->noutrefresh;
     doupdate() unless $no_doupdate;
 

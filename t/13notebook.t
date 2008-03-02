@@ -1,14 +1,15 @@
-# -*- perl -*-
-# $Id: 13notebook.t,v 1.4 2005/03/18 10:10:51 mthies2s Exp $
+use Test::More tests => 25;
 
-use Test::More tests => 24;
+use strict;
+use warnings;
+
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";
 use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
 
 # Tests 1: module load.
-BEGIN { 
+BEGIN {
     $| = 1;
     # Ensure Term::ReadKey doesn't fail to get the screen size.
     $ENV{LINES} = 25;
@@ -19,10 +20,8 @@ BEGIN {
 
 my $debug = 0;
 
-my $cui = new Curses::UI (
-    -clear_on_exit => 0,
-    -debug => $debug,
-);
+my $cui = new Curses::UI ( -clear_on_exit => 0,
+			   -debug => $debug, );
 $cui->leave_curses();
 
 my $win = $cui->add(undef, 'Window');
@@ -30,8 +29,9 @@ exit unless $win;
 
 # Tests 2-4: notebook object creation.
 my $nb1 = $win->add(undef, 'Notebook');
+isa_ok( $nb1, 'Curses::UI::Notebook');
+
 ok(
-    $nb1->isa('Curses::UI::Notebook') &&
     $nb1->{-border} == 1 && $nb1->{-sbborder} == 0 &&
     $nb1->{-padleft} == 0 && $nb1->{-ipadleft} == 1,
     'Initialization w/ defaults'

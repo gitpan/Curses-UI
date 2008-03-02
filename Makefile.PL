@@ -1,17 +1,17 @@
-use ExtUtils::MakeMaker;
+# Load the Module::Install bundled in ./inc/
+use inc::Module::Install;
 
-WriteMakefile(
-    NAME         => 'Curses::UI',
-    VERSION_FROM => 'lib/Curses/UI.pm',
-    DISTNAME     => 'Curses-UI',
-    PREREQ_PM    => {
-        'Curses'           => 0,
-	'Term::ReadKey'    => 0,
-	'Test::Pod'        => 0,
-	'Test::More'       => 0,
-    },
+# Define metadata
+name            'Curses-UI';
+all_from        'lib/Curses/UI.pm';
 
-    dist         => { COMPRESS => 'gzip', SUFFIX => 'gz' },
-    clean        => { FILES => 'MANIFEST.bak' },
-);
+# Specific dependencies
+requires        'Curses'        => 0;
+requires        'Term::ReadKey' => 0;
+build_requires  'Test::More'    => 0;
+build_requires  'Test::Pod'     => 0;
 
+no_index        'directory'         => 'examples';
+
+auto_install;
+WriteAll;
