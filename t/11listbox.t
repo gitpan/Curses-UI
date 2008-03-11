@@ -3,7 +3,6 @@ use Test::More tests => 10;
 use strict;
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";
-use lib "$FindBin::RealBin/../lib";
 
 $ENV{LINES} = 25;
 $ENV{COLUMNS} = 80;

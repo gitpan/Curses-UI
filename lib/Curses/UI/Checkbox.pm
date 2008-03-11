@@ -17,11 +17,11 @@ Curses::UI::Checkbox - Create and manipulate checkbox widgets
 
 =head1 VERSION
 
-Version 1.0011
+Version 1.11
 
 =cut
 
-$VERSION = '1.0011';
+$VERSION = '1.11';
 
 =head1 CLASS HIERARCHY
 
@@ -84,10 +84,12 @@ my %bindings = ( KEY_ENTER() => 'loose-focus',
 
 =head1 STANDARD OPTIONS
 
-B<-parent>, B<-x>, B<-y>, B<-width>, B<-height>, B<-pad>, B<-padleft>,
-B<-padright>, B<-padtop>, B<-padbottom>, B<-ipad>, B<-ipadleft>,
-B<-ipadright>, B<-ipadtop>, B<-ipadbottom>, B<-title>,
-B<-titlefullwidth>, B<-titlereverse>, B<-onfocus>, B<-onblur>
+    -x  -y   -width    -height
+    -pad     -padleft  -padright  -padtop  -padbottom
+    -ipad    -ipadleft -ipadright -ipadtop -ipadbottom
+    -title   -titlefullwidth      -titlereverse
+    -onfocus -onblur
+    -parent
 
 See L<Curses::UI::Widget|Curses::UI::Widget> for an explanation of
 these.
@@ -166,21 +168,8 @@ sub new () {
 
 =head1 STANDARD METHODS
 
-=over
-
-=item * C<layout>
-
-=item * C<draw(BOOLEAN)>
-
-=item * C<intellidraw>
-
-=item * C<focus>
-
-=item * C<onFocus( CODEREF )>
-
-=item * C<onBlur( CODEREF )>
-
-=back
+    layout draw    intellidraw
+    focus  onFocus onBlur
 
 See L<Curses::UI::Widget|Curses::UI::Widget> for an explanation of
 these.
@@ -302,10 +291,11 @@ sub toggle() {
     $this->schedule_draw(1);
 }
 
-=head2 onChange ( CODEREF )
+=head2 onChange
 
 This method can be used to set the C<-onchange> event handler (see
-above) after initialization of the checkbox.
+above) after initialization of the checkbox. It expects a coderef as
+its argument.
 
 =cut
 

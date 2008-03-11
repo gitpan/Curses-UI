@@ -1,7 +1,7 @@
 --- 
 abstract: A curses based OO user interface framework
 author: 
-  - Originally written by Maurice Makaay. Formerly maintained by Marcus Thiesen.
+  - Shawn Boyette C<< <mdxi@cpan.org> >>
 build_requires: 
   Test::More: 0
   Test::Pod: 0
@@ -20,4 +20,4 @@ no_index:
 requires: 
   Curses: 0
   Term::ReadKey: 0
-version: 0.9602
+version: 0.9603

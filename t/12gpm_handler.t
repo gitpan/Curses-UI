@@ -3,7 +3,6 @@ use strict;
 use Test::More tests => 5;
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";
-use lib "$FindBin::RealBin/../lib";
 
 $ENV{LINES} = 25;
 $ENV{COLUMNS} = 80;
@@ -31,7 +30,7 @@ $cui->do_one_event(); #should not lead to errors
 pass("Without forced GPM support");
 
 undef $cui;
-undef $Curses::UI::rootobject;
+$Curses::UI::initialized = 0;
 
 $Curses::UI::gpm_mouse = 1; #force mouse
 $cui = new Curses::UI("-clear_on_exit" => 0);

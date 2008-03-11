@@ -1,6 +1,4 @@
-BUGS
 Changes
-Coverage
 CREDITS
 examples/color_editor
 examples/demo-add
@@ -73,8 +71,8 @@ lib/Curses/UI/Tutorial.pod
 lib/Curses/UI/Widget.pm
 lib/Curses/UI/Window.pm
 Makefile.PL
-MANIFEST
-META.yml			Module meta-data (added by MakeMaker)
+MANIFEST			This list of files
+META.yml
 README
 t/01base_classes.t
 t/02widget_classes.t
@@ -92,4 +90,3 @@ t/13notebook.t
 t/99misc.t
 t/fakelib/Curses.pm
 t/lorem.pl
-TODO

@@ -1,32 +1,12 @@
-=====================================================================
-	 _____                                       _   _  _
-	|  ___| _   _ _ __ ____  ___  ____          | | | || |
-	| |    | | | | '__'  __|' _ `'  __|  _   _  | | | || |
-	| |    | | | | |  | |__  |_| | |__  |_| |_| | | | || |
-	| |    | | | | |  |___ |  __/|__  |  _   _  | | | || |
-	| |___ | |_| | |   __| | |_,  __| | |_| |_| | |_| || |
-	|_____| \___/|_|  |____,\___,|____,          \___/ |_|
+       		     _                         ___
+		    /      ._ _  _   _ o o | |  |
+		    \_ |_| | _> (/_ _> o o |_| _|_
 
 	   A curses based user interface framework in perl
 
-	     Maintained by Shawn Boyette (mdxi@cpan.org)
-		Copyright (c) 2003-2006 Marcus Thiesen
-		Copyright (c) 2001-2002 Maurice Makaay
-			 All rights reserved.
-
-This package is free software and is provided "as is" without express
-  or implied warranty. It may be used, redistributed and/or modified
-		 under the same terms as perl itself.
-
-=====================================================================
-
-Please do let me know if you find these modules useful and let me
-know if any application is built using them.
-
 
 What is Curses::UI?
-===================
-
+-------------------
 A UI framework based on the curses library. Curses::UI contains
 several widgets which can be used to build a user interface:
 
@@ -47,7 +27,7 @@ several widgets which can be used to build a user interface:
 - Widget (widget base element)
 - Window
 
-There are also a couple of dialog windows available:
+There are also prefabricated dialog windows available:
 
 - Basic dialog window 
 - Error dialog window
@@ -56,6 +36,9 @@ There are also a couple of dialog windows available:
 - Progress window
 - Calendar dialog window
 
+
+Localization
+------------
 Curses::UI can easily be configured to use a specific language.
 If you want a language that is not yet supported, please let me
 know. If you want to translate the needed strings, I'll add 
@@ -72,50 +55,14 @@ are supported:
 - Norwegian
 - Slovak
 
-Examples:
-=========
 
+Examples
+--------
 Examples are in the distribution's "examples" directory.
 You do not have to install this distribution to test these
 examples.
 
-There aren't many examples yet, but the widgets are pretty much
-finished and functional. So far I have only built some small example
-applications using the Curses::UI widget-set, so interfacing with 
-them might miss out on some aspects, but as soon as I am going to
-build the project for which I created these widgets, this might
-change. 
 
-If you want me to add a particular functionality or 
-widget type, please feel free to send me an e-mail 
-(marcus@cpan.thiesenweb.de) and I'll see what I can do for you.
-Patches are even better :-)
-
-
-Some random features:
-=====================
-
-- Curses::UI is compatible with the standard curses library. 
-  So it will work on non-ncurses systems. 
-
-- Curses::UI programs can be controlled using the mouse (if
-  ncurses is installed and your terminal communicates with it).
-
-- Curses::UI uses a perl-Tk like MainLoop(). You add windows
-  and widgets, define relationships through bindings and events
-  and MainLoop() will take care of the rest for you! :-)
-
-- The Curses::UI::ListBox widget is searchable using a "less"-like
-  system. So if a listbox widget has focus, pressing "/" or "?"
-  will invoke a search on the contents of the listbox. Since the
-  listbox is also used for radiobuttons, popupboxes and menulistboxes,
-  all these are automatically searchable as well;
-
-- The base element of most widgets (Curses::UI::Widget) has the 
-  ability of showing "scrollbars" for both the x- and y-direction. 
-  These scrollbars can be drawn on all sides of the widget
-  (left, right, top and bottom). The scrollbar is not really a 
-  scrollbar but more a document location indicator, but since it 
-  mimics a scrollbar I decided to call it a scrollbar (sounds 
-  simple eh? :-). This ability makes it easy to create widgets
-  with scrollbars on them.
+More Information
+----------------
+Please see 'perldoc ./lib/Curses/UI.pm' for more information.

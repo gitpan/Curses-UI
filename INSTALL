@@ -1,29 +1,14 @@
 Curses::UI installation:
 ========================
 
-You will need to have the Curses and Term::ReadKey packages installed
-before installing Curses::UI. I recommend compiling Curses against
-the ncurses library.
+Curses::UI depends on the Curses and Term::ReadKey packages. The
+installer will volunteer to take care of this for you via the CPAN,
+but you may wish to handle it through your package manager.
 
-This package uses MakeMaker in a standard way to build its Makefile. 
-In order to build it do the following:
+Installation is the usual:
 
-1. Unpack the source into a directory
-2. Change the current directory to the source directory
-3. Run "perl Makefile.PL"
-4. Run "make"
-5. Run "make test"
-6. Optionally, run "./example/demo-widgets" for an interactive test
-7. Run "make install"
-
-Example:
-
-$ tar -xvf Curses-UI-x.xx.tar.gz
-$ cd Curses-UI-x.xx
-$ perl Makefile.PL
-$ make
-$ make test
-$ ./examples/demo-widgets
-$ make install
-
-
+> perl Makefile.PL
+> make
+> make test
+> # Optionally, "./example/demo-widgets" for an interactive test
+> sudo make install

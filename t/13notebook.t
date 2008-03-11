@@ -5,8 +5,10 @@ use warnings;
 
 use FindBin;
 use lib "$FindBin::RealBin/fakelib";
-use lib "$FindBin::RealBin/../lib";
 use Curses::UI;
+
+$ENV{LINES} = 25;
+$ENV{COLUMNS} = 80;
 
 # Tests 1: module load.
 BEGIN {

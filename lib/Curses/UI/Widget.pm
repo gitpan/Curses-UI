@@ -114,7 +114,7 @@ sub new ()
     $args{-height} = undef 
         if defined $args{-height} and $args{-height} == -1;
 
-    $Curses::UI::rootobject->fatalerror(
+    &Curses::UI::fatalerror(
         "Missing or illegal parameter: -parent\n" 
       . "while creating " . caller() . "object"
     ) unless defined $args{-parent} and ref $args{-parent};

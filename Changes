@@ -1,5 +1,16 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.9603
+==============
+	- MainLoop has been removed (please use '$cui->mainloop')
+	- So the circular reference of $Curses::UI::rootobject has
+	  been removed as well
+	- RT bugs 31919, 11925 (Notebook.pm testing failures) fixed,
+	  again thanks to Russ Allbery
+	- UI.pm now uses strict and warnings(!)
+	- UI.pm's POD and layout being overhauled
+	- BUGS and TODO have been nuked (RT, googlecode)
+
 Version 0.9602
 ==============
 	- Using Module::Install now
