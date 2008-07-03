@@ -70,27 +70,26 @@ $win1->add("d3", "TextEntry",
 	      -readonly => 1,);
 
 
-my $ent3 = $win1->add("ent3", "TextEntry", 
-		      -border => 1, 
+my $ent3 = $win1->add("ent3", "TextEntry",
+		      -border => 1,
 		      -bfg => "red",
 		      -y => 10,
-		      -x => 10 , 
-		      -width => 10, 
+		      -x => 10 ,
+		      -width => 10,
 		      -readonly => 1,
 		      -focusable => 0,
 		      ) ;
 
 
 my $but1 = $win1->add("addbutton", "Buttonbox" ,
-	   -buttons => [ {
-	       -label => "< ADD >",
-	       -onpress => \&add } ] ,
-	      -y => 15, -x => 5
+	   -buttons => [ { -label => "< ADD >",
+			   -onpress => \&add } ] ,
+		      -y => 15, -x => 5
 	   );
 
 sub add {
     if (($ent1->get() =~ /[\d.]+/) &&
-	($ent2->get() =~ /[\d.]+/)) {   
+	($ent2->get() =~ /[\d.]+/)) {
 	$ent3->text($ent1->get() + $ent2->get());
     } else {
 	$cui->error("You have to enter a number in A and B");
@@ -98,8 +97,6 @@ sub add {
 
 }
 
-	       
 $cui->set_binding( sub {exit 0;}, "q");
-$cui->MainLoop;
-			 
+$cui->mainloop;
 

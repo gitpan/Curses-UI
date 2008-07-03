@@ -1,5 +1,11 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.9604
+==============
+	- MainLoop removal broke several examples. Fixed (thanks to
+	  Antony Gelberg)
+	- Japanese localization added (thanks Takatoshi Kitano)
+
 Version 0.9603
 ==============
 	- MainLoop has been removed (please use '$cui->mainloop')

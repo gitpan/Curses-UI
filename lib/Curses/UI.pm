@@ -19,12 +19,12 @@ Curses::UI - A curses based OO user interface framework
 
 =head1 VERSION
 
-Version 0.9603
+Version 0.9604
 
 =cut
 
 use vars qw( $VERSION );
-$VERSION = 0.9603;
+$VERSION = 0.9604;
 
 =head1 SYNOPSIS
 

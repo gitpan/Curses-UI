@@ -42,4 +42,4 @@ $win1->add("box2", "Buttonbox",
 	 );
 
 $cui->set_binding( sub {exit 0;}, "q");
-$cui->MainLoop;
+$cui->mainloop;

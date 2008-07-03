@@ -56,4 +56,5 @@ if ($Curses::UI::ncurses_mouse) {
 } else {
     $status->text($status->text() . " (mouse support disabled)"); 
 }
-MainLoop;
+
+$cui->mainloop;

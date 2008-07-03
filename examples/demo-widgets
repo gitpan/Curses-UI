@@ -934,5 +934,5 @@ $w{$current_demo}->focus;
 # Get things rolling...
 # ----------------------------------------------------------------------
 
-MainLoop;
+$cui->mainloop;
 

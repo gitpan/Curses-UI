@@ -311,5 +311,5 @@ END { $pop3->quit if defined $pop3 }
 
 setup_connection();
 build_inbox();
-MainLoop;
+$cui->mainloop;
 

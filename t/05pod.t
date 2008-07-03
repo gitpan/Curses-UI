@@ -7,7 +7,7 @@ use strict;
 use FindBin;
 use File::Find;
 use Test::More;
-use Test::Pod (tests => 44);
+use Test::Pod (tests => 45);
 
 
 sub wanted {
