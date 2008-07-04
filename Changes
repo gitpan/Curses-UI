@@ -1,5 +1,9 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.9605
+==============
+	- MANIFEST in 0.9604 was bad, causing pertesters FAIL
+
 Version 0.9604
 ==============
 	- MainLoop removal broke several examples. Fixed (thanks to

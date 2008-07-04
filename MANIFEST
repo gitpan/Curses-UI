@@ -49,6 +49,7 @@ lib/Curses/UI/Language/english.pm
 lib/Curses/UI/Language/french.pm
 lib/Curses/UI/Language/german.pm
 lib/Curses/UI/Language/italian.pm
+lib/Curses/UI/Language/japanese.pm
 lib/Curses/UI/Language/norwegian.pm
 lib/Curses/UI/Language/polish.pm
 lib/Curses/UI/Language/portuguese.pm
