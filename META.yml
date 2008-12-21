@@ -20,4 +20,4 @@ requires:
   Term::ReadKey: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.9606
+version: 0.9607

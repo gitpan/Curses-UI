@@ -24,7 +24,7 @@ use vars qw(
     $VERSION
     @ISA
 );
-$VERSION = '1.0.0';
+$VERSION = '1.0001';
 @ISA = qw(
     Curses::UI::Container
 );

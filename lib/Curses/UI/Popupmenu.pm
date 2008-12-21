@@ -29,7 +29,7 @@ use vars qw(
     @ISA
 );
 
-$VERSION = '1.10';
+$VERSION = '1.0011';
 
 @ISA = qw(
     Curses::UI::Listbox
@@ -232,13 +232,13 @@ sub draw(;$)
 
     $this->{-canvasscr}->attron(A_REVERSE) if $this->{-focus};
     my $width = $this->canvaswidth;
-    if (defined $sellabel) 
-    { 
+    if (defined $sellabel)
+    {
 	if (length($sellabel) > $width) {
-		$sellabel = substr(0, $width, $sellabel);
+		$sellabel = substr($sellabel, 0, $width);
 		$sellabel =~ s/.$/\$/;
 	}
-    } 
+    }
     else # No selection yet.
     {
         $this->{-canvasscr}->attron(A_DIM);

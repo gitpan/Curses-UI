@@ -9,7 +9,7 @@ use File::Find;
 use Test::More;
 #use Test::Pod (tests => 45);
 
-eval "use Test::Pod";
+eval "use Test::Pod (tests => 45)";
 plan skip_all => "Test::Pod required for testing POD" if $@;
 
 sub wanted {

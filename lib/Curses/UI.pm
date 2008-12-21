@@ -19,12 +19,12 @@ Curses::UI - A curses based OO user interface framework
 
 =head1 VERSION
 
-Version 0.9606
+Version 0.9607
 
 =cut
 
 use vars qw( $VERSION );
-$VERSION = 0.9606;
+$VERSION = 0.9607;
 
 =head1 SYNOPSIS
 
@@ -574,7 +574,7 @@ sub set_timer($$;)
     ) unless defined $id;
 
     my $config = {
-        -time     => int($time),
+        -time     => $time,
         -callback => $callback,
         -enabled  => 1,
         -lastrun  => time(),

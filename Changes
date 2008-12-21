@@ -1,8 +1,16 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.9607
+==============
+        - Curses::UI::set_timer no longer calls int() on passed time value,
+          allowing Time::HiRes support, thanks to Gilmar Santos, Jr. (RT#29026)
+        - Fixed ancient bug in Popupmenu.pm, thanks to Davide Chiarini
+          and Michael Arlt (RT#38211,25885)
+        - POD testing bug introduced in last version now fixed
+
 Version 0.9606
 ==============
-	- Patch to Notebook.pm from Dominque Dumont
+	- Patch to Notebook.pm from Dominque Dumont (RT#39915)
         - Test::POD no longer required for install
 
 Version 0.9605
