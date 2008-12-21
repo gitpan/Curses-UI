@@ -257,8 +257,7 @@ sub text_draw($$;)
                 elsif ($type eq 'underline') { $this->{-canvasscr}->attron(A_UNDERLINE); }
                 elsif ($type eq 'blink')     { $this->{-canvasscr}->attron(A_BLINK);     }
                 elsif ($type eq 'dim')       { $this->{-canvasscr}->attron(A_DIM);       }
-            }
-            elsif ($token =~ m/^<\/(standout|reverse|bold|underline|blink|dim)>$/s) {
+            } elsif ($token =~ m/^<\/(standout|reverse|bold|underline|blink|dim)>$/s) {
                 my $type = $1;
                 if    ($type eq 'standout')  { $this->{-canvasscr}->attroff(A_STANDOUT);  }
                 elsif ($type eq 'reverse')   { $this->{-canvasscr}->attroff(A_REVERSE);   }
@@ -266,20 +265,20 @@ sub text_draw($$;)
                 elsif ($type eq 'underline') { $this->{-canvasscr}->attroff(A_UNDERLINE); }
                 elsif ($type eq 'blink')     { $this->{-canvasscr}->attroff(A_BLINK);     }
                 elsif ($type eq 'dim')       { $this->{-canvasscr}->attroff(A_DIM);       }
-			# Tags: (see, man 5 terminfo)
-			#   |  <4_ACS_VLINE>  --  Vertical line (4 items).
-			#   -- <5_ACS_HLINE>  --  Horizontal line (5 items).
-			#   `  <12_ACS_TTEE>  --  Tee pointing down (12 items).
-			#   ~  <ACS_BTEE>     --  Tee pointing up (1 item).
-			#   +  <ACS_PLUS>     --  Large plus or crossover (1 item).
-			# ------------------------------------------------------------------
-			} elsif ($token =~ m/^<(\d*)_?(ACS_HLINE|ACS_VLINE|ACS_TTEE|ACS_BTEE|ACS_PLUS)>$/s) {
-				no strict 'refs';
-				my $scrlen = ($1 || 1);
-				my $type = &{ $2 };
-				$this->{-canvasscr}->hline( $y, $x, $type, $scrlen );
-				$x += $scrlen;
-			} else {
+		# Tags: (see, man 5 terminfo)
+		#   |  <4_ACS_VLINE>  --  Vertical line (4 items).
+		#   -- <5_ACS_HLINE>  --  Horizontal line (5 items).
+		#   `  <12_ACS_TTEE>  --  Tee pointing down (12 items).
+		#   ~  <ACS_BTEE>     --  Tee pointing up (1 item).
+		#   +  <ACS_PLUS>     --  Large plus or crossover (1 item).
+		# ------------------------------------------------------------------
+	    } elsif ($token =~ m/^<(\d*)_?(ACS_HLINE|ACS_VLINE|ACS_TTEE|ACS_BTEE|ACS_PLUS)>$/s) {
+		no strict 'refs';
+		my $scrlen = ($1 || 1);
+		my $type = &{ $2 };
+		$this->{-canvasscr}->hline( $y, $x, $type, $scrlen );
+		$x += $scrlen;
+	    } else {
                 $this->{-canvasscr}->addstr($y, $x, $token);
                 $x += length($token);
             }

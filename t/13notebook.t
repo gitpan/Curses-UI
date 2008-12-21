@@ -1,4 +1,4 @@
-use Test::More tests => 25;
+use Test::More tests => 30;
 
 use strict;
 use warnings;
@@ -139,3 +139,23 @@ ok(
     scalar(@{$nb1->{-pages}}) == 0,
     'delete_page(), final page'
 );
+
+my ($activated_widget,$activated_name) ;
+my ($deleted_widget,$deleted_name) ;
+
+my $ac_sub  = sub { ($activated_widget,$activated_name) = @_ ;} ;
+my $del_sub = sub { ($deleted_widget,$deleted_name) = @_ ;} ;
+
+# create page with activation and deletion call-back
+my $cbpage = $nb1->add_page("CB Page", -on_activate => $ac_sub,
+			   -on_delete => $del_sub );
+
+ok($cbpage, "Created page with callback") ;
+
+$nb1->activate_page('CB Page');
+is($activated_widget, $nb1, "activate callback called (widget ok)" );
+is($activated_name,  'CB Page', "activate callback called (name ok)");
+
+$nb1->delete_page('CB Page') ;
+is($deleted_widget, $nb1, "delete callback called (widget ok)" );
+is($deleted_name,  'CB Page', "delete callback called (name ok)");

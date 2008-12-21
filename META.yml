@@ -2,15 +2,12 @@
 abstract: 'A curses based OO user interface framework'
 author:
   - 'Shawn Boyette C<< <mdxi@cpan.org> >>'
-build_requires:
-  Test::More: 0
-  Test::Pod: 0
 distribution_type: module
-generated_by: 'Module::Install version 0.75'
+generated_by: 'Module::Install version 0.77'
 license: perl
 meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.3.html
-  version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
 name: Curses-UI
 no_index:
   directory:
@@ -18,8 +15,9 @@ no_index:
     - inc
     - t
     - examples
-    - examples
 requires:
   Curses: 0
   Term::ReadKey: 0
-version: 0.9605
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.9606

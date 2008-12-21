@@ -1,5 +1,10 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.9606
+==============
+	- Patch to Notebook.pm from Dominque Dumont
+        - Test::POD no longer required for install
+
 Version 0.9605
 ==============
 	- MANIFEST in 0.9604 was bad, causing pertesters FAIL

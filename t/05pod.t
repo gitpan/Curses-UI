@@ -7,8 +7,10 @@ use strict;
 use FindBin;
 use File::Find;
 use Test::More;
-use Test::Pod (tests => 45);
+#use Test::Pod (tests => 45);
 
+eval "use Test::Pod";
+plan skip_all => "Test::Pod required for testing POD" if $@;
 
 sub wanted {
     if ($File::Find::name =~ /\.pm$/) {

@@ -474,6 +474,13 @@ sub add_page($$;) {
     # Create a window for this page using same layout as widget's canvasscr.
     my %userargs = @_;
     keys_to_lowercase(\%userargs);
+
+    # grab callback arguments
+    foreach my $cbkey (qw/-on_activate -on_delete/) {
+	$this->{callback}{$page}{$cbkey} = delete $userargs{$cbkey}
+	  if defined $userargs{$cbkey};
+    }
+
     $this->add(
         $page, 'Window',
 
@@ -524,6 +531,12 @@ sub delete_page($$) {
         unless (defined $this->{-id2object}->{$page});
 
     debug_msg "  deleting '$page' page";
+
+    if (defined $this->{callback}{$page}{-on_delete}) {
+	debug_msg "  calling delete callback for $page";
+	$this->{callback}{$page}{-on_delete}->($this,$page);
+    }
+
     my $active_page = $this->active_page;
     @{$this->{-pages}} = grep($page ne $_, @{$this->{-pages}});
     $this->activate_page($this->first_page) if ($page eq $active_page);
@@ -624,6 +637,11 @@ sub activate_page($$) {
     my $active_page = $this->active_page;
     debug_msg "  old active page = '$active_page'";
 
+    if (defined $this->{callback}{$page}{-on_activate}) {
+	debug_msg "  calling activate callback for $page";
+	$this->{callback}{$page}{-on_activate}->($this,$page);
+    }
+
     if ($active_page ne $page) {
         $active_page = $this->{-active_page} = $page;
         debug_msg "  new active page = '$active_page'";
@@ -713,7 +731,7 @@ Curses::UI::Notebook - Create and manipulate notebook widgets.
         -y    => 6,
         -text => "Page #2.",
     );
-    my $page3 = $notebook->add_page('page 3');
+    my $page3 = $notebook->add_page('page 3', -on_activate => \&sub );
     $page3->add(
         undef, 'Label',
         -x    => 15,
@@ -831,13 +849,20 @@ By default, BOOLEAN is true so the screen is updated.
 See L<Curses::UI::Widget|Curses::UI::Widget> for explanations of these
 methods.
 
-=item * B<add_page> ( PAGE )
+=item * B<add_page> ( PAGE [ , -on_activate => sub_ref ] [, -on_delete => ] )
 
 Adds the specified page to the notebook object and creates an associated
 window object.  Returns the window object or undef on failure.
 
 Note: the add fails if the page would otherwise cause the tab window to
 overflow or is already part of the notebook object.
+
+The C<-on_activate> parameter specifies an optional call-back that
+will be invoked when the page is activated. This call-back will be
+called with the notebook widget and page name as parameter.
+
+Likewise for C<-on_delete> call-back. This one is invoked when the
+page is deleted.
 
 =item * B<delete_page> ( PAGE )
 

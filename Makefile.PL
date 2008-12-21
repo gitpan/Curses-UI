@@ -8,8 +8,6 @@ all_from        'lib/Curses/UI.pm';
 # Specific dependencies
 requires        'Curses'        => 0;
 requires        'Term::ReadKey' => 0;
-build_requires  'Test::More'    => 0;
-build_requires  'Test::Pod'     => 0;
 
 no_index        'directory'         => 'examples';
 
