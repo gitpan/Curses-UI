@@ -19,12 +19,12 @@ Curses::UI - A curses based OO user interface framework
 
 =head1 VERSION
 
-Version 0.9607
+Version 0.9608
 
 =cut
 
 use vars qw( $VERSION );
-$VERSION = 0.9607;
+$VERSION = 0.9608;
 
 =head1 SYNOPSIS
 
@@ -219,8 +219,22 @@ sub mainloop {
     $self->draw;
     doupdate();
 
+	$self->{mainloop}=1;
+
     # Inifinite event loop.
-    while (1) { $self->do_one_event }
+    while ($self->{mainloop}) { $self->do_one_event }
+}
+
+=head2 mainloopExit
+
+This exits the main loop.
+
+=cut
+
+sub mainloopExit{
+	my $self=$_[0];
+
+	$self->{mainloop}=undef;
 }
 
 =head2 schedule_event
@@ -246,7 +260,7 @@ sub schedule_event {
 
 The layout method of Curses::UI tries to find the size of the screen
 then calls the C<layout> method of every contained object (i.e. window
-or widget). It is not normally neccessary to call this method directly.
+or widget). It is not normally necessary to call this method directly.
 
 =cut
 
@@ -384,7 +398,7 @@ sub do_one_event(;$)
     # TODO: Try to redraw and layout everything anew
     # KEY_RESIZE doesn't seem to work right;
     if (Curses->can("KEY_RESIZE")) {
-        $key = '-1' if $key eq KEY_RESIZE();
+      eval { $key = '-1' if $key eq KEY_RESIZE(); };
     }
     my ($cols,$lines) = GetTerminalSize;
     if ( ($ENV{COLS} != $cols) || ( $ENV{LINES} != $lines )) {
@@ -433,12 +447,6 @@ sub do_one_event(;$)
 	$code->($self);
     }
 
-    # See if there are pending keys on input. If I do not
-    # feed them to the application in this way, the screen
-    # hangs in case I do a lot of input on my Solaris
-    # machine.
-    $key = $self->get_key(0);
-    $self->feedkey($key) unless $key eq '-1';
 
     # Update the screen.
     doupdate();
@@ -504,7 +512,6 @@ sub feedkey()
 {
     my $self = shift;
     my $key = shift;
-    $self->flushkeys();
     $self->{-feedkey} = $key;
     return $self;
 }
@@ -1366,7 +1373,7 @@ Returns the currently used Curses::UI::Color object
 
 =item B<set_color> ( OBJECT )
 
-Replaces the currently used Color object with an other. This can be
+Replaces the currently used Color object with another. This can be
 used to fast change all colors in a Curses::UI application.
 
 =back

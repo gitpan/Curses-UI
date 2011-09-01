@@ -1,5 +1,14 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.9608
+==============
+        - TextEditor doc patch from Zane C.B.
+        - Patch to allow mainloop to halt from Zane C.B.
+        - key handling fix from Scott McCoy
+        - Background color set patch from Miquel van Smoorenburg
+        - AIX fix from Shava Smallen
+        - Fix for prototypes warnings from Damyan Ivanov
+
 Version 0.9607
 ==============
         - Curses::UI::set_timer no longer calls int() on passed time value,

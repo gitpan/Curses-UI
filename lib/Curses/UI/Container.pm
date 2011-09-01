@@ -64,7 +64,7 @@ DESTROY()
 }
 
 # Add an object to the container
-sub add($@;)
+sub add($@)
 {
     my $this = shift;
     my $id = shift;
@@ -472,7 +472,7 @@ sub event_onblur()
 }
 
 
-sub set_focusorder(@;)
+sub set_focusorder(@)
 {
     my $this = shift;
     my @order = @_;
@@ -480,7 +480,7 @@ sub set_focusorder(@;)
     return $this;
 }
 
-sub set_draworder(@;)
+sub set_draworder(@)
 {
     my $this = shift;
     my @order = @_;
@@ -627,7 +627,7 @@ container. If CLASS does not contain '::' or CLASS
 matches 'Dialog::...' then 'Curses::UI' will be prepended
 to it. This way you do not have to specifiy the full
 class name for widgets that are in the Curses::UI 
-hierarchy. It is not neccessary to call "use CLASS" 
+hierarchy. It is not necessary to call "use CLASS"
 yourself. The B<add> method will call the B<usemodule>
 method from Curses::UI to automatically load the module.
 

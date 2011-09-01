@@ -353,7 +353,7 @@ sub process_padding($;)
     }
 }
 
-sub width_by_windowscrwidth($@;)
+sub width_by_windowscrwidth($@)
 {
     my $width = shift || 0;
     $width = shift if ref $width; # make $this->width... possible.
@@ -377,7 +377,7 @@ sub width_by_windowscrwidth($@;)
     return $width;    
 }
 
-sub height_by_windowscrheight($@;)
+sub height_by_windowscrheight($@)
 {
     my $height = shift || 0;
     $height = shift if ref $height; # make $this->height... possible.
@@ -536,6 +536,11 @@ sub draw(;$)
     my $scr = defined $this->{-borderscr} 
             ? $this->{-borderscr} 
             : $this->{-canvasscr};
+    if ($Curses::UI::color_support) {
+       my $co = $Curses::UI::color_object;
+       my $pair = $co->get_color_pair( $this->{-fg}, $this->{-bg} );
+       $scr->bkgdset(COLOR_PAIR($pair) | 32) if ($pair);
+    }
     return unless defined $scr;
     $scr->erase;
     $scr->noutrefresh();
@@ -895,7 +900,7 @@ sub set_routine($$;)
     return $this;
 }
 
-sub set_binding($@;)
+sub set_binding($@)
 {
     my $this = shift;
     my $routine = shift;
@@ -921,7 +926,7 @@ sub set_binding($@;)
     return $this;
 }
 
-sub set_mouse_binding($@;)
+sub set_mouse_binding($@)
 {
     my $this = shift;
     my $routine = shift;
@@ -1262,7 +1267,7 @@ option is mainly used in widget building.
 =item * B<-userdata> < SCALAR >
 
 This option specifies a user data that can be retrieved with
-the B<userdata>() method.  It is usefull to store application's
+the B<userdata>() method.  It is useful to store application's
 internal data that otherwise would not be accessible in callbacks.
 
 =item * B<-border> < BOOLEAN >

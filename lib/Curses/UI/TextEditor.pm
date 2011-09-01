@@ -1542,6 +1542,18 @@ This method can be used to set the B<-onchange> event handler
 This method can be used to change the password property.  The password 
 character will be set to $char, or turned off in $char is undef.
 
+=item * B<toggle_showhardreturns>
+
+Toggles the -showhardreturns option.
+
+=item * B<toggle_showoverflow>
+
+Toggles the -showoverflow option.
+
+=item * B<toggle_wrapping>
+
+Toggles the -wrapping option.
+
 =back
 
 

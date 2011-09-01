@@ -218,7 +218,7 @@ sub add_labels(;$)
 }
 
 
-sub maxlabelwidth(@;)
+sub maxlabelwidth(@)
 {
     my %args = @_;
     
@@ -884,7 +884,7 @@ It will get the widget reference as its argument.
 =item * B<-htmltext> < BOOLEAN >
 
 Make the Listbox parse primitive markup to change the items
-appearence. See above.
+appearance. See above.
 
 
 =back
