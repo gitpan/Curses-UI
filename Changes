@@ -1,5 +1,9 @@
 Changelog for the Curses::UI distribution:
 
+Version 0.9609
+==============
+        - Bugfix for crashing error in 0.9608
+
 Version 0.9608
 ==============
         - TextEditor doc patch from Zane C.B.

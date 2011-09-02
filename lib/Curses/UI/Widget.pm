@@ -533,13 +533,13 @@ sub draw(;$)
     eval { curs_set(0) }; # not available on every system.
 
     # Clear the contents of the window.
-    my $scr = defined $this->{-borderscr} 
-            ? $this->{-borderscr} 
+    my $scr = defined $this->{-borderscr}
+            ? $this->{-borderscr}
             : $this->{-canvasscr};
     if ($Curses::UI::color_support) {
        my $co = $Curses::UI::color_object;
        my $pair = $co->get_color_pair( $this->{-fg}, $this->{-bg} );
-       $scr->bkgdset(COLOR_PAIR($pair) | 32) if ($pair);
+       $scr->bkgdset(COLOR_PAIR($pair) | 32) if (defined $scr and $pair);
     }
     return unless defined $scr;
     $scr->erase;
